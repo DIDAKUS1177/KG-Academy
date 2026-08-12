@@ -1,0 +1,925 @@
+// ==========================================================================
+//  KG ACADEMY - Modelo de datos
+//  Plataforma educativa LMS B2C / B2B  -  KG Gestion Integral S.A.S.
+//  Autor del desarrollo: Diego Alejandro Hernandez Blanco
+//
+//  Provider local: SQLite (cero configuracion, ideal para revisar en local).
+//  Para produccion en Hostinger/VPS: cambiar provider a "postgresql" y la
+//  variable DATABASE_URL. El modelo es 100% compatible con PostgreSQL/MySQL.
+//
+//  Nota: SQLite no soporta enum nativo -> los estados se modelan como String
+//  con listas cerradas documentadas en src/lib/constants.ts
+// ==========================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================ 1. IDENTIDAD Y ACCESO ============================
+
+/// Roles del sistema: superadmin | admin_kg | instructor | admin_empresa | supervisor | estudiante
+model Role {
+  id          String   @id @default(cuid())
+  code        String   @unique // superadmin, admin_kg, instructor, admin_empresa, supervisor, estudiante
+  name        String
+  description String?
+  scope       String   @default("plataforma") // plataforma | empresa
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+/// Catalogo granular de permisos (modulo.accion) -> matriz de permisos del punto 4 del esqueleto
+model Permission {
+  id          String  @id @default(cuid())
+  code        String  @unique // ej: cursos.crear, empresas.ver, certificados.revocar
+  module      String // usuarios, empresas, cursos, evaluaciones, certificados, reportes, pagos, config
+  action      String // ver, crear, editar, eliminar, exportar, publicar, revocar
+  description String?
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+/// Usuario unico de la plataforma (estudiante B2C, trabajador B2B, instructor o staff KG)
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  documentType   String? // CC | CE | TI | PAS | NIT
+  documentNumber String?   @unique
+  phone          String?
+  birthDate      DateTime?
+  avatarUrl      String?
+  jobTitle       String? // cargo declarado por el usuario
+  city           String?
+  status         String    @default("activo") // activo | inactivo | bloqueado | pendiente_activacion
+  emailVerified  Boolean   @default(false)
+  acceptedTerms  Boolean   @default(false)
+  acceptedDataAt DateTime? // consentimiento tratamiento de datos (Ley 1581 de 2012)
+  roleId         String
+  companyId      String? // empresa principal (nullable = usuario B2C)
+  lastLoginAt    DateTime?
+  loginCount     Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  role    Role     @relation(fields: [roleId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
+
+  memberships     CompanyMember[]
+  sessions        Session[]
+  resetTokens     PasswordResetToken[]
+  enrollments     Enrollment[]
+  lessonProgress  LessonProgress[]
+  moduleProgress  ModuleProgress[]
+  attempts        AssessmentAttempt[]
+  certificates    Certificate[]
+  assignments     CourseAssignment[]   @relation("AsignacionTrabajador")
+  assignedByMe    CourseAssignment[]   @relation("AsignacionResponsable")
+  coursesTaught   Course[]             @relation("InstructorDelCurso")
+  notifications   Notification[]
+  pointsLedger    PointsLedger[]
+  badges          UserBadge[]
+  streak          Streak?
+  auditLogs       AuditLog[]
+  orders          Order[]
+  revokedCerts    Certificate[]        @relation("CertificadoRevocadoPor")
+
+  @@index([companyId])
+  @@index([roleId])
+  @@index([status])
+  @@map("users")
+}
+
+/// Sesiones activas (gestion de sesiones - punto 17 del esqueleto)
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+// ============================ 2. EMPRESAS (B2B) ============================
+
+model Company {
+  id            String   @id @default(cuid())
+  nit           String   @unique
+  legalName     String
+  tradeName     String?
+  economicSector String?
+  arl           String?
+  riskLevel     String? // I | II | III | IV | V
+  contactName   String?
+  contactEmail  String?
+  contactPhone  String?
+  address       String?
+  city          String?
+  logoUrl       String?
+  status        String   @default("activa") // activa | suspendida | inactiva
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users         User[]
+  members       CompanyMember[]
+  locations     CompanyLocation[]
+  areas         Area[]
+  positions     Position[]
+  subscriptions CompanySubscription[]
+  assignments   CourseAssignment[]
+  batches       AssignmentBatch[]
+  orders        Order[]
+
+  @@map("companies")
+}
+
+model CompanyLocation {
+  id        String  @id @default(cuid())
+  companyId String
+  name      String // sede
+  city      String?
+  address   String?
+  isActive  Boolean @default(true)
+
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members CompanyMember[]
+
+  @@map("company_locations")
+}
+
+model Area {
+  id        String  @id @default(cuid())
+  companyId String
+  name      String // area / departamento
+  code      String?
+
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members CompanyMember[]
+
+  @@map("areas")
+}
+
+model Position {
+  id        String  @id @default(cuid())
+  companyId String
+  name      String // cargo
+  riskLevel String? // nivel de riesgo del cargo (SST)
+
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members CompanyMember[]
+
+  @@map("positions")
+}
+
+/// Relacion usuario <-> empresa con su ubicacion organizacional
+model CompanyMember {
+  id           String    @id @default(cuid())
+  companyId    String
+  userId       String
+  areaId       String?
+  positionId   String?
+  locationId   String?
+  employeeCode String?
+  hiredAt      DateTime?
+  isSupervisor Boolean   @default(false)
+  status       String    @default("activo") // activo | retirado | suspendido
+  createdAt    DateTime  @default(now())
+
+  company  Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  area     Area?            @relation(fields: [areaId], references: [id])
+  position Position?        @relation(fields: [positionId], references: [id])
+  location CompanyLocation? @relation(fields: [locationId], references: [id])
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+  @@map("company_members")
+}
+
+/// Planes comerciales B2B (punto 16 del esqueleto)
+model Plan {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String
+  description   String?
+  maxUsers      Int?
+  maxCourses    Int?
+  pricePerMonth Int      @default(0) // COP
+  pricePerUser  Int      @default(0) // COP
+  features      String? // JSON serializado
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  subscriptions CompanySubscription[]
+
+  @@map("plans")
+}
+
+model CompanySubscription {
+  id        String    @id @default(cuid())
+  companyId String
+  planId    String
+  startsAt  DateTime  @default(now())
+  endsAt    DateTime?
+  seats     Int       @default(0)
+  status    String    @default("activa") // activa | vencida | cancelada
+  createdAt DateTime  @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan    Plan    @relation(fields: [planId], references: [id])
+
+  @@map("company_subscriptions")
+}
+
+// ============================ 3. CATALOGO DE CURSOS ============================
+
+model Category {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+  icon        String? // nombre del icono en UI
+  color       String? // color hex de acento
+  parentId    String?
+  order       Int     @default(0)
+  isActive    Boolean @default(true)
+
+  parent   Category?  @relation("SubCategorias", fields: [parentId], references: [id])
+  children Category[] @relation("SubCategorias")
+  courses  Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  code           String    @unique // ej: KG-PA-001
+  title          String
+  subtitle       String?
+  description    String?
+  objective      String?
+  targetAudience String?
+  requirements   String?
+  methodology    String?
+  level          String    @default("basico") // basico | intermedio | avanzado
+  modality       String    @default("virtual") // virtual | mixto | presencial
+  durationHours  Float     @default(0) // intensidad horaria certificada
+  coverImageUrl  String?
+  promoVideoUrl  String?
+  categoryId     String
+  instructorId   String?
+  status         String    @default("borrador") // borrador | revision | publicado | despublicado | archivado
+  accessType     String    @default("pago") // gratuito | pago | plan_empresarial | asignado
+  price          Int       @default(0) // COP
+  discountPrice  Int?
+  // ---- Reglas de negocio configurables (punto 22 del esqueleto) ----
+  progressRule       String @default("obligatorios") // obligatorios | peso_lecciones | peso_modulos
+  minPassingScore    Int    @default(80) // % minimo aprobatorio
+  maxAttempts        Int    @default(3)
+  requiresFinalExam  Boolean @default(true)
+  requiresAllLessons Boolean @default(true)
+  certificateEnabled Boolean @default(true)
+  certificateValidityMonths Int? // vigencia del certificado en meses (null = indefinido)
+  allowRetake        Boolean @default(true)
+  // ---- Publicacion ----
+  publishedAt DateTime?
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category    Category @relation(fields: [categoryId], references: [id])
+  instructor  User?    @relation("InstructorDelCurso", fields: [instructorId], references: [id])
+
+  modules      Module[]
+  assessments  Assessment[]
+  enrollments  Enrollment[]
+  assignments  CourseAssignment[]
+  batches      AssignmentBatch[]
+  certificates Certificate[]
+  orderItems   OrderItem[]
+  questionBanks QuestionBank[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@map("courses")
+}
+
+model Module {
+  id          String  @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  order       Int     @default(0)
+  weight      Float   @default(0) // peso porcentual para el calculo de progreso
+  isRequired  Boolean @default(true)
+  isPublished Boolean @default(false)
+
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
+  progress ModuleProgress[]
+  assessments Assessment[]
+
+  @@index([courseId])
+  @@map("modules")
+}
+
+model Lesson {
+  id          String  @id @default(cuid())
+  moduleId    String
+  title       String
+  description String?
+  order       Int     @default(0)
+  /// video | pdf | texto | enlace | genially | scorm | quiz | actividad
+  contentType String  @default("pendiente")
+  /// URL del video, del PDF, del embed de Genially, etc. NULL = contenido pendiente de cargar
+  contentUrl  String?
+  /// Contenido HTML/markdown para lecciones tipo texto
+  contentBody String?
+  durationMin Int     @default(0)
+  isRequired  Boolean @default(true)
+  isPreview   Boolean @default(false) // visible sin matricula
+  weight      Float   @default(0)
+  /// Regla de completado: manual | tiempo | porcentaje_video | quiz_aprobado
+  completionRule String @default("manual")
+  completionThreshold Int @default(90) // % de video o de tiempo requerido
+  isPublished Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  resources LessonResource[]
+  progress  LessonProgress[]
+
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+model LessonResource {
+  id       String @id @default(cuid())
+  lessonId String
+  title    String
+  type     String // pdf | enlace | plantilla | anexo | normativa
+  url      String
+  sizeKb   Int?
+  order    Int    @default(0)
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_resources")
+}
+
+// ============================ 4. MATRICULA, PROGRESO Y TRAZABILIDAD ============================
+
+model Enrollment {
+  id           String    @id @default(cuid())
+  userId       String
+  courseId     String
+  /// compra | asignacion_empresa | gratuito | cortesia | plan
+  origin       String    @default("gratuito")
+  assignmentId String?   @unique
+  status       String    @default("no_iniciado") // no_iniciado | en_progreso | completado | vencido | anulado
+  progress     Float     @default(0) // 0..100
+  startedAt    DateTime?
+  lastAccessAt DateTime?
+  completedAt  DateTime?
+  expiresAt    DateTime?
+  finalScore   Float?
+  timeSpentSec Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assignment CourseAssignment? @relation(fields: [assignmentId], references: [id])
+
+  lessonProgress LessonProgress[]
+  moduleProgress ModuleProgress[]
+  attempts       AssessmentAttempt[]
+  certificate    Certificate?
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([status])
+  @@map("enrollments")
+}
+
+model ModuleProgress {
+  id           String    @id @default(cuid())
+  enrollmentId String
+  moduleId     String
+  userId       String
+  status       String    @default("no_iniciado") // no_iniciado | en_progreso | completado
+  progress     Float     @default(0)
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module     Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, moduleId])
+  @@map("module_progress")
+}
+
+model LessonProgress {
+  id            String    @id @default(cuid())
+  enrollmentId  String
+  lessonId      String
+  userId        String
+  status        String    @default("no_iniciado") // no_iniciado | en_progreso | completado
+  percent       Float     @default(0)
+  timeSpentSec  Int       @default(0)
+  lastPositionSec Int     @default(0) // "continuar donde quedo"
+  views         Int       @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+  @@index([userId])
+  @@map("lesson_progress")
+}
+
+// ============================ 5. EVALUACIONES ============================
+
+model QuestionBank {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  courseId    String?
+  topic       String?
+  createdAt   DateTime @default(now())
+
+  course    Course?    @relation(fields: [courseId], references: [id])
+  questions Question[]
+
+  @@map("question_banks")
+}
+
+model Question {
+  id          String  @id @default(cuid())
+  bankId      String
+  /// unica | multiple | verdadero_falso | abierta | emparejar
+  type        String  @default("unica")
+  statement   String
+  explanation String? // retroalimentacion automatica
+  difficulty  String  @default("media") // baja | media | alta
+  points      Float   @default(1)
+  imageUrl    String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  bank      QuestionBank         @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  options   QuestionOption[]
+  inQuizzes AssessmentQuestion[]
+  answers   AttemptAnswer[]
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  feedback   String?
+  order      Int     @default(0)
+
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  AttemptAnswer[]
+
+  @@map("question_options")
+}
+
+model Assessment {
+  id          String  @id @default(cuid())
+  courseId    String
+  moduleId    String?
+  title       String
+  description String?
+  /// diagnostica | modulo | final | encuesta
+  type        String  @default("modulo")
+  minScore    Int     @default(80)
+  maxAttempts Int     @default(3)
+  timeLimitMin Int? // null = sin limite
+  shuffleQuestions Boolean @default(true)
+  shuffleOptions   Boolean @default(true)
+  showFeedback     Boolean @default(true)
+  showCorrectAnswers Boolean @default(false)
+  isRequired  Boolean @default(true)
+  isPublished Boolean @default(false)
+  order       Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  course    Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  module    Module?              @relation(fields: [moduleId], references: [id])
+  questions AssessmentQuestion[]
+  attempts  AssessmentAttempt[]
+
+  @@index([courseId])
+  @@map("assessments")
+}
+
+model AssessmentQuestion {
+  id           String @id @default(cuid())
+  assessmentId String
+  questionId   String
+  order        Int    @default(0)
+  points       Float  @default(1)
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question   Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, questionId])
+  @@map("assessment_questions")
+}
+
+model AssessmentAttempt {
+  id           String    @id @default(cuid())
+  assessmentId String
+  enrollmentId String
+  userId       String
+  attemptNo    Int       @default(1)
+  score        Float     @default(0) // 0..100
+  correctCount Int       @default(0)
+  totalCount   Int       @default(0)
+  passed       Boolean   @default(false)
+  status       String    @default("en_curso") // en_curso | finalizado | anulado
+  startedAt    DateTime  @default(now())
+  submittedAt  DateTime?
+  durationSec  Int       @default(0)
+  gradedBy     String? // null = automatico
+  gradeNote    String?
+
+  assessment Assessment      @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  enrollment Enrollment      @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers    AttemptAnswer[]
+
+  @@index([userId])
+  @@index([assessmentId])
+  @@map("assessment_attempts")
+}
+
+model AttemptAnswer {
+  id         String  @id @default(cuid())
+  attemptId  String
+  questionId String
+  optionId   String?
+  textAnswer String?
+  isCorrect  Boolean @default(false)
+  points     Float   @default(0)
+  answeredAt DateTime @default(now())
+
+  attempt  AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question          @relation(fields: [questionId], references: [id])
+  option   QuestionOption?   @relation(fields: [optionId], references: [id])
+
+  @@map("attempt_answers")
+}
+
+// ============================ 6. CERTIFICADOS ============================
+
+model CertificateTemplate {
+  id           String  @id @default(cuid())
+  name         String
+  description  String?
+  orientation  String  @default("horizontal") // horizontal | vertical
+  backgroundUrl String?
+  signatureUrl String?
+  signerName   String?
+  signerTitle  String?
+  bodyTemplate String? // texto con variables {{estudiante}} {{curso}} {{horas}} {{fecha}}
+  isDefault    Boolean @default(false)
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+
+  certificates Certificate[]
+
+  @@map("certificate_templates")
+}
+
+model Certificate {
+  id             String    @id @default(cuid())
+  code           String    @unique // codigo unico de verificacion, ej: KG-2026-A7F3C9
+  userId         String
+  courseId       String
+  enrollmentId   String    @unique
+  templateId     String?
+  studentName    String // congelado al momento de emision
+  studentDocument String?
+  courseTitle    String
+  hours          Float
+  finalScore     Float?
+  issuedAt       DateTime  @default(now())
+  expiresAt      DateTime?
+  verifyUrl      String
+  qrDataUrl      String? // QR en base64
+  pdfUrl         String?
+  status         String    @default("vigente") // vigente | vencido | revocado
+  revokedAt      DateTime?
+  revokedReason  String?
+  revokedById    String?
+  downloads      Int       @default(0)
+
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course               @relation(fields: [courseId], references: [id])
+  enrollment Enrollment           @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  template   CertificateTemplate? @relation(fields: [templateId], references: [id])
+  revokedBy  User?                @relation("CertificadoRevocadoPor", fields: [revokedById], references: [id])
+
+  @@index([userId])
+  @@map("certificates")
+}
+
+// ============================ 7. ASIGNACION EMPRESARIAL ============================
+
+/// Lote de asignacion masiva (para trazabilidad de "asigne 40 cursos el 12/08")
+model AssignmentBatch {
+  id           String   @id @default(cuid())
+  companyId    String
+  courseId     String
+  createdById  String?
+  name         String?
+  dueDate      DateTime?
+  totalTargets Int      @default(0)
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  company     Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  course      Course             @relation(fields: [courseId], references: [id])
+  assignments CourseAssignment[]
+
+  @@map("assignment_batches")
+}
+
+model CourseAssignment {
+  id           String    @id @default(cuid())
+  companyId    String
+  courseId     String
+  userId       String
+  batchId      String?
+  assignedById String?
+  isMandatory  Boolean   @default(true)
+  dueDate      DateTime?
+  /// asignado | en_progreso | completado | vencido | cancelado
+  status       String    @default("asignado")
+  notifiedAt   DateTime?
+  remindedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company    Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  course     Course           @relation(fields: [courseId], references: [id])
+  user       User             @relation("AsignacionTrabajador", fields: [userId], references: [id], onDelete: Cascade)
+  assignedBy User?            @relation("AsignacionResponsable", fields: [assignedById], references: [id])
+  batch      AssignmentBatch? @relation(fields: [batchId], references: [id])
+  enrollment Enrollment?
+
+  @@unique([companyId, courseId, userId])
+  @@index([companyId])
+  @@map("course_assignments")
+}
+
+// ============================ 8. COMERCIAL Y PAGOS ============================
+
+model Coupon {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  description   String?
+  discountType  String    @default("porcentaje") // porcentaje | valor_fijo
+  discountValue Int       @default(0)
+  maxUses       Int?
+  usedCount     Int       @default(0)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  orders Order[]
+
+  @@map("coupons")
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  reference   String   @unique // KG-ORD-000123
+  userId      String?
+  companyId   String?
+  couponId    String?
+  subtotal    Int      @default(0)
+  discount    Int      @default(0)
+  tax         Int      @default(0)
+  total       Int      @default(0)
+  currency    String   @default("COP")
+  status      String   @default("pendiente") // pendiente | pagada | fallida | reembolsada | anulada
+  gateway     String? // wompi | mercadopago | payu | transferencia
+  gatewayRef  String?
+  paidAt      DateTime?
+  invoiceUrl  String?
+  createdAt   DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
+  coupon  Coupon?  @relation(fields: [couponId], references: [id])
+  items   OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  courseId  String?
+  planId    String?
+  concept   String
+  quantity  Int    @default(1)
+  unitPrice Int    @default(0)
+  total     Int    @default(0)
+
+  order  Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id])
+
+  @@map("order_items")
+}
+
+// ============================ 9. NOTIFICACIONES ============================
+
+model NotificationTemplate {
+  id        String  @id @default(cuid())
+  code      String  @unique // bienvenida | curso_asignado | recordatorio | por_vencer | curso_completado | certificado_listo | reset_password
+  name      String
+  channel   String  @default("email") // email | interna | whatsapp | sms
+  subject   String?
+  body      String
+  isActive  Boolean @default(true)
+
+  notifications Notification[]
+
+  @@map("notification_templates")
+}
+
+model Notification {
+  id         String    @id @default(cuid())
+  userId     String
+  templateId String?
+  channel    String    @default("interna")
+  title      String
+  message    String
+  linkUrl    String?
+  type       String    @default("info") // info | exito | alerta | error
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  sentAt     DateTime  @default(now())
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template NotificationTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ============================ 10. GAMIFICACION ============================
+
+model Badge {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+  iconUrl     String?
+  criteria    String? // regla legible: "Completar 3 cursos"
+  points      Int     @default(0)
+  isActive    Boolean @default(true)
+
+  users UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  reason    String?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model PointsLedger {
+  id        String   @id @default(cuid())
+  userId    String
+  points    Int
+  reason    String // leccion_completada | curso_completado | evaluacion_aprobada | racha
+  refType   String? // curso | leccion | evaluacion
+  refId     String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("points_ledger")
+}
+
+model Streak {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  currentDays  Int       @default(0)
+  longestDays  Int       @default(0)
+  lastActiveAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("streaks")
+}
+
+// ============================ 11. AUDITORIA Y CONFIGURACION ============================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  actorEmail String?
+  action     String // login | crear | editar | eliminar | publicar | asignar | revocar | exportar
+  entity     String // users | courses | certificates | ...
+  entityId   String?
+  summary    String?
+  beforeJson String?
+  afterJson  String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  type        String   @default("string") // string | number | boolean | json
+  group       String   @default("general") // general | marca | certificados | correo | seguridad
+  label       String?
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}

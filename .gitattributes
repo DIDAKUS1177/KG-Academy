@@ -1,0 +1,11 @@
+# Normaliza los finales de linea: LF en el repositorio,
+# el checkout local se adapta al sistema operativo.
+* text=auto eol=lf
+
+# Binarios: no tocar
+*.png binary
+*.jpg binary
+*.pdf binary
+*.docx binary
+*.pptx binary
+*.db binary

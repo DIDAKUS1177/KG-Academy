@@ -1,0 +1,28 @@
+# dependencias
+node_modules/
+
+# build
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# base de datos local (se regenera con: npm run setup)
+prisma/*.db
+prisma/*.db-journal
+
+# variables de entorno (contienen secretos)
+# copiar .env.example a .env para trabajar en local
+.env
+.env.local
+.env.production
+
+# python (generadores de documentos)
+__pycache__/
+*.pyc
+
+# sistema y logs
+*.log
+.DS_Store
+Thumbs.db
