@@ -32,68 +32,99 @@ const ROLES = [
 
 /* ------------------------------------------------------------------ */
 /*  ESTRUCTURA DE LOS TRES PRIMEROS CURSOS                             */
-/*  El contenido (video / PDF / Genially) queda PENDIENTE a proposito. */
+/*                                                                     */
+/*  Contenido entregado por KG a la fecha:                             */
+/*    - KG-PA-001, Modulo 1: presentacion interactiva en Genially.     */
+/*  El resto de modulos queda con el contenedor reservado              */
+/*  (contentType "pendiente") hasta que KG produzca el material.       */
 /* ------------------------------------------------------------------ */
+
+/** Una leccion de la semilla: texto simple si el contenido esta pendiente. */
+type LeccionSemilla = {
+  title: string;
+  description?: string;
+  contentType?: string;
+  contentUrl?: string;
+  durationMin?: number;
+  isPreview?: boolean;
+};
+
+/**
+ * Presentacion interactiva del Modulo 1 del Curso Basico de Primeros Auxilios.
+ * Se embebe por URL publica: el material vive en Genially y la plataforma solo
+ * lo referencia. Si KG edita la presentacion, el cambio se refleja sin
+ * necesidad de volver a desplegar.
+ */
+const GENIALLY_PA_MODULO_1 =
+  "https://view.genially.com/6a839aee6503b7aa52feb9d8/presentation-cu-rso-basico-de-primeros-auxilios";
 const CURSOS = [
   {
     code: "KG-PA-001",
     slug: "primeros-auxilios-basicos",
-    title: "Primeros Auxilios Basicos",
-    subtitle: "Actue con criterio en el primer minuto: valoracion de la escena, RCP, hemorragias y traslado seguro.",
+    title: "Curso Basico de Primeros Auxilios",
+    subtitle:
+      "Para brigadas de emergencia y equipos de primera respuesta: protocolos estandarizados, valoracion inicial y gestion segura de la escena.",
     objective:
-      "Formar al participante para identificar una emergencia, activar la cadena de supervivencia y aplicar tecnicas basicas de primeros auxilios de forma segura para la victima y para si mismo.",
+      "Capacitar al personal integrante de las brigadas de emergencia en la aplicacion estandarizada de protocolos internacionales de primeros auxilios y soporte vital; proveer las bases fisiopatologicas, normativas y practicas para realizar una valoracion clinica inicial, estabilizacion temporal y manejo seguro de lesiones agudas; y desarrollar competencias operativas y de liderazgo en la gestion de escenas de emergencia industriales, priorizando la autoproteccion y la articulacion con los sistemas de emergencia.",
     targetAudience:
-      "Trabajadores de cualquier sector, brigadistas, integrantes del COPASST y publico general.",
+      "Integrantes de brigadas de emergencia, equipos de primera respuesta, COPASST y personal designado para la atencion inicial de emergencias.",
     requirements: "No requiere conocimientos previos. Se recomienda computador o celular con internet.",
     methodology:
-      "100% virtual asincronico. Lecciones cortas, recursos descargables, evaluacion diagnostica, evaluaciones por modulo y evaluacion final.",
+      "100% virtual asincronico. Cada modulo se desarrolla en una presentacion interactiva de Genially, con evaluacion diagnostica, evaluaciones por modulo y evaluacion final.",
     level: "basico",
     durationHours: 20,
     price: 149000,
     status: "publicado",
     accessType: "pago",
     launch: "22 de agosto de 2026",
+    // Temario oficial de KG, tomado del indice de la presentacion entregada.
+    // Hoy solo el Modulo 1 tiene contenido producido; el resto queda reservado.
     modules: [
       {
-        title: "Modulo 1. Fundamentos y bioseguridad",
-        description: "Marco normativo, principios de actuacion y proteccion del auxiliador.",
+        title: "Modulo 1. Introduccion a los Primeros Auxilios y Marco Legal del Brigadista",
+        description:
+          "Definicion y objetivos de los primeros auxilios, rol y limites del primer respondiente, responsabilidad y consentimiento.",
         lessons: [
-          "Bienvenida al curso y como estudiar en KG Academy",
-          "Que son los primeros auxilios y hasta donde llega mi actuacion",
-          "Marco legal en Colombia y responsabilidad del auxiliador",
-          "Bioseguridad y elementos de proteccion personal",
+          {
+            title: "Introduccion a los Primeros Auxilios y Marco Legal del Brigadista",
+            description:
+              "Presentacion interactiva del modulo: fundamentos y objetivos, rol y competencias del primer respondiente, responsabilidad y consentimiento.",
+            contentType: "genially",
+            contentUrl: GENIALLY_PA_MODULO_1,
+            durationMin: 35,
+            isPreview: true,
+          },
         ],
       },
       {
-        title: "Modulo 2. Valoracion de la escena y de la victima",
-        description: "Seguridad de la escena, valoracion primaria y secundaria, activacion del SEM.",
-        lessons: [
-          "Seguridad de la escena: primero yo, luego la victima",
-          "Valoracion primaria: consciencia, via aerea, respiracion y circulacion",
-          "Valoracion secundaria y toma de signos vitales",
-          "Como activar el sistema de emergencias medicas",
-        ],
+        title: "Modulo 2. Valoracion de la Escena, Bioseguridad y Activacion del SEM",
+        description: "Seguridad de la escena, elementos de proteccion personal y activacion del sistema de emergencias medicas.",
+        lessons: ["Valoracion de la Escena, Bioseguridad y Activacion del SEM"],
       },
       {
-        title: "Modulo 3. Reanimacion cardiopulmonar (RCP) y OVACE",
-        description: "Cadena de supervivencia, RCP en adultos y manejo de la obstruccion de via aerea.",
-        lessons: [
-          "Cadena de supervivencia",
-          "RCP de alta calidad en el adulto",
-          "Uso del DEA paso a paso",
-          "Obstruccion de la via aerea por cuerpo extrano (OVACE)",
-        ],
+        title: "Modulo 3. Evaluacion Primaria y Soporte Vital Basico (SVB, RCP y DEA)",
+        description: "Valoracion primaria, cadena de supervivencia, reanimacion cardiopulmonar y uso del desfibrilador externo automatico.",
+        lessons: ["Evaluacion Primaria y Soporte Vital Basico (SVB, RCP y DEA)"],
       },
       {
-        title: "Modulo 4. Urgencias frecuentes en el trabajo",
-        description: "Hemorragias, quemaduras, fracturas, convulsiones y movilizacion de lesionados.",
-        lessons: [
-          "Control de hemorragias y manejo del shock",
-          "Quemaduras y lesiones por calor o electricidad",
-          "Fracturas, esguinces e inmovilizacion",
-          "Convulsiones, desmayos y emergencias medicas comunes",
-          "Movilizacion y traslado seguro del lesionado",
-        ],
+        title: "Modulo 4. Manejo de la Via Aerea y Obstruccion (OVACE)",
+        description: "Permeabilizacion de la via aerea y manejo de la obstruccion por cuerpo extrano.",
+        lessons: ["Manejo de la Via Aerea y Obstruccion (OVACE)"],
+      },
+      {
+        title: "Modulo 5. Control de Hemorragias, Heridas y Quemaduras",
+        description: "Control de sangrado, manejo de heridas y atencion inicial de quemaduras.",
+        lessons: ["Control de Hemorragias, Heridas y Quemaduras"],
+      },
+      {
+        title: "Modulo 6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia",
+        description: "Fracturas e inmovilizacion, reconocimiento y manejo del shock, y alteraciones del estado de conciencia.",
+        lessons: ["Lesiones Osteomusculares, Shock y Alteraciones de Conciencia"],
+      },
+      {
+        title: "Modulo 7. Movilizacion, Transporte de Pacientes y Casos Practicos",
+        description: "Tecnicas de movilizacion y traslado seguro, y resolucion de casos practicos.",
+        lessons: ["Movilizacion, Transporte de Pacientes y Casos Practicos"],
       },
     ],
   },
@@ -653,21 +684,26 @@ async function main() {
         },
       });
       const pesoLeccion = pesoModulo / m.lessons.length;
-      for (const [li, title] of m.lessons.entries()) {
+      for (const [li, leccion] of m.lessons.entries()) {
+        // Una leccion se declara como texto simple (contenido aun pendiente)
+        // o como objeto cuando KG ya entrego el material.
+        const l: LeccionSemilla = typeof leccion === "string" ? { title: leccion } : leccion;
+        const tipo = l.contentType ?? "pendiente";
+
         await prisma.lesson.create({
           data: {
             moduleId: mod.id,
-            title,
-            description: null,
+            title: l.title,
+            description: l.description ?? null,
             order: li + 1,
-            contentType: "pendiente", // <- ESPACIO RESERVADO PARA EL CONTENIDO DE KG
-            contentUrl: null,
-            durationMin: 12,
+            contentType: tipo, // "pendiente" = espacio reservado para KG
+            contentUrl: l.contentUrl ?? null,
+            durationMin: l.durationMin ?? 12,
             isRequired: true,
-            isPreview: mi === 0 && li === 0,
+            isPreview: l.isPreview ?? (mi === 0 && li === 0),
             weight: pesoLeccion,
             completionRule: "manual",
-            isPublished: c.status === "publicado",
+            isPublished: c.status === "publicado" && tipo !== "pendiente",
           },
         });
       }

@@ -67,7 +67,7 @@ explícita del cliente.
 ## 4. Estado actual
 
 **Fase 1 (MVP) entregada y funcionando en local.** Verificado de extremo a extremo: se
-completaron las 17 lecciones de un curso, se presentó la evaluación final, el sistema emitió
+completaron todas las lecciones de un curso, se presentó la evaluación final, el sistema emitió
 el certificado solo y la página pública de verificación lo validó.
 
 | Módulo | Estado |
@@ -88,22 +88,50 @@ el certificado solo y la página pública de verificación lo validó.
 
 ## 5. Los tres primeros cursos
 
-| Código | Curso | Módulos | Lecciones | Horas | Estado | Lanzamiento previsto |
-|---|---|---|---|---|---|---|
-| KG-PA-001 | Primeros Auxilios Básicos | 4 | 17 | 20 | Publicado | 22 de agosto de 2026 |
-| KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 14 | 16 | Borrador | Finales de agosto de 2026 |
-| KG-PA-003 | Primeros Auxilios Psicológicos | 4 | 12 | 12 | Borrador | Finales de agosto de 2026 |
+| Código | Curso | Módulos | Horas | Estado | Lanzamiento previsto |
+|---|---|---|---|---|---|
+| KG-PA-001 | Curso Básico de Primeros Auxilios | 7 | 20 | Publicado | 22 de agosto de 2026 |
+| KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 16 | Borrador | Finales de agosto de 2026 |
+| KG-PA-003 | Primeros Auxilios Psicológicos | 4 | 12 | Borrador | Finales de agosto de 2026 |
 
-**Importante:** cuando se construyó la plataforma **los cursos aún no estaban producidos**.
-Por eso todas las lecciones nacen con `contentType: "pendiente"` y muestran un espacio
-reservado con la marca KG en lugar del video.
+### KG-PA-001 — el único con contenido real
 
-KG carga el material desde `/admin/cursos/[id]` (Constructor): elige el tipo (`video`,
-`genially`, `pdf`, `texto`, `enlace`, `scorm`) y pega la URL. **No hace falta programar.**
+*«Curso Básico de Primeros Auxilios — Para Brigadas de Emergencia y Equipos de Primera
+Respuesta».* El temario **no es inventado**: se tomó del índice de la presentación entregada
+por KG el 19 de agosto de 2026.
 
-El **banco de preguntas cargado es de ejemplo** (6 preguntas genéricas de primeros auxilios).
-Existe únicamente para poder probar el motor de calificación. KG debe reemplazarlo por el
-banco oficial de cada curso.
+| Módulo | Contenido |
+|---|---|
+| 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista | **Genially embebido** |
+| 2. Valoración de la Escena, Bioseguridad y Activación del SEM | Pendiente |
+| 3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA) | Pendiente |
+| 4. Manejo de la Vía Aérea y Obstrucción (OVACE) | Pendiente |
+| 5. Control de Hemorragias, Heridas y Quemaduras | Pendiente |
+| 6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia | Pendiente |
+| 7. Movilización, Transporte de Pacientes y Casos Prácticos | Pendiente |
+
+**Cómo se sirve el contenido.** KG produce cada módulo como una presentación de Genially y la
+publica. La plataforma **solo guarda la URL pública** y la embebe en un iframe 16:9; el material
+vive en Genially. Ventaja: si KG edita la presentación, el cambio se ve al instante sin volver a
+desplegar. La constante está en `prisma/seed.ts` (`GENIALLY_PA_MODULO_1`) y, una vez en
+producción, se administra desde `/admin/cursos/[id]`.
+
+El export offline de Genially (unos 22 MB por módulo) se conserva en la carpeta local `cursos/`
+como respaldo, pero **no se versiona**: está en `.gitignore`. Servir esos archivos desde el
+servidor consumiría el ancho de banda del VPS.
+
+### Los otros dos cursos
+
+KG-PA-002 y KG-PA-003 conservan la estructura tentativa derivada de la especificación. **Cuando
+KG entregue su material, hay que corregir el temario igual que se hizo con KG-PA-001**: lo que
+está sembrado hoy es una propuesta, no el temario oficial.
+
+### Lo que sigue pendiente en KG-PA-001
+
+- Contenido de los módulos 2 a 7.
+- **Intensidad horaria real**: las 20 horas son una estimación previa; KG debe confirmarla porque
+  es el dato que se imprime en el certificado.
+- Banco oficial de preguntas (el cargado sigue siendo de ejemplo).
 
 ---
 

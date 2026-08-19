@@ -18,6 +18,11 @@ prisma/*.db-journal
 .env.local
 .env.production
 
+# material fuente de los cursos (exports de Genially, 20+ MB cada uno).
+# El contenido se sirve embebido por URL publica; estos exports son solo
+# respaldo local y no deben versionarse.
+cursos/
+
 # python (generadores de documentos)
 __pycache__/
 *.pyc

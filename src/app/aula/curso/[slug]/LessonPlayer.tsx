@@ -183,7 +183,37 @@ function ContentSlot({ lesson }: { lesson: Lesson }) {
     );
   }
 
-  if ((lesson.contentType === "genially" || lesson.contentType === "scorm") && lesson.contentUrl) {
+  // Genially: las presentaciones son 16:9, se embeben por URL publica.
+  if (lesson.contentType === "genially" && lesson.contentUrl) {
+    return (
+      <div>
+        <div className="aspect-video overflow-hidden rounded-2xl border border-navy-100 bg-navy-900">
+          <iframe
+            src={lesson.contentUrl}
+            title={lesson.title}
+            className="h-full w-full"
+            allow="fullscreen; autoplay"
+            allowFullScreen
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-navy-400">
+          <span className="inline-flex items-center gap-1.5">
+            <IconFile width={13} height={13} /> Presentacion interactiva &middot; use las flechas para avanzar
+          </span>
+          <a
+            href={lesson.contentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-navy-500 hover:text-lime-600"
+          >
+            Abrir en pantalla completa
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (lesson.contentType === "scorm" && lesson.contentUrl) {
     return (
       <div className="aspect-[16/10] overflow-hidden rounded-2xl border border-navy-100 bg-white">
         <iframe src={lesson.contentUrl} title={lesson.title} className="h-full w-full" allowFullScreen />
