@@ -90,11 +90,11 @@ export function LoginForm() {
         </button>
 
         <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-navy-300">
-          <IconLock width={12} height={12} /> Conexion protegida &middot; sesión de 8 horas
+          <IconLock width={12} height={12} /> Conexión protegida &middot; sesión de 8 horas
         </p>
       </form>
 
-      {/* Accesos de demostracion para la revisión local */}
+      {/* Accesos de demostración para la revisión local */}
       <div className="mt-5 rounded-2xl border border-dashed border-navy-200 bg-white/70 p-4">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-navy-400">
           Usuarios de prueba (clave: <span className="text-lime-600">KgAcademy2026*</span>)

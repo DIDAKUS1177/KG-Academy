@@ -90,8 +90,8 @@ el certificado solo y la página pública de verificación lo validó.
 
 | Código | Curso | Módulos | Horas | Estado | Lanzamiento previsto |
 |---|---|---|---|---|---|
-| KG-PA-001 | Curso Básico de Primeros Auxilios | 7 | 20 | Publicado | 22 de agosto de 2026 |
-| KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 16 | Borrador | Finales de agosto de 2026 |
+| KG-PA-001 | Curso Básico de Primeros Auxilios | 7 | 40 | Publicado | 22 de agosto de 2026 |
+| KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 60 | Borrador | Finales de agosto de 2026 |
 | KG-PA-003 | Primeros Auxilios Psicológicos | 4 | 12 | Borrador | Finales de agosto de 2026 |
 
 ### KG-PA-001 — el único con contenido real
@@ -129,8 +129,11 @@ está sembrado hoy es una propuesta, no el temario oficial.
 ### Lo que sigue pendiente en KG-PA-001
 
 - Contenido de los módulos 2 a 7.
-- ~~Intensidad horaria~~: **confirmada por KG el 19 de agosto de 2026 en 40 horas** (antes se
-  había estimado en 20). Es el dato que se imprime en el certificado.
+- ~~Intensidad horaria~~: **confirmada por KG en 40 horas** el Curso Básico y **60 horas** el
+  Pediátrico (antes estimadas en 20 y 16). Es el dato que se imprime en el certificado.
+  El curso Psicológico sigue con 12 horas **sin confirmar**.
+- **Entidad instructora:** los cursos se acreditan a **Bomberos**, no al desarrollador. Falta
+  que KG confirme el nombre oficial completo de la entidad (`instructorBomberos` en el seed).
 - Banco oficial de preguntas (el cargado sigue siendo de ejemplo).
 
 ---

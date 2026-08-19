@@ -121,7 +121,7 @@ export default async function CertificadoPage({ params }: { params: { code: stri
             <div className="mt-14 grid items-end gap-8 sm:grid-cols-3">
               <div className="text-center sm:text-left">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-navy-400">
-                  Fecha de expedicion
+                  Fecha de expedición
                 </p>
                 <p className="mt-1 font-semibold text-navy-700">{formatDate(cert.issuedAt)}</p>
                 <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-navy-400">

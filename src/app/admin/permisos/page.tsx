@@ -9,7 +9,7 @@ import { IconCheck, IconX, IconLayers } from "@/components/Icons";
 export const metadata: Metadata = { title: "Matriz de permisos" };
 export const dynamic = "force-dynamic";
 
-/** Los modulos de permisos se guardan como codigo; en pantalla van legibles. */
+/** Los módulos de permisos se guardan como código; en pantalla van legibles. */
 const MODULO_LABEL: Record<string, string> = {
   usuarios: "Usuarios",
   empresas: "Empresas",

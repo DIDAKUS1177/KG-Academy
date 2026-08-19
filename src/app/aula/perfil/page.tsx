@@ -74,7 +74,7 @@ export default async function PerfilPage() {
           </form>
 
           <p className="mt-3 text-xs text-navy-300">
-            La edicion del perfil se habilita en la Fase 1 del backlog. Los campos exactos quedaron como
+            La edición del perfil se habilita en la Fase 1 del backlog. Los campos exactos quedaron como
             &quot;Por definir&quot; en el punto 5 del esqueleto funcional.
           </p>
         </div>

@@ -72,7 +72,7 @@ conservan el espacio reservado hasta que KG produzca el material.
 | Código | Curso | Módulos | Lecciones | Horas | Estado | Lanzamiento |
 |---|---|---|---|---|---|---|
 | KG-PA-001 | Curso Básico de Primeros Auxilios | 7 | 7 | 40 | Publicado | 22 de agosto de 2026 |
-| KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 14 | 16 | Borrador | Finales de agosto |
+| KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 14 | 60 | Borrador | Finales de agosto |
 | KG-PA-003 | Primeros Auxilios Psicológicos | 4 | 12 | 12 | Borrador | Finales de agosto |
 
 ### Modelo comercial

@@ -89,7 +89,7 @@ export default async function AdminCursos() {
                   <p className="mt-2 text-[11px] text-navy-300">
                     {c.code} &middot; {c.durationHours} h &middot; {c.modules.length} módulos &middot;{" "}
                     {lecciones} lecciones &middot; {c.assessments.length} evaluaciones
-                    {c.instructor && ` · ${c.instructor.firstName} ${c.instructor.lastName}`}
+                    {c.instructor && ` · ${`${c.instructor.firstName} ${c.instructor.lastName}`.trim()}`}
                   </p>
                 </div>
 

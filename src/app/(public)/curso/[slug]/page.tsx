@@ -87,7 +87,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
               <p className="mt-6 text-sm text-white/45">
                 Instructor:{" "}
                 <span className="font-semibold text-white/80">
-                  {course.instructor.firstName} {course.instructor.lastName}
+                  {`${course.instructor.firstName} ${course.instructor.lastName}`.trim()}
                 </span>
               </p>
             )}
@@ -101,7 +101,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                   <IconCheck width={14} height={14} strokeWidth={3.5} /> Incluido en el plan
                 </span>
                 <p className="mt-3 font-display text-xl font-extrabold text-navy-700">
-                  Acceso por suscripcion
+                  Acceso por suscripción
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-navy-400">
                   KG Academy se contrata como servicio: su empresa activa el plan y todo el catálogo,
@@ -162,7 +162,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
           </div>
 
           <div>
-            <h2 className="h-display text-2xl">Contenido programatico</h2>
+            <h2 className="h-display text-2xl">Contenido programático</h2>
             <span className="kg-rule mt-3 block" />
             <p className="mt-4 text-sm text-navy-400">
               {course.modules.length} módulos &middot; {totalLessons} lecciones

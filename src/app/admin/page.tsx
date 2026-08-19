@@ -63,7 +63,7 @@ export default async function AdminDashboard() {
     ? enrollments.reduce((s, e) => s + e.progress, 0) / enrollments.length
     : 0;
   const completados = enrollments.filter((e) => e.status === "completado").length;
-  // El modelo comercial es la suscripcion a la plataforma, no la venta por curso:
+  // El modelo comercial es la suscripción a la plataforma, no la venta por curso:
   // el indicador útil es la formación efectivamente certificada.
   const horasCertificadas = cursosTop.reduce(
     (s, c) => s + c.durationHours * c.certificates.length,
@@ -81,7 +81,7 @@ export default async function AdminDashboard() {
             Estado general de la plataforma
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
-            Vision consolidada de usuarios, empresas, cursos, matrículas y certificación.
+            Visión consolidada de usuarios, empresas, cursos, matrículas y certificación.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/admin/cursos" className="btn-lime">
@@ -144,7 +144,7 @@ export default async function AdminDashboard() {
           </table>
         </div>
 
-        {/* Distribucion por rol */}
+        {/* Distribución por rol */}
         <div className="space-y-6">
           <div className="card p-6">
             <p className="font-display text-sm font-bold text-navy-700">Usuarios por rol</p>

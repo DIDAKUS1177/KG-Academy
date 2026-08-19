@@ -133,7 +133,7 @@ export default async function AdminEmpresas() {
           </tbody>
         </table>
         <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-          La pasarela de pagos y la facturacion quedaron marcadas como POR DEFINIR en el punto 16 del
+          La pasarela de pagos y la facturación quedaron marcadas como POR DEFINIR en el punto 16 del
           esqueleto. Las tablas <code>orders</code>, <code>order_items</code> y <code>coupons</code> ya
           están modeladas para cuando KG defina el proveedor.
         </p>

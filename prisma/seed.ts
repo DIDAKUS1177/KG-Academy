@@ -65,12 +65,12 @@ const CURSOS = [
     subtitle:
       "Para brigadas de emergencia y equipos de primera respuesta: protocolos estandarizados, valoración inicial y gestión segura de la escena.",
     objective:
-      "Capacitar al personal integrante de las brigadas de emergencia en la aplicación estandarizada de protocolos internacionales de primeros auxilios y soporte vital; proveer las bases fisiopatologicas, normativas y prácticas para realizar una valoración clínica inicial, estabilización temporal y manejo seguro de lesiones agudas; y desarrollar competencias operativas y de liderazgo en la gestión de escenas de emergencia industriales, priorizando la autoprotección y la articulación con los sistemas de emergencia.",
+      "Capacitar al personal integrante de las brigadas de emergencia en la aplicación estandarizada de protocolos internacionales de primeros auxilios y soporte vital; proveer las bases fisiopatológicas, normativas y prácticas para realizar una valoración clínica inicial, estabilización temporal y manejo seguro de lesiones agudas; y desarrollar competencias operativas y de liderazgo en la gestión de escenas de emergencias empresariales, priorizando la autoprotección y la articulación con los sistemas de emergencia.",
     targetAudience:
       "Integrantes de brigadas de emergencia, equipos de primera respuesta, COPASST y personal designado para la atención inicial de emergencias.",
     requirements: "No requiere conocimientos previos. Se recomienda computador o celular con internet.",
     methodology:
-      "100% virtual asincronico. Cada módulo se desarrolla en una presentación interactiva de Genially, con evaluación diagnóstica, evaluaciones por módulo y evaluación final.",
+      "100% virtual asincrónico. Cada módulo se desarrolla en una presentación interactiva de Genially, con evaluación diagnóstica, evaluaciones por módulo y evaluación final.",
     level: "basico",
     durationHours: 40,
     price: 149000,
@@ -98,7 +98,7 @@ const CURSOS = [
       },
       {
         title: "Módulo 2. Valoración de la Escena, Bioseguridad y Activación del SEM",
-        description: "Seguridad de la escena, elementos de protección personal y activación del sistema de emergencias medicas.",
+        description: "Seguridad de la escena, elementos de protección personal y activación del sistema de emergencias médicas.",
         lessons: ["Valoración de la Escena, Bioseguridad y Activación del SEM"],
       },
       {
@@ -134,13 +134,13 @@ const CURSOS = [
     title: "Primeros Auxilios Pediátricos",
     subtitle: "Lactantes y niños: valoración, RCP pediátrica, atragantamiento, fiebre y accidentes en el hogar.",
     objective:
-      "Capacitar al participante en la atención inicial de emergencias en lactantes y niños, reconociendo las diferencias anatomicas y fisiologicas frente al adulto.",
+      "Capacitar al participante en la atención inicial de emergencias en lactantes y niños, reconociendo las diferencias anatómicas y fisiológicas frente al adulto.",
     targetAudience:
       "Padres, cuidadores, docentes, personal de jardines infantiles y trabajadores con población infantil a cargo.",
     requirements: "Se recomienda haber cursado Primeros Auxilios Básicos.",
-    methodology: "100% virtual asincronico con casos clinicos guiados y evaluación final.",
+    methodology: "100% virtual asincrónico con casos clínicos guiados y evaluación final.",
     level: "intermedio",
-    durationHours: 16,
+    durationHours: 60,
     price: 169000,
     status: "borrador",
     accessType: "pago",
@@ -148,7 +148,7 @@ const CURSOS = [
     modules: [
       {
         title: "Módulo 1. El paciente pediátrico es diferente",
-        description: "Diferencias anatomicas y fisiologicas, triangulo de evaluación pediátrica.",
+        description: "Diferencias anatómicas y fisiológicas, triangulo de evaluación pediátrica.",
         lessons: [
           "Lactante, niño y adolescente: por que cambia la atención",
           "Triangulo de evaluación pediátrica",
@@ -190,13 +190,13 @@ const CURSOS = [
     code: "KG-PA-003",
     slug: "primeros-auxilios-psicologicos",
     title: "Primeros Auxilios Psicológicos",
-    subtitle: "Contención emocional en crisis: escucha activa, modelo ABCDE y cuidado de quien ayuda.",
+    subtitle: "Contención emocional en crisis: escucha activa, modelo ABCDE y cuidado de quién ayuda.",
     objective:
       "Entregar herramientas prácticas de contención emocional para acompañar a una persona en crisis dentro del entorno laboral, respetando sus límites y los del auxiliador.",
     targetAudience:
       "Lideres de equipo, talento humano, brigadistas, COPASST y responsables del SG-SST.",
     requirements: "No requiere formación previa en salud mental.",
-    methodology: "100% virtual asincronico con simulaciones de dialogo y evaluación final.",
+    methodology: "100% virtual asincrónico con simulaciones de diálogo y evaluación final.",
     level: "basico",
     durationHours: 12,
     price: 139000,
@@ -483,7 +483,28 @@ async function main() {
       documentType: "CC",
       documentNumber: "1020304050",
       jobTitle: "Instructor y desarrollador de la plataforma",
-      city: "Bogota D.C.",
+      city: "Bogotá D.C.",
+      roleId: roles.instructor,
+      status: "activo",
+      emailVerified: true,
+      acceptedTerms: true,
+      acceptedDataAt: new Date(),
+    },
+  });
+
+  /**
+   * Entidad instructora de los cursos de primeros auxilios.
+   * KG acredita la formación a Bomberos, no al desarrollador de la plataforma.
+   * PENDIENTE: confirmar con KG el nombre oficial completo de la entidad.
+   */
+  const instructorBomberos = await prisma.user.create({
+    data: {
+      email: "bomberos@kggestionintegral.com",
+      passwordHash: hash,
+      firstName: "Bomberos",
+      lastName: "",
+      jobTitle: "Entidad instructora",
+      city: "Bogotá D.C.",
       roleId: roles.instructor,
       status: "activo",
       emailVerified: true,
@@ -655,9 +676,9 @@ async function main() {
         modality: "virtual",
         durationHours: c.durationHours,
         categoryId: catPA.id,
-        instructorId: instructor.id,
+        instructorId: instructorBomberos.id,
         status: c.status,
-        // Modelo comercial: la plataforma se vende como servicio (suscripcion por
+        // Modelo comercial: la plataforma se vende como servicio (suscripción por
         // empresa), no curso por curso. Los campos price/discountPrice se conservan
         // en el modelo por si KG habilita venta B2C directa en la Fase 2.
         accessType: "plan_empresarial",
@@ -806,7 +827,7 @@ async function main() {
     orderBy: [{ module: { order: "asc" } }, { order: "asc" }],
   });
 
-  // Distribucion de avance: 0%, 100%, 35%, 0%, 70%, 100%, 15%, 0%
+  // Distribución de avance: 0%, 100%, 35%, 0%, 70%, 100%, 15%, 0%
   const AVANCES = [0, 1, 0.35, 0, 0.7, 1, 0.15, 0];
 
   for (const [i, t] of trabajadores.entries()) {
@@ -870,7 +891,7 @@ async function main() {
     const progress = Math.round((hasta / lessons.length) * 1000) / 10;
     const completo = ratio === 1;
 
-    // Intento de evaluación final para quienes terminaron
+    // Intento de evaluación final para quiénes terminaron
     if (completo) {
       const preguntas = await prisma.assessmentQuestion.findMany({
         where: { assessmentId: cursoBasico.finalEval.id },
@@ -945,7 +966,7 @@ async function main() {
       });
     }
 
-    // Certificado para quienes completaron
+    // Certificado para quiénes completaron
     if (completo) {
       const code = `KG-${new Date().getFullYear()}-${(100000 + i * 7331).toString(36).toUpperCase().padStart(6, "0").slice(0, 6)}`;
       const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/verificar/${code}`;

@@ -40,7 +40,7 @@ const SERVICIOS = [
 const PASOS = [
   { n: "01", t: "La empresa carga sus trabajadores", d: "Individual o de forma masiva, organizados por área, cargo y sede." },
   { n: "02", t: "Se asignan los cursos", d: "Con fecha límite y carácter obligatorio u opcional. El trabajador recibe la notificación." },
-  { n: "03", t: "El trabajador estudia y se evalua", d: "Aula virtual con progreso guardado lección a lección y evaluación final." },
+  { n: "03", t: "El trabajador estudia y se evalúa", d: "Aula virtual con progreso guardado lección a lección y evaluación final." },
   { n: "04", t: "Se emite el certificado", d: "Automático, con código único y QR de verificación pública." },
 ];
 
@@ -77,11 +77,11 @@ export default async function LandingPage() {
             </span>
 
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
-              Formación que
-              <span className="relative mx-3 inline-block">
+              Formación que{" "}
+              <span className="relative inline-block">
                 <span className="relative z-10 text-lime-400">protege vidas</span>
                 <span className="absolute inset-x-0 bottom-1.5 z-0 h-3 rounded bg-lime-500/25" />
-              </span>
+              </span>{" "}
               y que su empresa puede demostrar.
             </h1>
 
@@ -339,7 +339,7 @@ export default async function LandingPage() {
           </h2>
           <p className="max-w-2xl text-white/65">
             Todo certificado emitido por KG Academy lleva un código único y un código QR. Cualquier
-            persona puede confirmar su autenticidad, sin necesidad de tener cuenta.
+            persona puede confirmar su autenticidad: no necesita registrarse ni iniciar sesión.
           </p>
           <form action="/verificar" className="flex w-full max-w-md gap-2">
             <input

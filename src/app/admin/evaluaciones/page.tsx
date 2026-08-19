@@ -117,7 +117,7 @@ export default async function AdminEvaluaciones() {
           para poder probar el motor de calificacion. KG debe reemplazarlas por el banco oficial de cada
           curso. El editor visual de preguntas corresponde a la Fase 1 del backlog; el modelo de datos
           (<code>question_banks</code>, <code>questions</code>, <code>question_options</code>,{" "}
-          <code>assessment_questions</code>) ya soporta seleccion única, multiple y verdadero/falso.
+          <code>assessment_questions</code>) ya soporta selección única, multiple y verdadero/falso.
         </p>
       </div>
     </div>
