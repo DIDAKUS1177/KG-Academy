@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoFull, Logo } from "@/components/Logo";
+import { CreditoDesarrollo } from "@/components/Contacto";
 import { IconShield, IconGraduation, IconChart, IconCheck } from "@/components/Icons";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +46,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <p className="relative text-[11px] text-white/30">
-          KG Gestion Integral S.A.S. &middot; Desarrollado por Diego Alejandro Hernandez Blanco
+          KG Gestion Integral S.A.S. &middot; Desarrollado por{" "}
+          <CreditoDesarrollo tone="dark" className="text-white/50 hover:text-lime-400" />
         </p>
       </aside>
 

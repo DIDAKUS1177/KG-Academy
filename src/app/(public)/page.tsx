@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LogoFull, LogoMark } from "@/components/Logo";
 import { CourseCard } from "@/components/CourseCard";
+import { CreditoDesarrollo, EnlacesContacto } from "@/components/Contacto";
 import {
   IconShield,
   IconGraduation,
@@ -375,14 +376,30 @@ export default async function LandingPage() {
               </Link>
             </div>
           </div>
+
+          {/* Contacto directo con KG */}
+          <div className="relative mt-10 grid gap-8 border-t border-navy-100 pt-9 lg:grid-cols-[1fr_auto]">
+            <div>
+              <p className="eyebrow">Hablemos</p>
+              <h3 className="mt-2 font-display text-xl font-extrabold text-navy-700">
+                Prefiere que le expliquemos?
+              </h3>
+              <p className="mt-2 max-w-lg text-sm leading-relaxed text-navy-400">
+                Escribanos por WhatsApp o por correo y le mostramos la plataforma, resolvemos sus
+                dudas y le armamos el plan que necesita su empresa.
+              </p>
+            </div>
+            <div className="lg:min-w-[290px]">
+              <EnlacesContacto tone="light" />
+            </div>
+          </div>
         </div>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-center text-xs text-navy-300">
           <IconUsers width={14} height={14} />
           <span>
-            Plataforma disenada y desarrollada por{" "}
-            <span className="font-semibold text-navy-500">Diego Alejandro Hernandez Blanco</span> para KG
-            Gestion Integral S.A.S.
+            Plataforma disenada y desarrollada por <CreditoDesarrollo /> para KG Gestion Integral
+            S.A.S.
           </span>
           <IconClipboard width={14} height={14} />
         </div>

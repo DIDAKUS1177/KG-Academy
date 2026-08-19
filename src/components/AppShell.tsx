@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Logo } from "./Logo";
+import { CreditoDesarrollo } from "./Contacto";
 import { Avatar } from "./ui";
 import { IconLogout, IconMenu, IconX, IconBell } from "./Icons";
 import { cn } from "@/lib/utils";
@@ -97,7 +98,7 @@ export function AppShell({
           </form>
         </div>
         <p className="mt-3 text-center text-[9px] leading-relaxed text-white/25">
-          Desarrollado por Diego Alejandro Hernandez Blanco
+          Desarrollado por <CreditoDesarrollo tone="dark" className="text-lime-400/70 hover:text-lime-400" />
         </p>
       </div>
     </div>
@@ -145,7 +146,7 @@ export function AppShell({
 
         <footer className="border-t border-navy-100 px-4 py-6 text-center text-[11px] text-navy-300 lg:px-8">
           KG Academy &middot; KG Gestion Integral S.A.S. &middot; Desarrollado por{" "}
-          <span className="font-semibold text-navy-500">Diego Alejandro Hernandez Blanco</span>
+          <CreditoDesarrollo />
         </footer>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { BRAND } from "@/lib/constants";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -9,8 +10,8 @@ export const metadata: Metadata = {
   description:
     "Plataforma de formacion virtual en Seguridad y Salud en el Trabajo de KG Gestion Integral S.A.S. Cursos, evaluaciones, certificados verificables y trazabilidad corporativa.",
   applicationName: "KG Academy",
-  authors: [{ name: "Diego Alejandro Hernandez Blanco" }],
-  creator: "Diego Alejandro Hernandez Blanco",
+  authors: [{ name: BRAND.developer, url: BRAND.developerUrl }],
+  creator: BRAND.developer,
   publisher: "KG Gestion Integral S.A.S.",
   keywords: ["SST", "e-learning", "primeros auxilios", "capacitacion", "certificados", "KG Academy"],
   icons: { icon: "/brand/kg-logo.png", apple: "/brand/kg-logo.png" },

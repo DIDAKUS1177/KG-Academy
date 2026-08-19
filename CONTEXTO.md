@@ -222,7 +222,24 @@ Reglas de marca que deben respetarse en cualquier entregable:
 - El **logotipo oficial** (`public/brand/kg-logo.png`) debe aparecer: landing, login, sidebar,
   certificado, verificación pública y portada de todos los documentos.
 - El crédito **«Desarrollado por Diego Alejandro Hernández Blanco»** aparece en el pie de la
-  landing, el sidebar, el certificado, la configuración y los documentos.
+  landing, el sidebar, el certificado, la configuración y los documentos, y **enlaza al perfil
+  de LinkedIn** del desarrollador. Se renderiza siempre con el componente
+  `CreditoDesarrollo` de `src/components/Contacto.tsx`; nunca copiar el nombre como texto suelto.
+  La única excepción es el certificado: es un documento que se imprime, así que ahí va en texto plano.
+
+### Contacto público
+
+Definido en `CONTACTO` (`src/lib/constants.ts`) y replicado en `system_settings` para que se
+vea en `/admin/configuracion`. **Si cambia, se cambia en la constante**, no en cada pantalla.
+
+| Canal | Valor |
+|---|---|
+| Teléfono / WhatsApp | +57 320 7605561 |
+| Correo | katerineguanarita@gmail.com |
+
+Aparece en el pie del sitio, en el cierre de la landing y en un botón flotante de WhatsApp
+presente en todas las páginas públicas (`BotonWhatsApp`). Es la vía de contacto principal
+porque la plataforma se vende como servicio, no por autogestión de compra.
 
 ---
 

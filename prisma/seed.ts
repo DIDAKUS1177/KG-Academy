@@ -392,6 +392,9 @@ async function main() {
       { key: "seguridad.min_password", value: "8", type: "number", group: "seguridad", label: "Longitud minima de contrasena" },
       { key: "seguridad.sesion_horas", value: "8", type: "number", group: "seguridad", label: "Duracion de la sesion (horas)" },
       { key: "general.desarrollador", value: "Diego Alejandro Hernandez Blanco", group: "general", label: "Desarrollado por" },
+      { key: "general.desarrollador_url", value: "https://www.linkedin.com/in/diego-alejandro-hernandez-blanco-08b64120b/", group: "general", label: "Perfil del desarrollador" },
+      { key: "contacto.telefono", value: "+57 320 7605561", group: "contacto", label: "Telefono / WhatsApp" },
+      { key: "contacto.email", value: "katerineguanarita@gmail.com", group: "contacto", label: "Correo de contacto" },
     ],
   });
 

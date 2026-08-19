@@ -12,8 +12,26 @@ export const BRAND = {
   navy: "#0A2D4D",
   lime: "#8FBF16",
   developer: "Diego Alejandro Hernandez Blanco",
+  developerUrl: "https://www.linkedin.com/in/diego-alejandro-hernandez-blanco-08b64120b/",
   services: ["Gestion SST", "E-Learning", "Business Analytics"],
 } as const;
+
+/**
+ * Datos de contacto publicos de KG Gestion Integral S.A.S.
+ * Fuente unica: si cambian, se cambian aqui y se reflejan en toda la plataforma.
+ */
+export const CONTACTO = {
+  telefono: "+57 320 7605561",
+  /** Formato E.164 sin espacios, para los enlaces tel: y wa.me */
+  telefonoE164: "+573207605561",
+  whatsapp: "https://wa.me/573207605561",
+  email: "katerineguanarita@gmail.com",
+} as const;
+
+/** Mensaje con el que se abre WhatsApp desde la plataforma. */
+export const WHATSAPP_MSG = encodeURIComponent(
+  "Hola, escribo desde KG Academy. Quisiera informacion sobre los cursos y los planes empresariales."
+);
 
 export const ROLES = {
   SUPERADMIN: "superadmin",

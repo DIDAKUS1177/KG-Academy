@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { ROLES, ROLE_LABEL } from "@/lib/constants";
 import { formatDateTime } from "@/lib/utils";
 import { SectionTitle, StatCard, StatusBadge, ProgressBar, Avatar } from "@/components/ui";
+import { CreditoDesarrollo } from "@/components/Contacto";
 import {
   IconUsers,
   IconBook,
@@ -241,7 +242,7 @@ export default async function AdminDashboard() {
       <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-dashed border-navy-200 bg-white/60 p-5 text-center text-xs text-navy-400">
         <IconBuilding width={14} height={14} />
         KG Academy &middot; Plataforma disenada y desarrollada por
-        <span className="font-semibold text-navy-600">Diego Alejandro Hernandez Blanco</span>
+        <CreditoDesarrollo />
       </div>
     </div>
   );

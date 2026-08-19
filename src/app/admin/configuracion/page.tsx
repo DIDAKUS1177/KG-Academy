@@ -4,7 +4,8 @@ import { requireRole } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { LogoFull } from "@/components/Logo";
 import { SectionTitle } from "@/components/ui";
-import { IconSettings, IconShield, IconAward, IconBell } from "@/components/Icons";
+import { CreditoDesarrollo } from "@/components/Contacto";
+import { IconSettings, IconShield, IconAward, IconBell, IconPhone } from "@/components/Icons";
 
 export const metadata: Metadata = { title: "Configuracion" };
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ const GRUPO_ICON: Record<string, JSX.Element> = {
   seguridad: <IconShield width={18} height={18} />,
   general: <IconSettings width={18} height={18} />,
   correo: <IconBell width={18} height={18} />,
+  contacto: <IconPhone width={18} height={18} />,
 };
 
 export default async function ConfiguracionPage() {
@@ -151,9 +153,7 @@ export default async function ConfiguracionPage() {
           Plataforma KG Academy v1.0 &middot; Next.js 14 + TypeScript + Prisma
         </p>
         <p className="mt-1 text-xs text-navy-400">
-          Disenada y desarrollada por{" "}
-          <span className="font-semibold text-navy-600">Diego Alejandro Hernandez Blanco</span> para KG
-          Gestion Integral S.A.S.
+          Disenada y desarrollada por <CreditoDesarrollo /> para KG Gestion Integral S.A.S.
         </p>
       </div>
     </div>

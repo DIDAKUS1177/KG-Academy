@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoMark } from "./Logo";
+import { CreditoDesarrollo, EnlacesContacto } from "./Contacto";
 import { IconShield, IconGraduation, IconChart } from "./Icons";
 
 const SERVICIOS = [
@@ -15,7 +16,7 @@ export function SiteFooter() {
       <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:44px_44px] opacity-40" />
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3">
               <LogoMark size={54} />
@@ -61,13 +62,20 @@ export function SiteFooter() {
               <li><Link href="/#como-funciona" className="hover:text-lime-400">Como funciona</Link></li>
             </ul>
           </div>
+
+          <div>
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-lime-400">Contacto</p>
+            <EnlacesContacto tone="dark" />
+            <p className="mt-4 text-xs leading-relaxed text-white/40">
+              Escribanos y le contamos como activar KG Academy en su empresa.
+            </p>
+          </div>
         </div>
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 md:flex-row">
           <p>&copy; {new Date().getFullYear()} KG Gestion Integral S.A.S. Todos los derechos reservados.</p>
           <p className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5">
-            Desarrollado por{" "}
-            <span className="font-semibold text-lime-400">Diego Alejandro Hernandez Blanco</span>
+            Desarrollado por <CreditoDesarrollo tone="dark" />
           </p>
         </div>
       </div>
