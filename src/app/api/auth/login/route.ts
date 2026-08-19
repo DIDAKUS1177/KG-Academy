@@ -6,7 +6,7 @@ import { ROLE_HOME } from "@/lib/constants";
 
 const schema = z.object({
   email: z.string().email("Correo invalido"),
-  password: z.string().min(1, "Ingrese su contrasena"),
+  password: z.string().min(1, "Ingrese su contraseña"),
 });
 
 export async function POST(req: Request) {
@@ -20,13 +20,13 @@ export async function POST(req: Request) {
   const user = await prisma.user.findUnique({ where: { email }, include: { role: true } });
 
   if (!user || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
-    return NextResponse.json({ error: "Correo o contrasena incorrectos" }, { status: 401 });
+    return NextResponse.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
   }
   if (user.status === "bloqueado") {
-    return NextResponse.json({ error: "Su cuenta esta bloqueada. Contacte al administrador." }, { status: 403 });
+    return NextResponse.json({ error: "Su cuenta está bloqueada. Contacte al administrador." }, { status: 403 });
   }
   if (user.status === "inactivo") {
-    return NextResponse.json({ error: "Su cuenta esta inactiva." }, { status: 403 });
+    return NextResponse.json({ error: "Su cuenta está inactiva." }, { status: 403 });
   }
 
   await createSession({
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     action: "login",
     entity: "users",
     entityId: user.id,
-    summary: "Inicio de sesion",
+    summary: "Inicio de sesión",
   });
 
   return NextResponse.json({ ok: true, redirect: ROLE_HOME[user.role.code] ?? "/aula" });

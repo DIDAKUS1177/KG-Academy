@@ -94,7 +94,7 @@ export async function POST(req: Request) {
       data: {
         userId: nuevo.id,
         title: "Bienvenido a KG Academy",
-        message: "Su empresa creo su cuenta. Cambie su contrasena temporal al ingresar.",
+        message: "Su empresa creó su cuenta. Cambie su contraseña temporal al ingresar.",
         linkUrl: "/aula",
         type: "info",
       },
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
     }
     const r = await crear(t as never);
     if (!r.creado && !r.vinculado) {
-      return NextResponse.json({ error: "Ese trabajador ya esta registrado en la empresa" }, { status: 409 });
+      return NextResponse.json({ error: "Ese trabajador ya está registrado en la empresa" }, { status: 409 });
     }
     await audit({
       userId: user.id,

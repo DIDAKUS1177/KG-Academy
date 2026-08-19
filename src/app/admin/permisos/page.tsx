@@ -9,6 +9,19 @@ import { IconCheck, IconX, IconLayers } from "@/components/Icons";
 export const metadata: Metadata = { title: "Matriz de permisos" };
 export const dynamic = "force-dynamic";
 
+/** Los modulos de permisos se guardan como codigo; en pantalla van legibles. */
+const MODULO_LABEL: Record<string, string> = {
+  usuarios: "Usuarios",
+  empresas: "Empresas",
+  cursos: "Cursos",
+  evaluaciones: "Evaluaciones",
+  certificados: "Certificados",
+  reportes: "Reportes",
+  pagos: "Pagos",
+  configuracion: "Configuración",
+  auditoria: "Auditoría",
+};
+
 export default async function PermisosPage() {
   await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
 
@@ -72,7 +85,7 @@ export default async function PermisosPage() {
               <Fragment key={modulo}>
                 <tr className="bg-navy-50/60">
                   <td colSpan={roles.length + 1} className="font-display text-xs font-bold uppercase tracking-wide text-navy-600">
-                    {modulo}
+                    {MODULO_LABEL[modulo] ?? modulo}
                   </td>
                 </tr>
                 {lista.map((p) => (
@@ -98,7 +111,7 @@ export default async function PermisosPage() {
           </tbody>
         </table>
         <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-          {permisos.length} permisos definidos sobre {porModulo.size} modulos. La edicion de la matriz
+          {permisos.length} permisos definidos sobre {porModulo.size} módulos. La edición de la matriz
           desde la interfaz corresponde a la Fase 1; las tablas <code>permissions</code> y{" "}
           <code>role_permissions</code> ya la soportan.
         </p>

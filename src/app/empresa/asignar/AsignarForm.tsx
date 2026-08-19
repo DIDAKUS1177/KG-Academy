@@ -94,7 +94,7 @@ export function AsignarForm({
     if (!res.ok) return setMsg({ ok: false, text: data.error ?? "No fue posible asignar" });
     setMsg({
       ok: true,
-      text: `${data.creadas} asignacion(es) creada(s). ${data.omitidas} ya existian.`,
+      text: `${data.creadas} asignación(es) creada(s). ${data.omitidas} ya existian.`,
     });
     setSelected(new Set());
     router.refresh();
@@ -121,7 +121,7 @@ export function AsignarForm({
             />
           </div>
           <select value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)} className="select py-2 text-sm">
-            <option value="">Todas las areas</option>
+            <option value="">Todas las áreas</option>
             {areas.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -139,7 +139,7 @@ export function AsignarForm({
               <tr>
                 <th className="w-10" />
                 <th>Trabajador</th>
-                <th>Area / Cargo</th>
+                <th>Área / Cargo</th>
                 <th>Estado</th>
               </tr>
             </thead>
@@ -197,14 +197,14 @@ export function AsignarForm({
         </div>
       </div>
 
-      {/* Configuracion de la asignacion */}
+      {/* Configuración de la asignación */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <div className="card p-6">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-700 text-lime-400">
               <IconClipboard width={19} height={19} />
             </span>
-            <p className="font-display text-base font-bold text-navy-700">Configuracion</p>
+            <p className="font-display text-base font-bold text-navy-700">Configuración</p>
           </div>
 
           <div className="mt-6 space-y-4">
@@ -235,7 +235,7 @@ export function AsignarForm({
             </div>
 
             <div>
-              <label className="label">Fecha limite</label>
+              <label className="label">Fecha límite</label>
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="input" />
             </div>
 
@@ -270,8 +270,8 @@ export function AsignarForm({
             {loading ? "Asignando..." : `Asignar a ${selected.size} trabajador(es)`}
           </button>
           <p className="mt-3 text-[11px] leading-relaxed text-navy-400">
-            Cada trabajador recibe una notificacion interna y se crea su matricula con estado &quot;no
-            iniciado&quot;. Todo queda registrado en el lote de asignacion para auditoria.
+            Cada trabajador recibe una notificación interna y se crea su matrícula con estado &quot;no
+            iniciado&quot;. Todo queda registrado en el lote de asignación para auditoría.
           </p>
         </div>
       </aside>

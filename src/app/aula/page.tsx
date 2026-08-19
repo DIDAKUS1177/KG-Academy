@@ -61,8 +61,8 @@ export default async function AulaHome() {
             </h1>
             <p className="mt-2 max-w-lg text-sm text-white/60">
               {enProgreso.length > 0
-                ? `Tiene ${enProgreso.length} curso(s) en progreso. Retome donde quedo.`
-                : "Explore el catalogo y comience su primera capacitacion."}
+                ? `Tiene ${enProgreso.length} curso(s) en progreso. Retome donde quedó.`
+                : "Explore el catálogo y comience su primera capacitación."}
             </p>
             {continuar && (
               <Link href={`/aula/curso/${continuar.course.slug}`} className="btn-lime mt-6">
@@ -91,13 +91,13 @@ export default async function AulaHome() {
         />
       </div>
 
-      {/* Asignaciones con fecha limite */}
+      {/* Asignaciones con fecha límite */}
       {pendingAssignments.length > 0 && (
         <div>
           <SectionTitle
-            eyebrow="Su empresa le asigno"
+            eyebrow="Su empresa le asignó"
             title="Capacitaciones pendientes"
-            description="Cursos asignados por su empresa con fecha limite de cumplimiento."
+            description="Cursos asignados por su empresa con fecha límite de cumplimiento."
           />
           <div className="grid gap-4 md:grid-cols-2">
             {pendingAssignments.map((a) => {
@@ -123,16 +123,16 @@ export default async function AulaHome() {
                     <p className="mt-0.5 text-xs text-navy-400">
                       {a.dueDate ? (
                         <>
-                          Fecha limite: {formatDate(a.dueDate)}
+                          Fecha límite: {formatDate(a.dueDate)}
                           {dias !== null && (
                             <span className={urgente ? "font-bold text-amber-600" : ""}>
                               {" "}
-                              &middot; {dias > 0 ? `quedan ${dias} dias` : "vencida"}
+                              &middot; {dias > 0 ? `quedan ${dias} días` : "vencida"}
                             </span>
                           )}
                         </>
                       ) : (
-                        "Sin fecha limite"
+                        "Sin fecha límite"
                       )}
                     </p>
                   </div>
@@ -159,11 +159,11 @@ export default async function AulaHome() {
         {enrollments.length === 0 ? (
           <EmptyState
             icon={<IconBook width={30} height={30} />}
-            title="Aun no tiene cursos"
-            description="Explore el catalogo de KG Academy e inscribase en su primer curso."
+            title="Aún no tiene cursos"
+            description="Explore el catálogo de KG Academy e inscríbase en su primer curso."
             action={
               <Link href="/catalogo" className="btn-lime">
-                Ver catalogo
+                Ver catálogo
               </Link>
             }
           />
@@ -186,7 +186,7 @@ export default async function AulaHome() {
                       <StatusBadge status={e.status} />
                     </div>
                     <p className="mt-0.5 text-xs text-navy-400">
-                      {e.course.modules.length} modulos &middot; {totalLessons} lecciones &middot;{" "}
+                      {e.course.modules.length} módulos &middot; {totalLessons} lecciones &middot;{" "}
                       {e.course.durationHours} h
                     </p>
                     <ProgressBar value={e.progress} className="mt-3" showLabel />
@@ -201,7 +201,7 @@ export default async function AulaHome() {
         )}
       </div>
 
-      {/* Gamificacion */}
+      {/* Gamificación */}
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="card p-6 lg:col-span-2">
           <div className="flex items-center gap-3">
@@ -238,9 +238,9 @@ export default async function AulaHome() {
           <p className="mt-4 font-display text-4xl font-extrabold text-navy-700">
             {streak?.currentDays ?? 0}
           </p>
-          <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">dias de racha</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">días de racha</p>
           <p className="mt-2 text-xs text-navy-400">
-            Racha mas larga: {streak?.longestDays ?? 0} dias
+            Racha más larga: {streak?.longestDays ?? 0} días
           </p>
           <Link href="/aula/logros" className="btn-outline btn-sm mt-5">
             Ver mis logros

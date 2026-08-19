@@ -35,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       ? []
       : [
           {
-            title: "Administracion",
+            title: "Administración",
             items: [
               { href: "/admin/usuarios", label: "Usuarios y roles", icon: <IconUsers width={18} height={18} /> },
               { href: "/admin/empresas", label: "Empresas y planes", icon: <IconBuilding width={18} height={18} /> },
@@ -46,9 +46,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           {
             title: "Sistema",
             items: [
-              { href: "/admin/auditoria", label: "Auditoria", icon: <IconShield width={18} height={18} /> },
+              { href: "/admin/auditoria", label: "Auditoría", icon: <IconShield width={18} height={18} /> },
               { href: "/admin/permisos", label: "Matriz de permisos", icon: <IconLayers width={18} height={18} /> },
-              { href: "/admin/configuracion", label: "Configuracion", icon: <IconSettings width={18} height={18} /> },
+              { href: "/admin/configuracion", label: "Configuración", icon: <IconSettings width={18} height={18} /> },
             ],
           },
         ]),
@@ -57,7 +57,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <AppShell
       groups={groups}
-      area={esInstructor ? "Panel de instructor" : "Administracion KG"}
+      area={esInstructor ? "Panel de instructor" : "Administración KG"}
       notifications={unread}
       user={{
         firstName: user.firstName,

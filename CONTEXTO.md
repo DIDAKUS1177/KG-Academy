@@ -129,8 +129,8 @@ está sembrado hoy es una propuesta, no el temario oficial.
 ### Lo que sigue pendiente en KG-PA-001
 
 - Contenido de los módulos 2 a 7.
-- **Intensidad horaria real**: las 20 horas son una estimación previa; KG debe confirmarla porque
-  es el dato que se imprime en el certificado.
+- ~~Intensidad horaria~~: **confirmada por KG el 19 de agosto de 2026 en 40 horas** (antes se
+  había estimado en 20). Es el dato que se imprime en el certificado.
 - Banco oficial de preguntas (el cargado sigue siendo de ejemplo).
 
 ---
@@ -245,9 +245,28 @@ porque la plataforma se vende como servicio, no por autogestión de compra.
 
 ## 9. Convenciones del código
 
-- **Idioma:** el código y los comentarios están en español, **sin tildes en identificadores**
-  ni en cadenas del dominio (los estados son `no_iniciado`, `en_progreso`, etc.). La interfaz
-  de usuario sí usa español natural.
+- **Idioma y ortografía.** Regla en dos niveles, y no es negociable:
+  - **Identificadores y códigos de dominio: ASCII, sin tildes ni eñes.** Los estados
+    (`no_iniciado`, `en_progreso`), los niveles (`basico`), los tipos (`diagnostica`), los
+    slugs y las rutas se comparan por igualdad; una tilde ahí rompe el sistema.
+  - **Todo el texto que lee una persona: español correcto, con tildes y eñes.** Interfaz,
+    mensajes de error, correos, semilla y comentarios.
+  - Cuando un código se muestra en pantalla, se traduce con un diccionario de etiquetas
+    (`STATUS_LABEL`, `ASSESSMENT_TYPE_LABEL`, `MODULO_LABEL`), nunca imprimiendo el código
+    crudo. Así el valor guardado sigue siendo ASCII y el usuario ve español bien escrito.
+
+  Hay dos herramientas para sostenerlo:
+
+  ```bash
+  python scripts/ortografia.py
+  ```
+  ```bash
+  PYTHONPATH=scripts python scripts/revisar_ortografia.py
+  ```
+
+  La primera corrige el texto visible (respeta identificadores, rutas y códigos); la segunda
+  reporta lo que quede sin tilde. El informe trae unos pocos falsos positivos —variables como
+  `dias`, rutas como `/admin/auditoria`— que son correctos.
 - **Estados:** siempre en `snake_case` y declarados en `src/lib/constants.ts`. No inventar
   estados nuevos sin agregarlos allí.
 - **Componentes de servidor por defecto.** Solo se marca `"use client"` cuando hay estado o

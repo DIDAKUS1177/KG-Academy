@@ -7,7 +7,7 @@ import { SectionTitle } from "@/components/ui";
 import { CreditoDesarrollo } from "@/components/Contacto";
 import { IconSettings, IconShield, IconAward, IconBell, IconPhone } from "@/components/Icons";
 
-export const metadata: Metadata = { title: "Configuracion" };
+export const metadata: Metadata = { title: "Configuración" };
 export const dynamic = "force-dynamic";
 
 const GRUPO_ICON: Record<string, JSX.Element> = {
@@ -35,8 +35,8 @@ export default async function ConfiguracionPage() {
     <div>
       <SectionTitle
         eyebrow="Sistema"
-        title="Configuracion general"
-        description="Parametros de marca, certificados, seguridad y plantillas de notificacion."
+        title="Configuración general"
+        description="Parametros de marca, certificados, seguridad y plantillas de notificación."
       />
 
       {/* Identidad de marca */}
@@ -48,11 +48,11 @@ export default async function ConfiguracionPage() {
           <div>
             <p className="eyebrow">Identidad visual</p>
             <h3 className="mt-1 font-display text-xl font-extrabold text-navy-700">
-              KATERINE GUANARITA &middot; KG Gestion Integral S.A.S.
+              KATERINE GUAÑARITA &middot; KG Gestión Integral S.A.S.
             </h3>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-navy-400">
-              El logotipo oficial se usa en la plataforma, en los certificados y en la pagina publica de
-              verificacion. Los colores del sistema se extrajeron directamente del logo.
+              El logotipo oficial se usa en la plataforma, en los certificados y en la página pública de
+              verificación. Los colores del sistema se extrajeron directamente del logo.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               {[
@@ -123,12 +123,12 @@ export default async function ConfiguracionPage() {
 
         <div className="card overflow-hidden">
           <p className="border-b border-navy-50 px-5 py-4 font-display text-sm font-bold text-navy-700">
-            Plantillas de notificacion
+            Plantillas de notificación
           </p>
           <table className="table-kg">
             <thead>
               <tr>
-                <th>Codigo</th>
+                <th>Código</th>
                 <th>Nombre</th>
                 <th>Canal</th>
               </tr>
@@ -153,7 +153,7 @@ export default async function ConfiguracionPage() {
           Plataforma KG Academy v1.0 &middot; Next.js 14 + TypeScript + Prisma
         </p>
         <p className="mt-1 text-xs text-navy-400">
-          Disenada y desarrollada por <CreditoDesarrollo /> para KG Gestion Integral S.A.S.
+          Diseñada y desarrollada por <CreditoDesarrollo /> para KG Gestión Integral S.A.S.
         </p>
       </div>
     </div>

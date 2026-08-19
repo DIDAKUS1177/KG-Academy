@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     action: "crear",
     entity: "enrollments",
     entityId: course.id,
-    summary: `Matricula en ${course.title}`,
+    summary: `Matrícula en ${course.title}`,
   });
 
   return NextResponse.redirect(new URL(`/aula/curso/${course.slug}`, req.url), { status: 303 });

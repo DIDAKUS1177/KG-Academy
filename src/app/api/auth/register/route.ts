@@ -12,7 +12,7 @@ const schema = z.object({
   documentNumber: z.string().optional(),
   phone: z.string().optional(),
   companyNit: z.string().optional(),
-  password: z.string().min(8, "La contrasena debe tener minimo 8 caracteres"),
+  password: z.string().min(8, "La contraseña debe tener mínimo 8 caracteres"),
   acceptedTerms: z.boolean().refine((v) => v, "Debe aceptar el tratamiento de datos"),
 });
 
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       userId: user.id,
       title: "Bienvenido a KG Academy",
       message:
-        "Su cuenta fue creada correctamente. Explore el catalogo y comience su primer curso.",
+        "Su cuenta fue creada correctamente. Explore el catálogo y comience su primer curso.",
       linkUrl: "/catalogo",
       type: "exito",
     },

@@ -44,16 +44,16 @@ export default async function LogrosPage() {
   const enNivel = points % 250;
 
   const REASON: Record<string, string> = {
-    leccion_completada: "Leccion completada",
+    leccion_completada: "Lección completada",
     curso_completado: "Curso completado",
-    evaluacion_aprobada: "Evaluacion aprobada",
+    evaluacion_aprobada: "Evaluación aprobada",
     racha: "Racha de estudio",
   };
 
   return (
     <div>
       <SectionTitle
-        eyebrow="Gamificacion"
+        eyebrow="Gamificación"
         title="Logros y puntos"
         description="Sus puntos, insignias y racha de estudio en KG Academy."
       />
@@ -62,8 +62,8 @@ export default async function LogrosPage() {
         <StatCard label="Puntos acumulados" value={points} tone="lime" icon={<IconSpark width={20} height={20} />} />
         <StatCard
           label="Racha actual"
-          value={`${streak?.currentDays ?? 0} dias`}
-          hint={`Mejor racha: ${streak?.longestDays ?? 0} dias`}
+          value={`${streak?.currentDays ?? 0} días`}
+          hint={`Mejor racha: ${streak?.longestDays ?? 0} días`}
           tone="amber"
           icon={<IconFire width={20} height={20} />}
         />
@@ -152,7 +152,7 @@ export default async function LogrosPage() {
             </p>
             <ul className="divide-y divide-navy-50">
               {ledger.length === 0 && (
-                <li className="px-5 py-6 text-center text-xs text-navy-300">Sin movimientos aun</li>
+                <li className="px-5 py-6 text-center text-xs text-navy-300">Sin movimientos aún</li>
               )}
               {ledger.map((l) => (
                 <li key={l.id} className="flex items-center gap-3 px-5 py-3 text-xs">

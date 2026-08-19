@@ -8,13 +8,13 @@ import { issueCertificate } from "./certificates";
  * Regla implementada (configurable por curso en Course.progressRule):
  *   - "obligatorios"     -> % = lecciones obligatorias completadas / total obligatorias
  *   - "peso_lecciones"   -> % = suma de pesos de lecciones completadas
- *   - "peso_modulos"     -> % = suma ponderada del avance de cada modulo
+ *   - "peso_modulos"     -> % = suma ponderada del avance de cada módulo
  *
  * Un curso se marca COMPLETADO cuando:
- *   1. progreso >= 100 (segun la regla activa), y
- *   2. si Course.requiresFinalExam -> existe intento aprobado de la evaluacion final.
+ *   1. progreso >= 100 (según la regla activa), y
+ *   2. si Course.requiresFinalExam -> existe intento aprobado de la evaluación final.
  *
- * La trazabilidad historica (lesson_progress, assessment_attempts) nunca se borra.
+ * La trazabilidad histórica (lesson_progress, assessment_attempts) nunca se borra.
  */
 export async function recalcEnrollment(enrollmentId: string) {
   const enrollment = await prisma.enrollment.findUnique({
@@ -69,7 +69,7 @@ export async function recalcEnrollment(enrollmentId: string) {
   }
   progress = Math.min(100, Math.round(progress * 10) / 10);
 
-  // ---- 2. Estado de cada modulo ----
+  // ---- 2. Estado de cada módulo ----
   for (const m of course.modules) {
     const lessons = m.lessons;
     const total = lessons.length || 1;
@@ -100,7 +100,7 @@ export async function recalcEnrollment(enrollmentId: string) {
     });
   }
 
-  // ---- 3. Evaluacion final aprobada ----
+  // ---- 3. Evaluación final aprobada ----
   const finalAssessment = course.assessments.find((a) => a.type === "final");
   const finalPassed = finalAssessment
     ? enrollment.attempts.some((a) => a.assessmentId === finalAssessment.id && a.passed)
@@ -131,7 +131,7 @@ export async function recalcEnrollment(enrollmentId: string) {
     },
   });
 
-  // ---- 4. Sincronizar la asignacion empresarial ----
+  // ---- 4. Sincronizar la asignación empresarial ----
   if (enrollment.assignmentId) {
     await prisma.courseAssignment.update({
       where: { id: enrollment.assignmentId },
@@ -139,7 +139,7 @@ export async function recalcEnrollment(enrollmentId: string) {
     });
   }
 
-  // ---- 5. Certificado automatico ----
+  // ---- 5. Certificado automático ----
   if (isComplete && course.certificateEnabled) {
     const exists = await prisma.certificate.findUnique({ where: { enrollmentId } });
     if (!exists) {
@@ -148,7 +148,7 @@ export async function recalcEnrollment(enrollmentId: string) {
       await prisma.notification.create({
         data: {
           userId: enrollment.userId,
-          title: "Tu certificado esta listo",
+          title: "Tu certificado está listo",
           message: `Completaste "${course.title}". Ya puedes descargar tu certificado.`,
           linkUrl: "/aula/certificados",
           type: "exito",
@@ -160,7 +160,7 @@ export async function recalcEnrollment(enrollmentId: string) {
   return updated;
 }
 
-/** Marca (o actualiza) el avance de una leccion y recalcula el curso. */
+/** Marca (o actualiza) el avance de una lección y recalcula el curso. */
 export async function trackLesson(params: {
   enrollmentId: string;
   lessonId: string;
@@ -210,7 +210,7 @@ export async function trackLesson(params: {
   return recalcEnrollment(enrollmentId);
 }
 
-/** Gamificacion: suma puntos al ledger. */
+/** Gamificación: suma puntos al ledger. */
 export async function addPoints(
   userId: string,
   points: number,
@@ -229,7 +229,7 @@ export async function totalPoints(userId: string) {
   return agg._sum.points ?? 0;
 }
 
-/** Gamificacion: racha diaria de estudio. */
+/** Gamificación: racha diaria de estudio. */
 export async function touchStreak(userId: string) {
   const s = await prisma.streak.findUnique({ where: { userId } });
   const today = new Date();
@@ -257,7 +257,7 @@ export async function touchStreak(userId: string) {
   });
 }
 
-/** Matricula perezosa: crea la matricula si no existe (compra, asignacion o gratuito). */
+/** Matrícula perezosa: crea la matrícula si no existe (compra, asignación o gratuito). */
 export async function ensureEnrollment(userId: string, courseId: string, origin = "gratuito") {
   const found = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId } },

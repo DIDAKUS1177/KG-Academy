@@ -71,7 +71,7 @@ conservan el espacio reservado hasta que KG produzca el material.
 
 | Código | Curso | Módulos | Lecciones | Horas | Estado | Lanzamiento |
 |---|---|---|---|---|---|---|
-| KG-PA-001 | Curso Básico de Primeros Auxilios | 7 | 7 | 20 | Publicado | 22 de agosto de 2026 |
+| KG-PA-001 | Curso Básico de Primeros Auxilios | 7 | 7 | 40 | Publicado | 22 de agosto de 2026 |
 | KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 14 | 16 | Borrador | Finales de agosto |
 | KG-PA-003 | Primeros Auxilios Psicológicos | 4 | 12 | 12 | Borrador | Finales de agosto |
 
@@ -112,7 +112,7 @@ Las **preguntas cargadas son de ejemplo** y deben reemplazarse por el banco ofic
 |---|---|
 | `/aula` | Dashboard con avance global, racha y asignaciones con fecha límite |
 | `/aula/cursos` | Mis cursos filtrados por estado |
-| `/aula/curso/[slug]` | Aula virtual: índice, reproductor y progreso leción a lección |
+| `/aula/curso/[slug]` | Aula virtual: índice, reproductor y progreso lección a lección |
 | `/aula/evaluacion/[id]` | Evaluación con temporizador, calificación y retroalimentación |
 | `/aula/certificados` · `/aula/certificado/[code]` | Certificados y vista imprimible a PDF |
 | `/aula/logros` · `/aula/perfil` · `/aula/notificaciones` | Gamificación, perfil y avisos |
@@ -234,7 +234,7 @@ KG-Academy/
 │   ├── seed.ts              cursos, empresa demo, usuarios y avances
 │   └── kg_academy.db        base SQLite local (se genera)
 ├── public/brand/kg-logo.png logotipo oficial
-├── scripts/generar_pptx.py  generador del PowerPoint
+├── scripts/                 generadores de PPTX y utilidades de ortografía
 └── src/
     ├── app/
     │   ├── (public)/  (auth)/  aula/  empresa/  admin/  api/

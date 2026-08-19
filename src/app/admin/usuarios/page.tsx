@@ -44,9 +44,9 @@ export default async function AdminUsuarios({
   return (
     <div>
       <SectionTitle
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Usuarios y roles"
-        description="Gestion de todas las cuentas de la plataforma, su rol y estado."
+        description="Gestión de todas las cuentas de la plataforma, su rol y estado."
       />
 
       <form className="card mb-6 flex flex-wrap items-end gap-3 p-4">
@@ -97,7 +97,7 @@ export default async function AdminUsuarios({
               <th>Empresa</th>
               <th>Cursos</th>
               <th>Cert.</th>
-              <th>Ultimo acceso</th>
+              <th>Último acceso</th>
               <th>Estado</th>
             </tr>
           </thead>
@@ -138,8 +138,8 @@ export default async function AdminUsuarios({
           </tbody>
         </table>
         <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-          {users.length} usuario(s). La creacion y edicion de cuentas desde este panel corresponde a la
-          Fase 1 del backlog; el modelo de datos y los permisos ya estan implementados.
+          {users.length} usuario(s). La creación y edición de cuentas desde este panel corresponde a la
+          Fase 1 del backlog; el modelo de datos y los permisos ya están implementados.
         </p>
       </div>
     </div>

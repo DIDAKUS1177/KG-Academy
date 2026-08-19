@@ -22,14 +22,14 @@ export default async function CertificadosPage() {
       <SectionTitle
         eyebrow="Mi aprendizaje"
         title="Mis certificados"
-        description="Cada certificado tiene un codigo unico y un QR de verificacion publica."
+        description="Cada certificado tiene un código único y un QR de verificación pública."
       />
 
       {certs.length === 0 ? (
         <EmptyState
           icon={<IconAward width={30} height={30} />}
-          title="Aun no tiene certificados"
-          description="Complete todas las lecciones de un curso y apruebe la evaluacion final para obtener su certificado automaticamente."
+          title="Aún no tiene certificados"
+          description="Complete todas las lecciones de un curso y apruebe la evaluación final para obtener su certificado automaticamente."
           action={
             <Link href="/aula/cursos" className="btn-lime">
               Ir a mis cursos

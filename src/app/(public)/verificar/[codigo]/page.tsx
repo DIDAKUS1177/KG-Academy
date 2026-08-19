@@ -46,7 +46,7 @@ export default async function VerificarCodigoPage({ params }: { params: { codigo
             <div>
               <p className="font-display text-2xl font-extrabold text-white">
                 {valido
-                  ? "Certificado valido"
+                  ? "Certificado válido"
                   : cert
                     ? cert.status === "revocado"
                       ? "Certificado revocado"
@@ -55,8 +55,8 @@ export default async function VerificarCodigoPage({ params }: { params: { codigo
               </p>
               <p className="text-sm text-white/85">
                 {cert
-                  ? `Codigo ${cert.code}`
-                  : `No existe ningun certificado con el codigo ${code} en KG Academy.`}
+                  ? `Código ${cert.code}`
+                  : `No existe ningún certificado con el código ${code} en KG Academy.`}
               </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default async function VerificarCodigoPage({ params }: { params: { codigo
                       Emitido por
                     </p>
                     <p className="font-display text-lg font-extrabold text-navy-700">
-                      KG Gestion Integral S.A.S.
+                      KG Gestión Integral S.A.S.
                     </p>
                   </div>
                 </div>
@@ -93,8 +93,8 @@ export default async function VerificarCodigoPage({ params }: { params: { codigo
                   ["Documento", cert.studentDocument ?? "No registrado"],
                   ["Curso", cert.courseTitle],
                   ["Intensidad horaria", `${cert.hours} horas`],
-                  ["Calificacion final", cert.finalScore ? `${cert.finalScore} / 100` : "Aprobado"],
-                  ["Fecha de emision", formatDate(cert.issuedAt)],
+                  ["Calificación final", cert.finalScore ? `${cert.finalScore} / 100` : "Aprobado"],
+                  ["Fecha de emisión", formatDate(cert.issuedAt)],
                   ["Vigente hasta", cert.expiresAt ? formatDate(cert.expiresAt) : "Indefinida"],
                   ["Empresa", cert.user.company?.tradeName ?? "Particular"],
                 ].map(([k, v]) => (
@@ -107,32 +107,32 @@ export default async function VerificarCodigoPage({ params }: { params: { codigo
 
               {cert.status === "revocado" && (
                 <div className="mt-7 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  <strong>Motivo de la revocacion:</strong> {cert.revokedReason ?? "No especificado"}
+                  <strong>Motivo de la revocación:</strong> {cert.revokedReason ?? "No especificado"}
                 </div>
               )}
 
               <p className="mt-8 border-t border-navy-50 pt-5 text-xs leading-relaxed text-navy-400">
-                Esta verificacion se realiza directamente contra la base de datos de KG Academy. La
-                informacion mostrada corresponde a los datos congelados en el momento de la emision del
-                certificado, conforme al principio de trazabilidad historica de la plataforma.
+                Esta verificación se realiza directamente contra la base de datos de KG Academy. La
+                información mostrada corresponde a los datos congelados en el momento de la emisión del
+                certificado, conforme al principio de trazabilidad histórica de la plataforma.
               </p>
             </div>
           ) : (
             <div className="p-8">
               <p className="text-sm leading-relaxed text-navy-500">
-                Revise que el codigo este escrito correctamente. Los codigos de KG Academy tienen el
+                Revise que el código esté escrito correctamente. Los códigos de KG Academy tienen el
                 formato <span className="font-mono font-bold text-navy-700">KG-AAAA-XXXXXX</span>. Si el
-                problema persiste, comuniquese con KG Gestion Integral S.A.S.
+                problema persiste, comuníquese con KG Gestión Integral S.A.S.
               </p>
               <Link href="/verificar" className="btn-primary mt-6">
-                Intentar con otro codigo
+                Intentar con otro código
               </Link>
             </div>
           )}
         </div>
 
         <p className="mt-8 flex items-center justify-center gap-2 text-center text-xs text-white/40">
-          <IconAward width={14} height={14} /> Sistema de verificacion de KG Academy
+          <IconAward width={14} height={14} /> Sistema de verificación de KG Academy
         </p>
       </div>
     </section>

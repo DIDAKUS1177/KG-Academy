@@ -61,7 +61,7 @@ export default async function TrabajadoresPage({
       <SectionTitle
         eyebrow={company.tradeName ?? company.legalName}
         title="Trabajadores"
-        description="Nomina registrada en KG Academy, organizada por area, cargo y sede."
+        description="Nomina registrada en KG Academy, organizada por área, cargo y sede."
         action={
           <div className="flex gap-2">
             <a href={`/api/empresa/reporte?tipo=trabajadores&empresa=${company.id}`} className="btn-outline btn-sm">
@@ -85,7 +85,7 @@ export default async function TrabajadoresPage({
           </div>
         </div>
         <div className="min-w-[180px]">
-          <label className="label">Area</label>
+          <label className="label">Área</label>
           <select name="area" defaultValue={searchParams.area ?? ""} className="select">
             <option value="">Todas</option>
             {areas.map((a) => (
@@ -122,8 +122,8 @@ export default async function TrabajadoresPage({
             <thead>
               <tr>
                 <th>Trabajador</th>
-                <th>Codigo</th>
-                <th>Area / Cargo</th>
+                <th>Código</th>
+                <th>Área / Cargo</th>
                 <th>Sede</th>
                 <th className="w-44">Avance promedio</th>
                 <th>Cursos</th>
@@ -178,7 +178,7 @@ export default async function TrabajadoresPage({
             </tbody>
           </table>
           <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-            {members.length} trabajador(es) &middot; ultima actualizacion {formatDate(new Date())}
+            {members.length} trabajador(es) &middot; última actualización {formatDate(new Date())}
           </p>
         </div>
       )}

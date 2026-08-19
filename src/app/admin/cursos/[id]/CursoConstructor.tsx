@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconCheck, IconAlert, IconClipboard, IconFile, IconLayers } from "@/components/Icons";
+import { ASSESSMENT_TYPE_LABEL } from "@/lib/constants";
 
 type Lesson = {
   id: string;
@@ -76,7 +77,7 @@ export function CursoConstructor({
     const data = await res.json().catch(() => ({}));
     setSaving(null);
     if (!res.ok) return setMsg({ ok: false, text: data.error ?? "No se pudo guardar" });
-    setMsg({ ok: true, text: "Contenido de la leccion actualizado" });
+    setMsg({ ok: true, text: "Contenido de la lección actualizado" });
     router.refresh();
   }
 
@@ -188,10 +189,10 @@ export function CursoConstructor({
           <table className="table-kg">
             <thead>
               <tr>
-                <th>Evaluacion</th>
+                <th>Evaluación</th>
                 <th>Tipo</th>
                 <th>Preguntas</th>
-                <th>Nota minima</th>
+                <th>Nota mínima</th>
                 <th>Intentos</th>
               </tr>
             </thead>
@@ -199,7 +200,7 @@ export function CursoConstructor({
               {assessments.map((a) => (
                 <tr key={a.id}>
                   <td className="font-semibold text-navy-700">{a.title}</td>
-                  <td className="text-xs capitalize text-navy-500">{a.type}</td>
+                  <td className="text-xs text-navy-500">{ASSESSMENT_TYPE_LABEL[a.type] ?? a.type}</td>
                   <td className="font-bold">{a.questions}</td>
                   <td>{a.minScore}</td>
                   <td>{a.maxAttempts}</td>
@@ -217,8 +218,8 @@ export function CursoConstructor({
       {/* Panel lateral */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <div className="card p-6">
-          <p className="font-display text-base font-bold text-navy-700">Publicacion</p>
-          <p className="mt-1 text-xs text-navy-400">Estado actual del curso en el catalogo.</p>
+          <p className="font-display text-base font-bold text-navy-700">Publicación</p>
+          <p className="mt-1 text-xs text-navy-400">Estado actual del curso en el catálogo.</p>
 
           <div className="mt-4 space-y-2">
             {["borrador", "revision", "publicado", "despublicado"].map((s) => (
@@ -254,11 +255,11 @@ export function CursoConstructor({
           <dl className="mt-4 space-y-2.5 text-xs">
             {[
               ["Regla de progreso", course.progressRule],
-              ["Nota minima", `${course.minPassingScore}/100`],
+              ["Nota mínima", `${course.minPassingScore}/100`],
               ["Intentos", String(course.maxAttempts)],
-              ["Evaluacion final", course.requiresFinalExam ? "Obligatoria" : "Opcional"],
+              ["Evaluación final", course.requiresFinalExam ? "Obligatoria" : "Opcional"],
               ["Todas las lecciones", course.requiresAllLessons ? "Si" : "No"],
-              ["Certificado", course.certificateEnabled ? "Automatico" : "Desactivado"],
+              ["Certificado", course.certificateEnabled ? "Automático" : "Desactivado"],
               [
                 "Vigencia",
                 course.certificateValidityMonths ? `${course.certificateValidityMonths} meses` : "Indefinida",

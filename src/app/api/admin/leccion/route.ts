@@ -13,7 +13,7 @@ const schema = z.object({
 
 const PERMITIDOS: string[] = [ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR];
 
-/** Carga de contenido de una leccion desde el constructor de cursos. */
+/** Carga de contenido de una lección desde el constructor de cursos. */
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!PERMITIDOS.includes(user.role.code)) {
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
 
   const before = await prisma.lesson.findUnique({ where: { id: parsed.data.lessonId } });
-  if (!before) return NextResponse.json({ error: "Leccion no encontrada" }, { status: 404 });
+  if (!before) return NextResponse.json({ error: "Lección no encontrada" }, { status: 404 });
 
   const url = parsed.data.contentUrl?.trim() || null;
   if (parsed.data.contentType !== "pendiente" && parsed.data.contentType !== "texto" && !url) {

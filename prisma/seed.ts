@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /**
  * KG ACADEMY - Semilla de la base de datos
- * Crea: roles, permisos, configuracion, plantilla de certificado, categorias,
+ * Crea: roles, permisos, configuración, plantilla de certificado, categorías,
  * los TRES primeros cursos (estructura lista / contenido pendiente),
  * banco de preguntas de ejemplo, una empresa demo con trabajadores,
  * asignaciones y avances para poder revisar todos los paneles.
@@ -23,10 +23,10 @@ const ACCIONES = ["ver", "crear", "editar", "eliminar", "publicar", "exportar", 
 
 const ROLES = [
   { code: "superadmin", name: "SuperAdmin KG", scope: "plataforma", description: "Acceso total a la plataforma." },
-  { code: "admin_kg", name: "Administrador KG", scope: "plataforma", description: "Gestion operativa segun permisos asignados." },
+  { code: "admin_kg", name: "Administrador KG", scope: "plataforma", description: "Gestión operativa según permisos asignados." },
   { code: "instructor", name: "Instructor", scope: "plataforma", description: "Crea y edita sus cursos y contenidos." },
   { code: "admin_empresa", name: "Administrador de empresa", scope: "empresa", description: "Gestiona trabajadores, asigna cursos y consulta cumplimiento." },
-  { code: "supervisor", name: "Supervisor", scope: "empresa", description: "Consulta trabajadores y areas autorizadas." },
+  { code: "supervisor", name: "Supervisor", scope: "empresa", description: "Consulta trabajadores y áreas autorizadas." },
   { code: "estudiante", name: "Estudiante / Trabajador", scope: "empresa", description: "Realiza cursos, evaluaciones y descarga certificados." },
 ];
 
@@ -34,12 +34,12 @@ const ROLES = [
 /*  ESTRUCTURA DE LOS TRES PRIMEROS CURSOS                             */
 /*                                                                     */
 /*  Contenido entregado por KG a la fecha:                             */
-/*    - KG-PA-001, Modulo 1: presentacion interactiva en Genially.     */
-/*  El resto de modulos queda con el contenedor reservado              */
+/*    - KG-PA-001, Módulo 1: presentación interactiva en Genially.     */
+/*  El resto de módulos queda con el contenedor reservado              */
 /*  (contentType "pendiente") hasta que KG produzca el material.       */
 /* ------------------------------------------------------------------ */
 
-/** Una leccion de la semilla: texto simple si el contenido esta pendiente. */
+/** Una lección de la semilla: texto simple si el contenido está pendiente. */
 type LeccionSemilla = {
   title: string;
   description?: string;
@@ -50,9 +50,9 @@ type LeccionSemilla = {
 };
 
 /**
- * Presentacion interactiva del Modulo 1 del Curso Basico de Primeros Auxilios.
- * Se embebe por URL publica: el material vive en Genially y la plataforma solo
- * lo referencia. Si KG edita la presentacion, el cambio se refleja sin
+ * Presentación interactiva del Módulo 1 del Curso Básico de Primeros Auxilios.
+ * Se embebe por URL pública: el material vive en Genially y la plataforma solo
+ * lo referencia. Si KG edita la presentación, el cambio se refleja sin
  * necesidad de volver a desplegar.
  */
 const GENIALLY_PA_MODULO_1 =
@@ -61,34 +61,34 @@ const CURSOS = [
   {
     code: "KG-PA-001",
     slug: "primeros-auxilios-basicos",
-    title: "Curso Basico de Primeros Auxilios",
+    title: "Curso Básico de Primeros Auxilios",
     subtitle:
-      "Para brigadas de emergencia y equipos de primera respuesta: protocolos estandarizados, valoracion inicial y gestion segura de la escena.",
+      "Para brigadas de emergencia y equipos de primera respuesta: protocolos estandarizados, valoración inicial y gestión segura de la escena.",
     objective:
-      "Capacitar al personal integrante de las brigadas de emergencia en la aplicacion estandarizada de protocolos internacionales de primeros auxilios y soporte vital; proveer las bases fisiopatologicas, normativas y practicas para realizar una valoracion clinica inicial, estabilizacion temporal y manejo seguro de lesiones agudas; y desarrollar competencias operativas y de liderazgo en la gestion de escenas de emergencia industriales, priorizando la autoproteccion y la articulacion con los sistemas de emergencia.",
+      "Capacitar al personal integrante de las brigadas de emergencia en la aplicación estandarizada de protocolos internacionales de primeros auxilios y soporte vital; proveer las bases fisiopatologicas, normativas y prácticas para realizar una valoración clínica inicial, estabilización temporal y manejo seguro de lesiones agudas; y desarrollar competencias operativas y de liderazgo en la gestión de escenas de emergencia industriales, priorizando la autoprotección y la articulación con los sistemas de emergencia.",
     targetAudience:
-      "Integrantes de brigadas de emergencia, equipos de primera respuesta, COPASST y personal designado para la atencion inicial de emergencias.",
+      "Integrantes de brigadas de emergencia, equipos de primera respuesta, COPASST y personal designado para la atención inicial de emergencias.",
     requirements: "No requiere conocimientos previos. Se recomienda computador o celular con internet.",
     methodology:
-      "100% virtual asincronico. Cada modulo se desarrolla en una presentacion interactiva de Genially, con evaluacion diagnostica, evaluaciones por modulo y evaluacion final.",
+      "100% virtual asincronico. Cada módulo se desarrolla en una presentación interactiva de Genially, con evaluación diagnóstica, evaluaciones por módulo y evaluación final.",
     level: "basico",
-    durationHours: 20,
+    durationHours: 40,
     price: 149000,
     status: "publicado",
     accessType: "pago",
     launch: "22 de agosto de 2026",
-    // Temario oficial de KG, tomado del indice de la presentacion entregada.
-    // Hoy solo el Modulo 1 tiene contenido producido; el resto queda reservado.
+    // Temario oficial de KG, tomado del indice de la presentación entregada.
+    // Hoy solo el Módulo 1 tiene contenido producido; el resto queda reservado.
     modules: [
       {
-        title: "Modulo 1. Introduccion a los Primeros Auxilios y Marco Legal del Brigadista",
+        title: "Módulo 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista",
         description:
-          "Definicion y objetivos de los primeros auxilios, rol y limites del primer respondiente, responsabilidad y consentimiento.",
+          "Definición y objetivos de los primeros auxilios, rol y límites del primer respondiente, responsabilidad y consentimiento.",
         lessons: [
           {
-            title: "Introduccion a los Primeros Auxilios y Marco Legal del Brigadista",
+            title: "Introducción a los Primeros Auxilios y Marco Legal del Brigadista",
             description:
-              "Presentacion interactiva del modulo: fundamentos y objetivos, rol y competencias del primer respondiente, responsabilidad y consentimiento.",
+              "Presentación interactiva del módulo: fundamentos y objetivos, rol y competencias del primer respondiente, responsabilidad y consentimiento.",
             contentType: "genially",
             contentUrl: GENIALLY_PA_MODULO_1,
             durationMin: 35,
@@ -97,48 +97,48 @@ const CURSOS = [
         ],
       },
       {
-        title: "Modulo 2. Valoracion de la Escena, Bioseguridad y Activacion del SEM",
-        description: "Seguridad de la escena, elementos de proteccion personal y activacion del sistema de emergencias medicas.",
-        lessons: ["Valoracion de la Escena, Bioseguridad y Activacion del SEM"],
+        title: "Módulo 2. Valoración de la Escena, Bioseguridad y Activación del SEM",
+        description: "Seguridad de la escena, elementos de protección personal y activación del sistema de emergencias medicas.",
+        lessons: ["Valoración de la Escena, Bioseguridad y Activación del SEM"],
       },
       {
-        title: "Modulo 3. Evaluacion Primaria y Soporte Vital Basico (SVB, RCP y DEA)",
-        description: "Valoracion primaria, cadena de supervivencia, reanimacion cardiopulmonar y uso del desfibrilador externo automatico.",
-        lessons: ["Evaluacion Primaria y Soporte Vital Basico (SVB, RCP y DEA)"],
+        title: "Módulo 3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)",
+        description: "Valoración primaria, cadena de supervivencia, reanimación cardiopulmonar y uso del desfibrilador externo automático.",
+        lessons: ["Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)"],
       },
       {
-        title: "Modulo 4. Manejo de la Via Aerea y Obstruccion (OVACE)",
-        description: "Permeabilizacion de la via aerea y manejo de la obstruccion por cuerpo extrano.",
-        lessons: ["Manejo de la Via Aerea y Obstruccion (OVACE)"],
+        title: "Módulo 4. Manejo de la Vía Aérea y Obstrucción (OVACE)",
+        description: "Permeabilización de la vía aérea y manejo de la obstrucción por cuerpo extraño.",
+        lessons: ["Manejo de la Vía Aérea y Obstrucción (OVACE)"],
       },
       {
-        title: "Modulo 5. Control de Hemorragias, Heridas y Quemaduras",
-        description: "Control de sangrado, manejo de heridas y atencion inicial de quemaduras.",
+        title: "Módulo 5. Control de Hemorragias, Heridas y Quemaduras",
+        description: "Control de sangrado, manejo de heridas y atención inicial de quemaduras.",
         lessons: ["Control de Hemorragias, Heridas y Quemaduras"],
       },
       {
-        title: "Modulo 6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia",
-        description: "Fracturas e inmovilizacion, reconocimiento y manejo del shock, y alteraciones del estado de conciencia.",
+        title: "Módulo 6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia",
+        description: "Fracturas e inmovilización, reconocimiento y manejo del shock, y alteraciones del estado de conciencia.",
         lessons: ["Lesiones Osteomusculares, Shock y Alteraciones de Conciencia"],
       },
       {
-        title: "Modulo 7. Movilizacion, Transporte de Pacientes y Casos Practicos",
-        description: "Tecnicas de movilizacion y traslado seguro, y resolucion de casos practicos.",
-        lessons: ["Movilizacion, Transporte de Pacientes y Casos Practicos"],
+        title: "Módulo 7. Movilización, Transporte de Pacientes y Casos Prácticos",
+        description: "Técnicas de movilización y traslado seguro, y resolución de casos prácticos.",
+        lessons: ["Movilización, Transporte de Pacientes y Casos Prácticos"],
       },
     ],
   },
   {
     code: "KG-PA-002",
     slug: "primeros-auxilios-pediatricos",
-    title: "Primeros Auxilios Pediatricos",
-    subtitle: "Lactantes y ninos: valoracion, RCP pediatrica, atragantamiento, fiebre y accidentes en el hogar.",
+    title: "Primeros Auxilios Pediátricos",
+    subtitle: "Lactantes y niños: valoración, RCP pediátrica, atragantamiento, fiebre y accidentes en el hogar.",
     objective:
-      "Capacitar al participante en la atencion inicial de emergencias en lactantes y ninos, reconociendo las diferencias anatomicas y fisiologicas frente al adulto.",
+      "Capacitar al participante en la atención inicial de emergencias en lactantes y niños, reconociendo las diferencias anatomicas y fisiologicas frente al adulto.",
     targetAudience:
-      "Padres, cuidadores, docentes, personal de jardines infantiles y trabajadores con poblacion infantil a cargo.",
-    requirements: "Se recomienda haber cursado Primeros Auxilios Basicos.",
-    methodology: "100% virtual asincronico con casos clinicos guiados y evaluacion final.",
+      "Padres, cuidadores, docentes, personal de jardines infantiles y trabajadores con población infantil a cargo.",
+    requirements: "Se recomienda haber cursado Primeros Auxilios Básicos.",
+    methodology: "100% virtual asincronico con casos clinicos guiados y evaluación final.",
     level: "intermedio",
     durationHours: 16,
     price: 169000,
@@ -147,41 +147,41 @@ const CURSOS = [
     launch: "Finales de agosto de 2026",
     modules: [
       {
-        title: "Modulo 1. El paciente pediatrico es diferente",
-        description: "Diferencias anatomicas y fisiologicas, triangulo de evaluacion pediatrica.",
+        title: "Módulo 1. El paciente pediátrico es diferente",
+        description: "Diferencias anatomicas y fisiologicas, triangulo de evaluación pediátrica.",
         lessons: [
-          "Lactante, nino y adolescente: por que cambia la atencion",
-          "Triangulo de evaluacion pediatrica",
+          "Lactante, niño y adolescente: por que cambia la atención",
+          "Triangulo de evaluación pediátrica",
           "Signos de alarma que exigen traslado inmediato",
         ],
       },
       {
-        title: "Modulo 2. RCP y OVACE pediatrico",
-        description: "Reanimacion en lactantes y ninos, desobstruccion de via aerea.",
+        title: "Módulo 2. RCP y OVACE pediátrico",
+        description: "Reanimación en lactantes y niños, desobstrucción de vía aérea.",
         lessons: [
           "RCP en el lactante",
-          "RCP en el nino",
-          "Atragantamiento en menores de 1 ano",
-          "Atragantamiento en mayores de 1 ano",
+          "RCP en el niño",
+          "Atragantamiento en menores de 1 año",
+          "Atragantamiento en mayores de 1 año",
         ],
       },
       {
-        title: "Modulo 3. Urgencias frecuentes en la infancia",
-        description: "Fiebre, convulsion febril, intoxicaciones, quemaduras y caidas.",
+        title: "Módulo 3. Urgencias frecuentes en la infancia",
+        description: "Fiebre, convulsión febril, intoxicaciones, quemaduras y caidas.",
         lessons: [
-          "Fiebre y convulsion febril",
+          "Fiebre y convulsión febril",
           "Intoxicaciones y consumo accidental de sustancias",
           "Quemaduras y caidas en el hogar",
           "Crisis respiratoria y alergias",
         ],
       },
       {
-        title: "Modulo 4. Prevencion de accidentes",
+        title: "Módulo 4. Prevención de accidentes",
         description: "Entorno seguro en casa, colegio y jardin infantil.",
         lessons: [
           "Mapa de riesgos en el hogar",
           "Entorno seguro en instituciones educativas",
-          "Botiquin pediatrico y plan familiar de emergencia",
+          "Botiquín pediátrico y plan familiar de emergencia",
         ],
       },
     ],
@@ -189,14 +189,14 @@ const CURSOS = [
   {
     code: "KG-PA-003",
     slug: "primeros-auxilios-psicologicos",
-    title: "Primeros Auxilios Psicologicos",
-    subtitle: "Contencion emocional en crisis: escucha activa, modelo ABCDE y cuidado de quien ayuda.",
+    title: "Primeros Auxilios Psicológicos",
+    subtitle: "Contención emocional en crisis: escucha activa, modelo ABCDE y cuidado de quien ayuda.",
     objective:
-      "Entregar herramientas practicas de contencion emocional para acompanar a una persona en crisis dentro del entorno laboral, respetando sus limites y los del auxiliador.",
+      "Entregar herramientas prácticas de contención emocional para acompañar a una persona en crisis dentro del entorno laboral, respetando sus límites y los del auxiliador.",
     targetAudience:
       "Lideres de equipo, talento humano, brigadistas, COPASST y responsables del SG-SST.",
-    requirements: "No requiere formacion previa en salud mental.",
-    methodology: "100% virtual asincronico con simulaciones de dialogo y evaluacion final.",
+    requirements: "No requiere formación previa en salud mental.",
+    methodology: "100% virtual asincronico con simulaciones de dialogo y evaluación final.",
     level: "basico",
     durationHours: 12,
     price: 139000,
@@ -205,39 +205,39 @@ const CURSOS = [
     launch: "Finales de agosto de 2026",
     modules: [
       {
-        title: "Modulo 1. Crisis y reaccion humana",
-        description: "Que es una crisis, respuestas normales ante eventos anormales.",
+        title: "Módulo 1. Crisis y reacción humana",
+        description: "Qué es una crisis, respuestas normales ante eventos anormales.",
         lessons: [
-          "Que son los primeros auxilios psicologicos",
+          "Qué son los primeros auxilios psicológicos",
           "Reacciones esperadas ante un evento critico",
           "Cuando derivar a un profesional de salud mental",
         ],
       },
       {
-        title: "Modulo 2. Modelo ABCDE de intervencion",
-        description: "Escucha activa, ventilacion emocional, categorizacion de necesidades y derivacion.",
+        title: "Módulo 2. Modelo ABCDE de intervención",
+        description: "Escucha activa, ventilación emocional, categorización de necesidades y derivación.",
         lessons: [
-          "A y B: escucha activa y ventilacion emocional",
-          "C y D: categorizacion de necesidades y derivacion",
-          "E: psicoeducacion y cierre del acompanamiento",
+          "A y B: escucha activa y ventilación emocional",
+          "C y D: categorización de necesidades y derivación",
+          "E: psicoeducación y cierre del acompañamiento",
         ],
       },
       {
-        title: "Modulo 3. Comunicacion en situaciones dificiles",
-        description: "Que decir, que no decir, comunicacion de malas noticias.",
+        title: "Módulo 3. Comunicación en situaciones dificiles",
+        description: "Qué decir, Qué no decir, comunicación de malas noticias.",
         lessons: [
-          "Frases que ayudan y frases que danan",
-          "Comunicacion de malas noticias en el entorno laboral",
-          "Acompanamiento a companeros tras un accidente de trabajo",
+          "Frases que ayudan y frases que dañan",
+          "Comunicación de malas noticias en el entorno laboral",
+          "Acompañamiento a compañeros tras un accidente de trabajo",
         ],
       },
       {
-        title: "Modulo 4. Cuidado del que cuida",
-        description: "Fatiga por compasion, autocuidado y riesgo psicosocial.",
+        title: "Módulo 4. Cuidado del que cuida",
+        description: "Fatiga por compasión, autocuidado y riesgo psicosocial.",
         lessons: [
-          "Fatiga por compasion y desgaste emocional",
+          "Fatiga por compasión y desgaste emocional",
           "Estrategias de autocuidado del auxiliador",
-          "Articulacion con el sistema de riesgo psicosocial de la empresa",
+          "Articulación con el sistema de riesgo psicosocial de la empresa",
         ],
       },
     ],
@@ -247,61 +247,61 @@ const CURSOS = [
 /** Banco de preguntas de EJEMPLO. KG debe reemplazarlo por el oficial de cada curso. */
 const PREGUNTAS_EJEMPLO = [
   {
-    statement: "Cual es la PRIMERA accion al llegar al lugar de una emergencia?",
+    statement: "Cuál es la PRIMERA acción al llegar al lugar de una emergencia?",
     explanation: "Antes de atender se debe garantizar que la escena sea segura para el auxiliador.",
     options: [
       { text: "Verificar que la escena sea segura", ok: true },
       { text: "Iniciar compresiones toracicas de inmediato", ok: false },
-      { text: "Buscar el botiquin", ok: false },
-      { text: "Mover a la victima a otro lugar", ok: false },
+      { text: "Buscar el botiquín", ok: false },
+      { text: "Mover a la víctima a otro lugar", ok: false },
     ],
   },
   {
-    statement: "Cual es la frecuencia recomendada de compresiones en la RCP del adulto?",
-    explanation: "La recomendacion internacional es de 100 a 120 compresiones por minuto.",
+    statement: "Cuál es la frecuencia recomendada de compresiones en la RCP del adulto?",
+    explanation: "La recomendación internacional es de 100 a 120 compresiones por minuto.",
     options: [
       { text: "60 a 80 por minuto", ok: false },
       { text: "100 a 120 por minuto", ok: true },
       { text: "140 a 160 por minuto", ok: false },
-      { text: "Segun la fuerza del auxiliador", ok: false },
+      { text: "Según la fuerza del auxiliador", ok: false },
     ],
   },
   {
     statement: "Ante una hemorragia externa abundante, la medida inicial es:",
-    explanation: "La presion directa sobre la herida es la primera medida de control.",
+    explanation: "La presión directa sobre la herida es la primera medida de control.",
     options: [
       { text: "Aplicar torniquete de inmediato", ok: false },
       { text: "Lavar la herida con abundante agua", ok: false },
-      { text: "Presion directa sobre la herida", ok: true },
+      { text: "Presión directa sobre la herida", ok: true },
       { text: "Aplicar hielo directamente", ok: false },
     ],
   },
   {
-    statement: "El uso de guantes durante la atencion corresponde a:",
-    explanation: "Es una medida de bioseguridad que protege al auxiliador y a la victima.",
+    statement: "El uso de guantes durante la atención corresponde a:",
+    explanation: "Es una medida de bioseguridad que protege al auxiliador y a la víctima.",
     options: [
-      { text: "Una recomendacion opcional", ok: false },
+      { text: "Una recomendación opcional", ok: false },
       { text: "Una medida de bioseguridad obligatoria", ok: true },
-      { text: "Solo aplica en centros medicos", ok: false },
+      { text: "Solo aplica en centros médicos", ok: false },
       { text: "Solo si hay sangre visible", ok: false },
     ],
   },
   {
-    statement: "El auxiliador debe realizar procedimientos medicos avanzados si sabe hacerlos.",
+    statement: "El auxiliador debe realizar procedimientos médicos avanzados si sabe hacerlos.",
     type: "verdadero_falso",
-    explanation: "El auxiliador actua dentro de sus competencias y activa el sistema de emergencias.",
+    explanation: "El auxiliador actúa dentro de sus competencias y activa el sistema de emergencias.",
     options: [
       { text: "Verdadero", ok: false },
       { text: "Falso", ok: true },
     ],
   },
   {
-    statement: "Cual de los siguientes es un signo de alarma que exige traslado inmediato?",
-    explanation: "La alteracion del estado de conciencia siempre es un signo de alarma.",
+    statement: "Cuál de los siguientes es un signo de alarma que exige traslado inmediato?",
+    explanation: "La alteración del estado de conciencia siempre es un signo de alarma.",
     options: [
-      { text: "Alteracion del estado de conciencia", ok: true },
+      { text: "Alteración del estado de conciencia", ok: true },
       { text: "Rubor leve en la piel", ok: false },
-      { text: "Sudoracion despues de ejercicio", ok: false },
+      { text: "Sudoración después de ejercicio", ok: false },
       { text: "Sed", ok: false },
     ],
   },
@@ -378,22 +378,22 @@ async function main() {
     data: permIds.map((permissionId) => ({ roleId: roles.superadmin, permissionId })),
   });
 
-  /* --------------------------- CONFIGURACION GENERAL -------------------------- */
-  console.log("Creando configuracion y plantillas...");
+  /* --------------------------- CONFIGURACIÓN GENERAL -------------------------- */
+  console.log("Creando configuración y plantillas...");
   await prisma.systemSetting.createMany({
     data: [
       { key: "marca.nombre", value: "KG Academy", group: "marca", label: "Nombre de la plataforma" },
-      { key: "marca.empresa", value: "KG GESTION INTEGRAL S.A.S.", group: "marca", label: "Razon social" },
+      { key: "marca.empresa", value: "KG GESTIÓN INTEGRAL S.A.S.", group: "marca", label: "Razon social" },
       { key: "marca.color_primario", value: "#0A2D4D", group: "marca", label: "Color primario" },
       { key: "marca.color_secundario", value: "#8FBF16", group: "marca", label: "Color secundario" },
-      { key: "certificados.prefijo", value: "KG", group: "certificados", label: "Prefijo del codigo" },
-      { key: "certificados.firmante", value: "Katerine Guanarita", group: "certificados", label: "Firma autorizada" },
-      { key: "certificados.cargo_firmante", value: "Directora - KG Gestion Integral S.A.S.", group: "certificados", label: "Cargo del firmante" },
-      { key: "seguridad.min_password", value: "8", type: "number", group: "seguridad", label: "Longitud minima de contrasena" },
-      { key: "seguridad.sesion_horas", value: "8", type: "number", group: "seguridad", label: "Duracion de la sesion (horas)" },
-      { key: "general.desarrollador", value: "Diego Alejandro Hernandez Blanco", group: "general", label: "Desarrollado por" },
+      { key: "certificados.prefijo", value: "KG", group: "certificados", label: "Prefijo del código" },
+      { key: "certificados.firmante", value: "Katerine Guañarita", group: "certificados", label: "Firma autorizada" },
+      { key: "certificados.cargo_firmante", value: "Directora - KG Gestión Integral S.A.S.", group: "certificados", label: "Cargo del firmante" },
+      { key: "seguridad.min_password", value: "8", type: "number", group: "seguridad", label: "Longitud mínima de contraseña" },
+      { key: "seguridad.sesion_horas", value: "8", type: "number", group: "seguridad", label: "Duración de la sesión (horas)" },
+      { key: "general.desarrollador", value: "Diego Alejandro Hernández Blanco", group: "general", label: "Desarrollado por" },
       { key: "general.desarrollador_url", value: "https://www.linkedin.com/in/diego-alejandro-hernandez-blanco-08b64120b/", group: "general", label: "Perfil del desarrollador" },
-      { key: "contacto.telefono", value: "+57 320 7605561", group: "contacto", label: "Telefono / WhatsApp" },
+      { key: "contacto.telefono", value: "+57 320 7605561", group: "contacto", label: "Teléfono / WhatsApp" },
       { key: "contacto.email", value: "katerineguanarita@gmail.com", group: "contacto", label: "Correo de contacto" },
     ],
   });
@@ -401,12 +401,12 @@ async function main() {
   const template = await prisma.certificateTemplate.create({
     data: {
       name: "Plantilla oficial KG",
-      description: "Diseno horizontal con identidad KG Gestion Integral S.A.S.",
+      description: "Diseño horizontal con identidad KG Gestión Integral S.A.S.",
       orientation: "horizontal",
-      signerName: "Katerine Guanarita",
-      signerTitle: "Directora - KG Gestion Integral S.A.S.",
+      signerName: "Katerine Guañarita",
+      signerTitle: "Directora - KG Gestión Integral S.A.S.",
       bodyTemplate:
-        "Certifica que {{estudiante}} identificado(a) con documento {{documento}} curso y aprobo satisfactoriamente el programa {{curso}}, con una intensidad de {{horas}} horas.",
+        "Certifica que {{estudiante}} identificado(a) con documento {{documento}} cursó y aprobó satisfactoriamente el programa {{curso}}, con una intensidad de {{horas}} horas.",
       isDefault: true,
     },
   });
@@ -414,31 +414,31 @@ async function main() {
   await prisma.notificationTemplate.createMany({
     data: [
       { code: "bienvenida", name: "Bienvenida", channel: "email", subject: "Bienvenido a KG Academy", body: "Hola {{nombre}}, su cuenta fue creada." },
-      { code: "curso_asignado", name: "Curso asignado", channel: "email", subject: "Le asignaron un curso", body: "Su empresa le asigno el curso {{curso}}. Fecha limite: {{fecha}}." },
+      { code: "curso_asignado", name: "Curso asignado", channel: "email", subject: "Le asignaron un curso", body: "Su empresa le asignó el curso {{curso}}. Fecha límite: {{fecha}}." },
       { code: "recordatorio", name: "Recordatorio de curso pendiente", channel: "email", subject: "Tiene un curso pendiente", body: "Recuerde completar {{curso}}." },
-      { code: "por_vencer", name: "Curso proximo a vencer", channel: "email", subject: "Su curso esta por vencer", body: "Le quedan {{dias}} dias para completar {{curso}}." },
-      { code: "curso_completado", name: "Curso completado", channel: "interna", subject: "Curso completado", body: "Felicitaciones, completo {{curso}}." },
-      { code: "certificado_listo", name: "Certificado disponible", channel: "email", subject: "Su certificado esta listo", body: "Descargue su certificado {{codigo}}." },
-      { code: "reset_password", name: "Recuperacion de contrasena", channel: "email", subject: "Restablecer contrasena", body: "Use este enlace: {{enlace}}" },
+      { code: "por_vencer", name: "Curso próximo a vencer", channel: "email", subject: "Su curso está por vencer", body: "Le quedan {{días}} días para completar {{curso}}." },
+      { code: "curso_completado", name: "Curso completado", channel: "interna", subject: "Curso completado", body: "Felicitaciones, completó {{curso}}." },
+      { code: "certificado_listo", name: "Certificado disponible", channel: "email", subject: "Su certificado está listo", body: "Descargue su certificado {{código}}." },
+      { code: "reset_password", name: "Recuperación de contraseña", channel: "email", subject: "Restablecer contraseña", body: "Use este enlace: {{enlace}}" },
     ],
   });
 
   await prisma.badge.createMany({
     data: [
-      { code: "primer_paso", name: "Primer paso", description: "Completo su primera leccion", criteria: "1 leccion completada", points: 10 },
-      { code: "constante", name: "Constante", description: "Racha de 3 dias seguidos", criteria: "Racha >= 3 dias", points: 30 },
+      { code: "primer_paso", name: "Primer paso", description: "completó su primera lección", criteria: "1 lección completada", points: 10 },
+      { code: "constante", name: "Constante", description: "Racha de 3 días seguidos", criteria: "Racha >= 3 días", points: 30 },
       { code: "certificado_1", name: "Certificado obtenido", description: "Obtuvo su primer certificado", criteria: "1 certificado emitido", points: 100 },
-      { code: "brigadista", name: "Brigadista KG", description: "Completo los tres cursos de primeros auxilios", criteria: "3 cursos completados", points: 300 },
-      { code: "evaluador", name: "Nota perfecta", description: "Obtuvo 100 en una evaluacion final", criteria: "score = 100", points: 50 },
+      { code: "brigadista", name: "Brigadista KG", description: "completó los tres cursos de primeros auxilios", criteria: "3 cursos completados", points: 300 },
+      { code: "evaluador", name: "Nota perfecta", description: "Obtuvo 100 en una evaluación final", criteria: "score = 100", points: 50 },
     ],
   });
 
-  /* ------------------------------- CATEGORIAS ------------------------------- */
+  /* ------------------------------- CATEGORÍAS ------------------------------- */
   const catPA = await prisma.category.create({
     data: {
       slug: "primeros-auxilios",
       name: "Primeros Auxilios",
-      description: "Atencion inicial de emergencias en el entorno laboral, familiar y comunitario.",
+      description: "Atención inicial de emergencias en el entorno laboral, familiar y comunitario.",
       icon: "heart",
       color: "#8FBF16",
       order: 1,
@@ -448,7 +448,7 @@ async function main() {
     data: [
       { slug: "sst", name: "Seguridad y Salud en el Trabajo", description: "SG-SST, riesgos, COPASST y normatividad.", icon: "shield", color: "#0A2D4D", order: 2 },
       { slug: "riesgo-psicosocial", name: "Riesgo Psicosocial", description: "Bienestar mental y clima laboral.", icon: "spark", color: "#1B4A73", order: 3 },
-      { slug: "analitica", name: "Business Analytics", description: "Indicadores y analitica aplicada a la gestion.", icon: "chart", color: "#759F11", order: 4 },
+      { slug: "analitica", name: "Business Analytics", description: "Indicadores y analitica aplicada a la gestión.", icon: "chart", color: "#759F11", order: 4 },
     ],
   });
 
@@ -461,7 +461,7 @@ async function main() {
       email: "admin@kggestionintegral.com",
       passwordHash: hash,
       firstName: "Katerine",
-      lastName: "Guanarita",
+      lastName: "Guañarita",
       documentType: "CC",
       documentNumber: "1010101010",
       jobTitle: "Directora General",
@@ -479,7 +479,7 @@ async function main() {
       email: "instructor@kggestionintegral.com",
       passwordHash: hash,
       firstName: "Diego Alejandro",
-      lastName: "Hernandez Blanco",
+      lastName: "Hernández Blanco",
       documentType: "CC",
       documentNumber: "1020304050",
       jobTitle: "Instructor y desarrollador de la plataforma",
@@ -497,17 +497,17 @@ async function main() {
     data: {
       code: "empresarial_pro",
       name: "Empresarial Pro",
-      description: "Hasta 100 trabajadores, catalogo completo y reportes exportables.",
+      description: "Hasta 100 trabajadores, catálogo completo y reportes exportables.",
       maxUsers: 100,
       pricePerMonth: 890000,
       pricePerUser: 0,
-      features: JSON.stringify(["Catalogo completo", "Asignacion masiva", "Reportes Excel/CSV", "Certificados ilimitados"]),
+      features: JSON.stringify(["Catálogo completo", "Asignación masiva", "Reportes Excel/CSV", "Certificados ilimitados"]),
     },
   });
   await prisma.plan.createMany({
     data: [
-      { code: "empresarial_basico", name: "Empresarial Basico", description: "Hasta 25 trabajadores.", maxUsers: 25, pricePerMonth: 320000 },
-      { code: "personalizado", name: "Plan personalizado", description: "Cotizacion a la medida segun numero de sedes y cursos.", pricePerMonth: 0 },
+      { code: "empresarial_basico", name: "Empresarial Básico", description: "Hasta 25 trabajadores.", maxUsers: 25, pricePerMonth: 320000 },
+      { code: "personalizado", name: "Plan personalizado", description: "Cotización a la medida según número de sedes y cursos.", pricePerMonth: 0 },
     ],
   });
 
@@ -516,7 +516,7 @@ async function main() {
       nit: "901234567-1",
       legalName: "CONSTRUCTORA ANDINA S.A.S.",
       tradeName: "Constructora Andina",
-      economicSector: "Construccion",
+      economicSector: "Construcción",
       arl: "ARL Positiva",
       riskLevel: "V",
       contactName: "Marcela Ruiz",
@@ -543,7 +543,7 @@ async function main() {
   ]);
   const cargos = await Promise.all([
     prisma.position.create({ data: { companyId: empresa.id, name: "Oficial de obra", riskLevel: "V" } }),
-    prisma.position.create({ data: { companyId: empresa.id, name: "Tecnico de mantenimiento", riskLevel: "IV" } }),
+    prisma.position.create({ data: { companyId: empresa.id, name: "Técnico de mantenimiento", riskLevel: "IV" } }),
     prisma.position.create({ data: { companyId: empresa.id, name: "Analista administrativo", riskLevel: "I" } }),
     prisma.position.create({ data: { companyId: empresa.id, name: "Supervisor HSE", riskLevel: "III" } }),
   ]);
@@ -576,7 +576,7 @@ async function main() {
     { first: "Carlos Andres", last: "Pineda Gomez", doc: "1023456792", area: 0, cargo: 0, sede: 1, code: "OPE-104" },
     { first: "Diana Patricia", last: "Suarez Leon", doc: "1023456793", area: 1, cargo: 3, sede: 0, code: "HSE-105", supervisor: true },
     { first: "Julian Esteban", last: "Torres Mora", doc: "1023456794", area: 0, cargo: 0, sede: 1, code: "OPE-106" },
-    { first: "Angela Maria", last: "Beltran Nino", doc: "1023456795", area: 2, cargo: 2, sede: 0, code: "ADM-107" },
+    { first: "Angela Maria", last: "Beltran Niño", doc: "1023456795", area: 2, cargo: 2, sede: 0, code: "ADM-107" },
     { first: "Oscar Ivan", last: "Castillo Ruiz", doc: "1023456796", area: 1, cargo: 1, sede: 1, code: "MTO-108" },
   ];
 
@@ -688,7 +688,7 @@ async function main() {
       });
       const pesoLeccion = pesoModulo / m.lessons.length;
       for (const [li, leccion] of m.lessons.entries()) {
-        // Una leccion se declara como texto simple (contenido aun pendiente)
+        // Una lección se declara como texto simple (contenido aún pendiente)
         // o como objeto cuando KG ya entrego el material.
         const l: LeccionSemilla = typeof leccion === "string" ? { title: leccion } : leccion;
         const tipo = l.contentType ?? "pendiente";
@@ -743,8 +743,8 @@ async function main() {
     const diagnostica = await prisma.assessment.create({
       data: {
         courseId: course.id,
-        title: "Evaluacion diagnostica",
-        description: "Mide su conocimiento previo. No afecta la aprobacion del curso.",
+        title: "Evaluación diagnóstica",
+        description: "Mide su conocimiento previo. No afecta la aprobación del curso.",
         type: "diagnostica",
         minScore: 0,
         maxAttempts: 1,
@@ -757,8 +757,8 @@ async function main() {
     const finalEval = await prisma.assessment.create({
       data: {
         courseId: course.id,
-        title: "Evaluacion final",
-        description: "Evaluacion de cierre. Nota minima aprobatoria 80/100.",
+        title: "Evaluación final",
+        description: "Evaluación de cierre. Nota mínima aprobatoria 80/100.",
         type: "final",
         minScore: 80,
         maxAttempts: 3,
@@ -794,10 +794,10 @@ async function main() {
       companyId: empresa.id,
       courseId: cursoBasico.course.id,
       createdById: adminEmpresa.id,
-      name: "Capacitacion obligatoria brigada 2026",
+      name: "Capacitación obligatoria brigada 2026",
       dueDate,
       totalTargets: trabajadores.length,
-      notes: "Asignacion masiva inicial para la brigada de emergencias.",
+      notes: "Asignación masiva inicial para la brigada de emergencias.",
     },
   });
 
@@ -838,7 +838,7 @@ async function main() {
       data: {
         userId: t.id,
         title: "Nuevo curso asignado",
-        message: `Su empresa le asigno el curso "${cursoBasico.course.title}". Fecha limite: ${dueDate.toLocaleDateString("es-CO")}.`,
+        message: `Su empresa le asignó el curso "${cursoBasico.course.title}". Fecha límite: ${dueDate.toLocaleDateString("es-CO")}.`,
         linkUrl: `/aula/curso/${cursoBasico.course.slug}`,
         type: "info",
       },
@@ -870,7 +870,7 @@ async function main() {
     const progress = Math.round((hasta / lessons.length) * 1000) / 10;
     const completo = ratio === 1;
 
-    // Intento de evaluacion final para quienes terminaron
+    // Intento de evaluación final para quienes terminaron
     if (completo) {
       const preguntas = await prisma.assessmentQuestion.findMany({
         where: { assessmentId: cursoBasico.finalEval.id },
@@ -923,7 +923,7 @@ async function main() {
       data: { status: completo ? "completado" : "en_progreso" },
     });
 
-    // Estado de modulos
+    // Estado de módulos
     const mods = await prisma.module.findMany({
       where: { courseId: cursoBasico.course.id },
       include: { lessons: true },
@@ -977,8 +977,8 @@ async function main() {
       await prisma.notification.create({
         data: {
           userId: t.id,
-          title: "Su certificado esta listo",
-          message: `Completo "${cursoBasico.course.title}". Ya puede descargar su certificado.`,
+          title: "Su certificado está listo",
+          message: `completó "${cursoBasico.course.title}". Ya puede descargar su certificado.`,
           linkUrl: "/aula/certificados",
           type: "exito",
         },
@@ -992,9 +992,9 @@ async function main() {
 
   await prisma.auditLog.createMany({
     data: [
-      { userId: superadmin.id, actorEmail: superadmin.email, action: "crear", entity: "courses", summary: "Creacion de los tres primeros cursos" },
-      { userId: adminEmpresa.id, actorEmail: adminEmpresa.email, action: "asignar", entity: "course_assignments", summary: `Asignacion masiva a ${trabajadores.length} trabajadores` },
-      { userId: superadmin.id, actorEmail: superadmin.email, action: "publicar", entity: "courses", summary: "Publicacion del curso Primeros Auxilios Basicos" },
+      { userId: superadmin.id, actorEmail: superadmin.email, action: "crear", entity: "courses", summary: "Creación de los tres primeros cursos" },
+      { userId: adminEmpresa.id, actorEmail: adminEmpresa.email, action: "asignar", entity: "course_assignments", summary: `Asignación masiva a ${trabajadores.length} trabajadores` },
+      { userId: superadmin.id, actorEmail: superadmin.email, action: "publicar", entity: "courses", summary: "Publicación del curso Primeros Auxilios Básicos" },
     ],
   });
 
@@ -1014,7 +1014,7 @@ async function main() {
 
   console.log("\n=========== KG ACADEMY - BASE DE DATOS LISTA ===========");
   console.table(counts);
-  console.log("\nUsuarios de acceso (contrasena para todos: " + PASS + ")");
+  console.log("\nUsuarios de acceso (contraseña para todos: " + PASS + ")");
   console.table([
     { rol: "SuperAdmin KG", correo: "admin@kggestionintegral.com" },
     { rol: "Instructor", correo: "instructor@kggestionintegral.com" },

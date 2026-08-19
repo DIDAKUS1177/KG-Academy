@@ -5,20 +5,20 @@
  */
 
 export const BRAND = {
-  company: "KG GESTION INTEGRAL S.A.S.",
-  owner: "Katerine Guanarita",
+  company: "KG GESTIÓN INTEGRAL S.A.S.",
+  owner: "Katerine Guañarita",
   product: "KG Academy",
-  tagline: "Formacion que protege vidas",
+  tagline: "Formación que protege vidas",
   navy: "#0A2D4D",
   lime: "#8FBF16",
-  developer: "Diego Alejandro Hernandez Blanco",
+  developer: "Diego Alejandro Hernández Blanco",
   developerUrl: "https://www.linkedin.com/in/diego-alejandro-hernandez-blanco-08b64120b/",
-  services: ["Gestion SST", "E-Learning", "Business Analytics"],
+  services: ["Gestión SST", "E-Learning", "Business Analytics"],
 } as const;
 
 /**
- * Datos de contacto publicos de KG Gestion Integral S.A.S.
- * Fuente unica: si cambian, se cambian aqui y se reflejan en toda la plataforma.
+ * Datos de contacto públicos de KG Gestión Integral S.A.S.
+ * Fuente única: si cambian, se cambian aquí y se reflejan en toda la plataforma.
  */
 export const CONTACTO = {
   telefono: "+57 320 7605561",
@@ -27,13 +27,13 @@ export const CONTACTO = {
   whatsapp: "https://wa.me/573207605561",
   // PENDIENTE: reemplazar por el correo corporativo (contacto@<dominio>) cuando
   // KG contrate el dominio. Se deja el personal a proposito: un buzon que rebota
-  // es peor que uno poco elegante. Cambiar aqui basta para toda la plataforma.
+  // es peor que uno poco elegante. Cambiar aquí basta para toda la plataforma.
   email: "katerineguanarita@gmail.com",
 } as const;
 
 /** Mensaje con el que se abre WhatsApp desde la plataforma. */
 export const WHATSAPP_MSG = encodeURIComponent(
-  "Hola, escribo desde KG Academy. Quisiera informacion sobre los cursos y los planes empresariales."
+  "Hola, escribo desde KG Academy. Quisiera información sobre los cursos y los planes empresariales."
 );
 
 export const ROLES = {
@@ -83,6 +83,14 @@ export const CONTENT_TYPES = [
   "actividad",
 ] as const;
 
+/** Etiqueta legible del tipo de evaluación (el valor guardado es un código). */
+export const ASSESSMENT_TYPE_LABEL: Record<string, string> = {
+  diagnostica: "Diagnóstica",
+  modulo: "Por módulo",
+  final: "Final",
+  encuesta: "Encuesta",
+};
+
 export const STATUS_LABEL: Record<string, string> = {
   no_iniciado: "No iniciado",
   en_progreso: "En progreso",
@@ -92,14 +100,14 @@ export const STATUS_LABEL: Record<string, string> = {
   asignado: "Asignado",
   cancelado: "Cancelado",
   borrador: "Borrador",
-  revision: "En revision",
+  revision: "En revisión",
   publicado: "Publicado",
   despublicado: "Despublicado",
   archivado: "Archivado",
   activo: "Activo",
   inactivo: "Inactivo",
   bloqueado: "Bloqueado",
-  pendiente_activacion: "Pendiente de activacion",
+  pendiente_activacion: "Pendiente de activación",
   vigente: "Vigente",
   revocado: "Revocado",
   activa: "Activa",

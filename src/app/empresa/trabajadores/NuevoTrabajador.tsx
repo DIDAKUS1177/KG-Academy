@@ -123,13 +123,13 @@ export function NuevoTrabajador({
               <input name="email" type="email" required className="input" />
             </div>
             <div>
-              <label className="label">Codigo de empleado</label>
+              <label className="label">Código de empleado</label>
               <input name="employeeCode" className="input" />
             </div>
             <div>
-              <label className="label">Area</label>
+              <label className="label">Área</label>
               <select name="areaId" className="select">
-                <option value="">Sin area</option>
+                <option value="">Sin área</option>
                 {areas.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
@@ -164,8 +164,8 @@ export function NuevoTrabajador({
                 {loading ? "Creando..." : "Crear trabajador"}
               </button>
               <p className="mt-2 text-xs text-navy-400">
-                Se crea con la contrasena temporal <strong>KgAcademy2026*</strong> y estado
-                &quot;pendiente de activacion&quot;.
+                Se crea con la contraseña temporal <strong>KgAcademy2026*</strong> y estado
+                &quot;pendiente de activación&quot;.
               </p>
             </div>
           </form>
@@ -174,7 +174,7 @@ export function NuevoTrabajador({
             <label className="label">
               Pegue las filas (una por trabajador) en formato:
               <span className="ml-1 font-mono normal-case text-navy-600">
-                nombres;apellidos;documento;correo;codigo
+                nombres;apellidos;documento;correo;código
               </span>
             </label>
             <textarea

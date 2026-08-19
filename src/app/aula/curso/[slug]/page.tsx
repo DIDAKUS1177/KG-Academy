@@ -55,7 +55,7 @@ export default async function AulaCursoPage({
   const allLessons = course.modules.flatMap((m) => m.lessons);
   if (allLessons.length === 0) notFound();
 
-  // Leccion activa: la de la URL, la ultima vista o la primera pendiente
+  // Lección activa: la de la URL, la última vista o la primera pendiente
   const activeId =
     searchParams.leccion && allLessons.some((l) => l.id === searchParams.leccion)
       ? searchParams.leccion
@@ -107,7 +107,7 @@ export default async function AulaCursoPage({
             </h1>
             <div className="mt-4 flex flex-wrap gap-5 text-xs text-white/60">
               <span className="inline-flex items-center gap-1.5">
-                <IconLayers width={14} height={14} className="text-lime-400" /> {course.modules.length} modulos
+                <IconLayers width={14} height={14} className="text-lime-400" /> {course.modules.length} módulos
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <IconPlay width={14} height={14} className="text-lime-400" /> {completedCount}/{allLessons.length} lecciones
@@ -284,13 +284,13 @@ export default async function AulaCursoPage({
                   Termino todas las lecciones
                 </p>
                 <p className="mt-0.5 text-sm text-navy-500">
-                  Presente la evaluacion final para obtener su certificado. Nota minima{" "}
+                  Presente la evaluación final para obtener su certificado. Nota mínima{" "}
                   {finalAssessment.minScore}/100 &middot; intentos usados {finalAttempts}/
                   {finalAssessment.maxAttempts}.
                 </p>
               </div>
               <Link href={`/aula/evaluacion/${finalAssessment.id}`} className="btn-lime">
-                Presentar evaluacion final
+                Presentar evaluación final
               </Link>
             </div>
           )}
@@ -303,7 +303,7 @@ export default async function AulaCursoPage({
               <div className="min-w-[220px] flex-1">
                 <p className="font-display text-base font-bold text-navy-700">Curso aprobado</p>
                 <p className="mt-0.5 text-sm text-navy-500">
-                  Su certificado <span className="font-mono font-bold">{certificate.code}</span> ya esta
+                  Su certificado <span className="font-mono font-bold">{certificate.code}</span> ya está
                   disponible.
                 </p>
               </div>
@@ -319,7 +319,7 @@ export default async function AulaCursoPage({
               <ContentPlaceholder
                 compact
                 title="Espacio reservado para el material del curso"
-                description="Cada leccion tiene su contenedor listo. Desde Administracion > Cursos > Constructor se define el tipo (video, PDF, texto, enlace o Genially) y se pega la URL del recurso."
+                description="Cada lección tiene su contenedor listo. Desde Administración > Cursos > Constructor se define el tipo (video, PDF, texto, enlace o Genially) y se pega la URL del recurso."
               />
             </div>
           )}

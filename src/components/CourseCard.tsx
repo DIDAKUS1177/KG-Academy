@@ -23,7 +23,7 @@ export type CourseCardData = {
 };
 
 const LEVEL_LABEL: Record<string, string> = {
-  basico: "Basico",
+  basico: "Básico",
   intermedio: "Intermedio",
   avanzado: "Avanzado",
 };
@@ -45,7 +45,7 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
         <div className="relative flex h-full flex-col justify-between p-5">
           <div className="flex items-start justify-between">
             <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/85 backdrop-blur">
-              {course.categoryName ?? "Formacion"}
+              {course.categoryName ?? "Formación"}
             </span>
             <span className="font-mono text-[10px] font-bold text-white/50">{course.code}</span>
           </div>
@@ -70,7 +70,7 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-navy-400">
           <span className="inline-flex items-center gap-1.5">
-            <IconLayers width={14} height={14} /> {course.modulesCount} modulos
+            <IconLayers width={14} height={14} /> {course.modulesCount} módulos
           </span>
           <span className="inline-flex items-center gap-1.5">
             <IconClock width={14} height={14} /> {course.lessonsCount} lecciones

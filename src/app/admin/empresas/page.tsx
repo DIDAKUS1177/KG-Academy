@@ -28,13 +28,13 @@ export default async function AdminEmpresas() {
   return (
     <div>
       <SectionTitle
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Empresas y planes"
-        description="Clientes B2B, su plan contratado y su nivel de cumplimiento en capacitacion."
+        description="Clientes B2B, su plan contratado y su nivel de cumplimiento en capacitación."
       />
 
       {companies.length === 0 ? (
-        <EmptyState icon={<IconBuilding width={30} height={30} />} title="Aun no hay empresas registradas" />
+        <EmptyState icon={<IconBuilding width={30} height={30} />} title="Aún no hay empresas registradas" />
       ) : (
         <div className="grid gap-5 lg:grid-cols-2">
           {companies.map((c) => {
@@ -78,7 +78,7 @@ export default async function AdminEmpresas() {
 
                   <div className="mt-4">
                     <div className="mb-1.5 flex items-baseline justify-between text-[11px] font-semibold text-navy-500">
-                      <span>Avance de capacitacion</span>
+                      <span>Avance de capacitación</span>
                       <span>{Math.round(avance)}%</span>
                     </div>
                     <ProgressBar value={avance} />
@@ -104,13 +104,13 @@ export default async function AdminEmpresas() {
         </div>
       )}
 
-      <SectionTitle title="Planes comerciales" description="Catalogo de planes B2B configurados." />
+      <SectionTitle title="Planes comerciales" description="Catálogo de planes B2B configurados." />
       <div className="card overflow-x-auto">
         <table className="table-kg">
           <thead>
             <tr>
               <th>Plan</th>
-              <th>Descripcion</th>
+              <th>Descripción</th>
               <th>Max. usuarios</th>
               <th>Valor mensual</th>
               <th>Estado</th>
@@ -135,7 +135,7 @@ export default async function AdminEmpresas() {
         <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
           La pasarela de pagos y la facturacion quedaron marcadas como POR DEFINIR en el punto 16 del
           esqueleto. Las tablas <code>orders</code>, <code>order_items</code> y <code>coupons</code> ya
-          estan modeladas para cuando KG defina el proveedor.
+          están modeladas para cuando KG defina el proveedor.
         </p>
       </div>
     </div>

@@ -48,7 +48,7 @@ export default async function NotificacionesPage() {
         <EmptyState
           icon={<IconBell width={30} height={30} />}
           title="Sin notificaciones"
-          description="Aqui apareceran los avisos de su empresa y de KG Academy."
+          description="Aquí apareceran los avisos de su empresa y de KG Academy."
         />
       ) : (
         <div className="card divide-y divide-navy-50 overflow-hidden">

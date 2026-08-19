@@ -71,7 +71,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   }
 }
 
-/** Usuario completo de la sesion (con rol y empresa). */
+/** Usuario completo de la sesión (con rol y empresa). */
 export async function getCurrentUser() {
   const s = await getSession();
   if (!s) return null;
@@ -81,7 +81,7 @@ export async function getCurrentUser() {
   });
 }
 
-/** Exige sesion; si no hay, redirige a login. */
+/** Exige sesión; si no hay, redirige a login. */
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user || user.status === "bloqueado") redirect("/ingresar");
@@ -102,7 +102,7 @@ export function can(roleCode: string, permission: string) {
   return perms.includes("*") || perms.includes(permission);
 }
 
-/** Registro de auditoria (punto 17 del esqueleto). */
+/** Registro de auditoría (punto 17 del esqueleto). */
 export async function audit(input: {
   userId?: string | null;
   actorEmail?: string | null;
@@ -127,6 +127,6 @@ export async function audit(input: {
       },
     });
   } catch {
-    /* la auditoria nunca debe romper el flujo de negocio */
+    /* la auditoría nunca debe romper el flujo de negocio */
   }
 }

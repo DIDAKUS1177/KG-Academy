@@ -204,8 +204,8 @@ export function Avatar({
 
 /* ------------------------- Aviso "contenido pendiente" ------------------ */
 export function ContentPlaceholder({
-  title = "Contenido en produccion",
-  description = "Este espacio queda reservado para el material del curso (video, PDF o recurso interactivo de Genially). El equipo de KG podra cargarlo desde el panel administrativo sin tocar el codigo.",
+  title = "Contenido en producción",
+  description = "Este espacio queda reservado para el material del curso (video, PDF o recurso interactivo de Genially). El equipo de KG podrá cargarlo desde el panel administrativo sin tocar el código.",
   compact = false,
 }: {
   title?: string;

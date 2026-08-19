@@ -56,11 +56,11 @@ export default async function PerfilPage() {
               <input className="input" defaultValue={user.documentType ?? "—"} readOnly />
             </div>
             <div>
-              <label className="label">Numero de documento</label>
+              <label className="label">Número de documento</label>
               <input className="input" defaultValue={user.documentNumber ?? "—"} readOnly />
             </div>
             <div>
-              <label className="label">Telefono</label>
+              <label className="label">Teléfono</label>
               <input className="input" defaultValue={user.phone ?? "—"} readOnly />
             </div>
             <div>
@@ -87,14 +87,14 @@ export default async function PerfilPage() {
               <IconBuilding width={20} height={20} />
             </span>
             <div>
-              <p className="font-display text-base font-bold text-navy-700">Vinculacion laboral</p>
+              <p className="font-display text-base font-bold text-navy-700">Vinculación laboral</p>
               <p className="text-xs text-navy-400">{user.company.legalName}</p>
             </div>
           </div>
           <dl className="mt-6 grid gap-5 sm:grid-cols-4">
             {[
               ["Empresa", user.company.tradeName ?? user.company.legalName],
-              ["Area", member?.area?.name ?? "—"],
+              ["Área", member?.area?.name ?? "—"],
               ["Cargo", member?.position?.name ?? "—"],
               ["Sede", member?.location?.name ?? "—"],
             ].map(([k, v]) => (
@@ -119,7 +119,7 @@ export default async function PerfilPage() {
         </div>
         <dl className="mt-6 grid gap-5 sm:grid-cols-3">
           {[
-            ["Ultimo acceso", formatDateTime(user.lastLoginAt)],
+            ["Último acceso", formatDateTime(user.lastLoginAt)],
             ["Total de ingresos", String(user.loginCount)],
             ["Cuenta creada", formatDateTime(user.createdAt)],
           ].map(([k, v]) => (

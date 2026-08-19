@@ -22,18 +22,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           <h2 className="mt-10 max-w-md font-display text-3xl font-extrabold leading-tight">
-            Formacion que <span className="text-lime-400">protege vidas</span>
+            Formación que <span className="text-lime-400">protege vidas</span>
           </h2>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-white/60">
-            Aula virtual, evaluaciones y certificados verificables para el Sistema de Gestion de
+            Aula virtual, evaluaciones y certificados verificables para el Sistema de Gestión de
             Seguridad y Salud en el Trabajo.
           </p>
 
           <ul className="mt-8 space-y-3">
             {[
-              { i: <IconShield width={16} height={16} />, t: "Gestion SST con evidencia auditable" },
+              { i: <IconShield width={16} height={16} />, t: "Gestión SST con evidencia auditable" },
               { i: <IconGraduation width={16} height={16} />, t: "E-Learning con progreso trazable" },
-              { i: <IconChart width={16} height={16} />, t: "Indicadores por area, cargo y sede" },
+              { i: <IconChart width={16} height={16} />, t: "Indicadores por área, cargo y sede" },
             ].map((f) => (
               <li key={f.t} className="flex items-center gap-3 text-sm text-white/75">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 text-lime-400">
@@ -46,7 +46,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <p className="relative text-[11px] text-white/30">
-          KG Gestion Integral S.A.S. &middot; Desarrollado por{" "}
+          KG Gestión Integral S.A.S. &middot; Desarrollado por{" "}
           <CreditoDesarrollo tone="dark" className="text-white/50 hover:text-lime-400" />
         </p>
       </aside>

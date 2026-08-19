@@ -42,7 +42,7 @@ export default async function ReportesPage({ searchParams }: { searchParams: { e
   const REPORTES = [
     {
       titulo: "Reporte de seguimiento",
-      desc: "Estado, avance y nota de cada trabajador por curso asignado. Incluye area, cargo, sede y fechas.",
+      desc: "Estado, avance y nota de cada trabajador por curso asignado. Incluye área, cargo, sede y fechas.",
       tipo: "seguimiento",
       icon: <IconChart width={20} height={20} />,
     },
@@ -54,7 +54,7 @@ export default async function ReportesPage({ searchParams }: { searchParams: { e
     },
     {
       titulo: "Reporte de certificados",
-      desc: "Certificados emitidos con codigo de verificacion, intensidad horaria, nota y vigencia.",
+      desc: "Certificados emitidos con código de verificación, intensidad horaria, nota y vigencia.",
       tipo: "certificados",
       icon: <IconAward width={20} height={20} />,
     },
@@ -65,7 +65,7 @@ export default async function ReportesPage({ searchParams }: { searchParams: { e
       <SectionTitle
         eyebrow={company.tradeName ?? company.legalName}
         title="Reportes e indicadores"
-        description="Descargue la evidencia de capacitacion para auditorias, ARL y el SG-SST."
+        description="Descargue la evidencia de capacitación para auditorías, ARL y el SG-SST."
       />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -128,7 +128,7 @@ export default async function ReportesPage({ searchParams }: { searchParams: { e
       </div>
 
       <p className="mt-8 rounded-2xl border border-dashed border-navy-200 bg-white/60 p-5 text-center text-xs leading-relaxed text-navy-400">
-        La exportacion a PDF con la imagen corporativa y el envio programado de reportes por correo
+        La exportación a PDF con la imagen corporativa y el envío programado de reportes por correo
         quedaron previstos para la Fase 2 del backlog (punto 23 del esqueleto funcional).
       </p>
     </div>

@@ -48,7 +48,7 @@ export default async function CertificadoPage({ params }: { params: { code: stri
           <div className="flex gap-3">
             <PrintButton />
             <Link href={`/verificar/${cert.code}`} target="_blank" className="btn-outline">
-              Pagina publica de verificacion <IconArrowRight width={15} height={15} />
+              Página pública de verificación <IconArrowRight width={15} height={15} />
             </Link>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default async function CertificadoPage({ params }: { params: { code: stri
               <LogoFull width={190} />
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-navy-400">
-                  Certificado de aprobacion
+                  Certificado de aprobación
                 </p>
                 <p className="mt-1 font-mono text-lg font-extrabold tracking-widest text-lime-600">
                   {cert.code}
@@ -78,12 +78,12 @@ export default async function CertificadoPage({ params }: { params: { code: stri
               </div>
             </div>
 
-            <div className="my-8 h-px bg-gradient-to-r from-transparent via-navy-200 to-transparent" />
+            <div className="my-8 h-px bg-gradient-to-r from-transparent vía-navy-200 to-transparent" />
 
             {/* Cuerpo */}
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-navy-400">
-                KG Gestion Integral S.A.S. certifica que
+                KG Gestión Integral S.A.S. certifica que
               </p>
 
               <h2 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-navy-700 sm:text-5xl">
@@ -96,7 +96,7 @@ export default async function CertificadoPage({ params }: { params: { code: stri
               )}
 
               <p className="mx-auto mt-7 max-w-2xl text-sm leading-relaxed text-navy-500">
-                Curso y aprobo satisfactoriamente el programa de formacion virtual
+                Cursó y aprobó satisfactoriamente el programa de formación virtual
               </p>
 
               <p className="mx-auto mt-3 max-w-3xl font-display text-2xl font-bold text-lime-600 sm:text-3xl">
@@ -109,7 +109,7 @@ export default async function CertificadoPage({ params }: { params: { code: stri
                 {cert.finalScore ? (
                   <>
                     {" "}
-                    y una calificacion final de{" "}
+                    y una calificación final de{" "}
                     <strong className="text-navy-700">{Math.round(cert.finalScore)}/100</strong>
                   </>
                 ) : null}
@@ -135,10 +135,10 @@ export default async function CertificadoPage({ params }: { params: { code: stri
               <div className="text-center">
                 <div className="mx-auto h-px w-52 bg-navy-300" />
                 <p className="mt-2 font-display text-sm font-bold text-navy-700">
-                  {cert.template?.signerName ?? "Katerine Guanarita"}
+                  {cert.template?.signerName ?? "Katerine Guañarita"}
                 </p>
                 <p className="text-[11px] text-navy-400">
-                  {cert.template?.signerTitle ?? "Directora - KG Gestion Integral S.A.S."}
+                  {cert.template?.signerTitle ?? "Directora - KG Gestión Integral S.A.S."}
                 </p>
               </div>
 
@@ -146,7 +146,7 @@ export default async function CertificadoPage({ params }: { params: { code: stri
                 {cert.qrDataUrl && (
                   <Image
                     src={cert.qrDataUrl}
-                    alt={`Codigo QR de verificacion ${cert.code}`}
+                    alt={`Código QR de verificación ${cert.code}`}
                     width={104}
                     height={104}
                     className="rounded-lg border border-navy-100 p-1"
@@ -161,7 +161,7 @@ export default async function CertificadoPage({ params }: { params: { code: stri
 
             <p className="mt-10 border-t border-navy-100 pt-4 text-center text-[9px] leading-relaxed text-navy-300">
               Verifique este certificado en {cert.verifyUrl} &middot; Plataforma KG Academy desarrollada
-              por Diego Alejandro Hernandez Blanco
+              por Diego Alejandro Hernández Blanco
             </p>
           </div>
         </div>

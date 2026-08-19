@@ -62,7 +62,7 @@ export function QuizForm({
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError(data.error ?? "No fue posible enviar la evaluacion");
+      setError(data.error ?? "No fue posible enviar la evaluación");
       setSending(false);
       return;
     }
@@ -163,7 +163,7 @@ export function QuizForm({
           </p>
         )}
         <button onClick={submit} disabled={sending} className="btn-lime w-full py-3.5 text-base">
-          {sending ? "Calificando..." : "Enviar evaluacion"}
+          {sending ? "Calificando..." : "Enviar evaluación"}
         </button>
       </div>
     </div>

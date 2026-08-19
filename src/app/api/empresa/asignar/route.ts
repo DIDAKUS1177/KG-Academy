@@ -16,7 +16,7 @@ const schema = z.object({
 
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 
-/** Asignacion individual y masiva de cursos (punto 11 del esqueleto). */
+/** Asignación individual y masiva de cursos (punto 11 del esqueleto). */
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!PERMITIDOS.includes(user.role.code)) {
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       companyId,
       courseId,
       createdById: user.id,
-      name: parsed.data.batchName ?? `Asignacion ${course.code}`,
+      name: parsed.data.batchName ?? `Asignación ${course.code}`,
       dueDate,
       totalTargets: userIds.length,
     },
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
       data: {
         userId,
         title: "Nuevo curso asignado",
-        message: `Su empresa le asigno el curso "${course.title}".${
+        message: `Su empresa le asignó el curso "${course.title}".${
           dueDate ? ` Fecha limite: ${formatDate(dueDate)}.` : ""
         }`,
         linkUrl: `/aula/curso/${course.slug}`,
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
     action: "asignar",
     entity: "course_assignments",
     entityId: batch.id,
-    summary: `Asignacion de "${course.title}": ${creadas} creadas, ${omitidas} omitidas`,
+    summary: `Asignación de "${course.title}": ${creadas} creadas, ${omitidas} omitidas`,
   });
 
   return NextResponse.json({ ok: true, creadas, omitidas, batchId: batch.id });

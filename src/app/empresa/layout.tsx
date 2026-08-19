@@ -19,7 +19,7 @@ export default async function EmpresaLayout({ children }: { children: React.Reac
 
   const groups: NavGroup[] = [
     {
-      title: "Capacitacion",
+      title: "Capacitación",
       items: [
         { href: "/empresa", label: "Dashboard", icon: <IconHome width={18} height={18} />, exact: true },
         { href: "/empresa/seguimiento", label: "Seguimiento", icon: <IconChart width={18} height={18} /> },
@@ -33,7 +33,7 @@ export default async function EmpresaLayout({ children }: { children: React.Reac
       title: "Informes",
       items: [
         { href: "/empresa/reportes", label: "Reportes", icon: <IconFile width={18} height={18} /> },
-        { href: "/catalogo", label: "Catalogo KG", icon: <IconBook width={18} height={18} /> },
+        { href: "/catalogo", label: "Catálogo KG", icon: <IconBook width={18} height={18} /> },
       ],
     },
   ];

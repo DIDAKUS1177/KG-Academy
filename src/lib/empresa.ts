@@ -3,7 +3,7 @@ import { ROLES } from "./constants";
 
 /**
  * Resuelve la empresa sobre la que trabaja el panel B2B.
- * Un usuario de empresa solo ve SU empresa (separacion de informacion,
+ * Un usuario de empresa solo ve SU empresa (separación de información,
  * punto 17 del esqueleto). El staff KG puede pasar ?empresa=<id>.
  */
 export async function resolveCompany(user: {

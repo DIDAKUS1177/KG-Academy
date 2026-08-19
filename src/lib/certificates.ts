@@ -3,17 +3,17 @@ import { prisma } from "./prisma";
 import { certificateCode, fullName } from "./utils";
 
 /**
- * Emision automatica de certificados (punto 10 del esqueleto funcional).
- * - Codigo unico de verificacion
- * - QR hacia la pagina publica /verificar/[codigo]
- * - Datos "congelados" en el momento de la emision (no cambian si el curso se edita)
+ * Emisión automática de certificados (punto 10 del esqueleto funcional).
+ * - Código único de verificación
+ * - QR hacia la página pública /verificar/[código]
+ * - Datos "congelados" en el momento de la emisión (no cambian si el curso se edita)
  */
 export async function issueCertificate(enrollmentId: string) {
   const enrollment = await prisma.enrollment.findUnique({
     where: { id: enrollmentId },
     include: { user: true, course: true },
   });
-  if (!enrollment) throw new Error("Matricula no encontrada");
+  if (!enrollment) throw new Error("Matrícula no encontrada");
 
   const existing = await prisma.certificate.findUnique({ where: { enrollmentId } });
   if (existing) return existing;

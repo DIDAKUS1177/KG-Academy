@@ -26,15 +26,15 @@ export default async function AdminReportes() {
   return (
     <div>
       <SectionTitle
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Reportes globales"
         description="Indicadores consolidados de toda la plataforma."
       />
 
       <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Matriculas" value={enrollments.length} icon={<IconBook width={20} height={20} />} />
+        <StatCard label="Matrículas" value={enrollments.length} icon={<IconBook width={20} height={20} />} />
         <StatCard
-          label="Tasa de finalizacion"
+          label="Tasa de finalización"
           value={`${Math.round(tasaFinalizacion)}%`}
           tone="lime"
           icon={<IconChart width={20} height={20} />}
@@ -79,7 +79,7 @@ export default async function AdminReportes() {
         </div>
 
         <div className="card p-6">
-          <p className="font-display text-base font-bold text-navy-700">Desempeno por curso</p>
+          <p className="font-display text-base font-bold text-navy-700">Desempeño por curso</p>
           <div className="mt-5 space-y-5">
             {courses.map((c) => {
               const av = c.enrollments.length
@@ -93,7 +93,7 @@ export default async function AdminReportes() {
                   </div>
                   <ProgressBar value={av} />
                   <p className="mt-1 text-[11px] text-navy-400">
-                    {c.enrollments.length} matriculas &middot; {c.certificates.length} certificados
+                    {c.enrollments.length} matrículas &middot; {c.certificates.length} certificados
                   </p>
                 </div>
               );
@@ -107,7 +107,7 @@ export default async function AdminReportes() {
           <IconDownload width={22} height={22} />
         </span>
         <div className="min-w-[220px] flex-1">
-          <p className="font-display text-base font-bold text-navy-700">Exportacion consolidada</p>
+          <p className="font-display text-base font-bold text-navy-700">Exportación consolidada</p>
           <p className="text-sm text-navy-400">
             Descargue el seguimiento por empresa desde el panel empresarial de cada cliente.
           </p>

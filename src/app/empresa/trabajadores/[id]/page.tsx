@@ -73,8 +73,8 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
 
           <dl className="mt-7 grid gap-5 sm:grid-cols-4">
             {[
-              ["Codigo", member.employeeCode ?? "—"],
-              ["Area", member.area?.name ?? "—"],
+              ["Código", member.employeeCode ?? "—"],
+              ["Área", member.area?.name ?? "—"],
               ["Cargo", member.position?.name ?? "—"],
               ["Sede", member.location?.name ?? "—"],
             ].map(([k, v]) => (
@@ -98,7 +98,7 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
           label="Certificados"
           value={u.certificates.length}
           tone="lime"
-          hint={`Ultimo acceso: ${u.lastLoginAt ? formatDate(u.lastLoginAt) : "nunca"}`}
+          hint={`Último acceso: ${u.lastLoginAt ? formatDate(u.lastLoginAt) : "nunca"}`}
           icon={<IconAward width={20} height={20} />}
         />
       </div>
@@ -124,7 +124,7 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
                   <td>
                     <p className="font-semibold text-navy-700">{e.course.title}</p>
                     <p className="text-[11px] text-navy-400">
-                      Ultimo acceso: {e.lastAccessAt ? formatDate(e.lastAccessAt) : "—"}
+                      Último acceso: {e.lastAccessAt ? formatDate(e.lastAccessAt) : "—"}
                     </p>
                   </td>
                   <td>
@@ -171,7 +171,7 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
                 </li>
               ))}
               {u.certificates.length === 0 && (
-                <li className="px-6 py-8 text-center text-xs text-navy-300">Sin certificados aun</li>
+                <li className="px-6 py-8 text-center text-xs text-navy-300">Sin certificados aún</li>
               )}
             </ul>
           </div>
@@ -179,7 +179,7 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
           {/* Evaluaciones */}
           <div className="card overflow-hidden">
             <p className="border-b border-navy-50 px-6 py-4 font-display text-sm font-bold text-navy-700">
-              Resultados de evaluacion
+              Resultados de evaluación
             </p>
             <ul className="divide-y divide-navy-50">
               {u.attempts.map((a) => (

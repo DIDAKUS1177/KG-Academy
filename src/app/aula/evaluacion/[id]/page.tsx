@@ -82,10 +82,10 @@ export default async function EvaluacionPage({
                 Intento {shown.attemptNo} &middot; {assessment.title}
               </p>
               <p className="mt-2 font-display text-3xl font-extrabold">
-                {shown.passed ? "Evaluacion aprobada" : "No alcanzo la nota minima"}
+                {shown.passed ? "Evaluación aprobada" : "No alcanzo la nota mínima"}
               </p>
               <p className="mt-1 text-sm text-white/85">
-                {shown.correctCount} de {shown.totalCount} respuestas correctas &middot; minimo{" "}
+                {shown.correctCount} de {shown.totalCount} respuestas correctas &middot; mínimo{" "}
                 {assessment.minScore}/100
               </p>
             </div>
@@ -169,7 +169,7 @@ export default async function EvaluacionPage({
             <IconClipboard width={22} height={22} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="eyebrow">{assessment.type === "final" ? "Evaluacion final" : "Evaluacion"}</p>
+            <p className="eyebrow">{assessment.type === "final" ? "Evaluación final" : "Evaluación"}</p>
             <h1 className="font-display text-2xl font-extrabold text-navy-700">{assessment.title}</h1>
           </div>
           {passed && <StatusBadge status="completado" label="Aprobada" />}
@@ -181,9 +181,9 @@ export default async function EvaluacionPage({
           <dl className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               ["Preguntas", String(assessment.questions.length)],
-              ["Nota minima", `${assessment.minScore}/100`],
+              ["Nota mínima", `${assessment.minScore}/100`],
               ["Intentos", `${attempts.length}/${assessment.maxAttempts}`],
-              ["Tiempo", assessment.timeLimitMin ? `${assessment.timeLimitMin} min` : "Sin limite"],
+              ["Tiempo", assessment.timeLimitMin ? `${assessment.timeLimitMin} min` : "Sin límite"],
             ].map(([k, v]) => (
               <div key={k} className="rounded-xl bg-navy-50/70 p-3">
                 <dt className="text-[10px] font-bold uppercase tracking-wide text-navy-400">{k}</dt>
@@ -196,7 +196,7 @@ export default async function EvaluacionPage({
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
               <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
               <span>
-                Esta evaluacion aun no tiene preguntas cargadas. KG puede administrarlas desde el banco
+                Esta evaluación aún no tiene preguntas cargadas. KG puede administrarlas desde el banco
                 de preguntas del panel administrativo.
               </span>
             </div>
@@ -206,7 +206,7 @@ export default async function EvaluacionPage({
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
               <span>
-                Agoto los {assessment.maxAttempts} intentos permitidos. Comuniquese con el administrador
+                Agoto los {assessment.maxAttempts} intentos permitidos. Comuníquese con el administrador
                 de KG Academy para habilitar un nuevo intento.
               </span>
             </div>

@@ -38,14 +38,14 @@ export function LessonPlayer({
   const [seconds, setSeconds] = useState(0);
   const startedRef = useRef(false);
 
-  // Cronometro de permanencia en la leccion (trazabilidad de tiempo)
+  // Cronometro de permanencia en la lección (trazabilidad de tiempo)
   useEffect(() => {
     setSeconds(0);
     const t = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, [lesson.id]);
 
-  // Registra el inicio de la leccion una sola vez
+  // Registra el inicio de la lección una sola vez
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
@@ -79,16 +79,16 @@ export function LessonPlayer({
 
   return (
     <div className="card overflow-hidden">
-      {/* Cabecera de la leccion */}
+      {/* Cabecera de la lección */}
       <div className="flex flex-wrap items-center gap-3 border-b border-navy-50 px-6 py-4">
         <span className="badge-blue">
-          Leccion {lesson.index} de {lesson.total}
+          Lección {lesson.index} de {lesson.total}
         </span>
         <span className="text-[11px] font-semibold uppercase tracking-wide text-navy-300">
           {lesson.moduleTitle}
         </span>
         <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-semibold text-navy-400">
-          <IconClock width={13} height={13} /> {mm}:{ss} en esta leccion
+          <IconClock width={13} height={13} /> {mm}:{ss} en esta lección
         </span>
         {completed && (
           <span className="badge-green">
@@ -110,7 +110,7 @@ export function LessonPlayer({
         <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-navy-50 pt-6">
           {prevHref ? (
             <Link href={prevHref} className="btn-outline btn-sm">
-              Leccion anterior
+              Lección anterior
             </Link>
           ) : (
             <span />
@@ -124,12 +124,12 @@ export function LessonPlayer({
               </button>
             ) : (
               <span className="inline-flex items-center gap-2 text-sm font-semibold text-lime-600">
-                <IconCheck width={16} height={16} strokeWidth={3} /> Leccion completada
+                <IconCheck width={16} height={16} strokeWidth={3} /> Lección completada
               </span>
             )}
             {nextHref && (
               <Link href={nextHref} className={completed ? "btn-lime" : "btn-outline"}>
-                Siguiente leccion <IconArrowRight width={16} height={16} />
+                Siguiente lección <IconArrowRight width={16} height={16} />
               </Link>
             )}
           </div>
@@ -141,8 +141,8 @@ export function LessonPlayer({
 
 /**
  * CONTENEDOR DE CONTENIDO.
- * Segun el tipo definido en la leccion renderiza video, PDF, texto, enlace o
- * un embed de Genially. Si el contenido aun no fue cargado por KG, muestra el
+ * Según el tipo definido en la lección renderiza video, PDF, texto, enlace o
+ * un embed de Genially. Si el contenido aún no fue cargado por KG, muestra el
  * espacio reservado.
  */
 function ContentSlot({ lesson }: { lesson: Lesson }) {
@@ -155,14 +155,14 @@ function ContentSlot({ lesson }: { lesson: Lesson }) {
             <span className="font-display text-2xl font-extrabold text-lime-500">KG</span>
           </div>
           <p className="mt-5 font-display text-lg font-bold text-navy-700">
-            Contenido de esta leccion en produccion
+            Contenido de esta lección en producción
           </p>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-navy-400">
-            Aqui se mostrara el video, el documento o el recurso interactivo de Genially. Mientras
+            Aquí se mostrará el video, el documento o el recurso interactivo de Genially. Mientras
             tanto puede recorrer la estructura del curso y presentar las evaluaciones de ejemplo.
           </p>
           <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-semibold text-navy-500 shadow-sm">
-            <IconFile width={13} height={13} /> Duracion estimada: {lesson.durationMin} minutos
+            <IconFile width={13} height={13} /> Duración estimada: {lesson.durationMin} minutos
           </p>
         </div>
       </div>
@@ -183,7 +183,7 @@ function ContentSlot({ lesson }: { lesson: Lesson }) {
     );
   }
 
-  // Genially: las presentaciones son 16:9, se embeben por URL publica.
+  // Genially: las presentaciones son 16:9, se embeben por URL pública.
   if (lesson.contentType === "genially" && lesson.contentUrl) {
     return (
       <div>
@@ -198,7 +198,7 @@ function ContentSlot({ lesson }: { lesson: Lesson }) {
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-navy-400">
           <span className="inline-flex items-center gap-1.5">
-            <IconFile width={13} height={13} /> Presentacion interactiva &middot; use las flechas para avanzar
+            <IconFile width={13} height={13} /> Presentación interactiva &middot; use las flechas para avanzar
           </span>
           <a
             href={lesson.contentUrl}
@@ -228,7 +228,7 @@ function ContentSlot({ lesson }: { lesson: Lesson }) {
           <div className="p-8 text-center text-sm text-navy-500">
             Su navegador no puede mostrar el PDF.{" "}
             <a href={lesson.contentUrl} className="link-kg" target="_blank" rel="noreferrer">
-              Descargarlo aqui
+              Descargarlo aquí
             </a>
           </div>
         </object>

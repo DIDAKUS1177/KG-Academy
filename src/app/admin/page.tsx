@@ -16,7 +16,7 @@ import {
   IconChart,
 } from "@/components/Icons";
 
-export const metadata: Metadata = { title: "Administracion" };
+export const metadata: Metadata = { title: "Administración" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
     : 0;
   const completados = enrollments.filter((e) => e.status === "completado").length;
   // El modelo comercial es la suscripcion a la plataforma, no la venta por curso:
-  // el indicador util es la formacion efectivamente certificada.
+  // el indicador útil es la formación efectivamente certificada.
   const horasCertificadas = cursosTop.reduce(
     (s, c) => s + c.durationHours * c.certificates.length,
     0
@@ -76,12 +76,12 @@ export default async function AdminDashboard() {
         <div className="pointer-events-none absolute inset-0 bg-kg-mesh" />
         <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:38px_38px] opacity-40" />
         <div className="relative">
-          <p className="eyebrow">Administracion KG Academy</p>
+          <p className="eyebrow">Administración KG Academy</p>
           <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight lg:text-4xl">
             Estado general de la plataforma
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
-            Vision consolidada de usuarios, empresas, cursos, matriculas y certificacion.
+            Vision consolidada de usuarios, empresas, cursos, matrículas y certificación.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/admin/cursos" className="btn-lime">
@@ -97,7 +97,7 @@ export default async function AdminDashboard() {
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Usuarios" value={users} hint={`${companies} empresas`} icon={<IconUsers width={20} height={20} />} />
         <StatCard label="Cursos" value={courses} hint={`${publicados} publicados`} icon={<IconBook width={20} height={20} />} />
-        <StatCard label="Matriculas" value={enrollments.length} hint={`${completados} completadas`} tone="amber" icon={<IconChart width={20} height={20} />} />
+        <StatCard label="Matrículas" value={enrollments.length} hint={`${completados} completadas`} tone="amber" icon={<IconChart width={20} height={20} />} />
         <StatCard label="Certificados" value={certificates} tone="lime" icon={<IconAward width={20} height={20} />} />
       </div>
 
@@ -105,7 +105,7 @@ export default async function AdminDashboard() {
         {/* Cursos */}
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between border-b border-navy-50 px-6 py-4">
-            <p className="font-display text-sm font-bold text-navy-700">Desempeno por curso</p>
+            <p className="font-display text-sm font-bold text-navy-700">Desempeño por curso</p>
             <Link href="/admin/cursos" className="text-xs font-semibold text-lime-600 hover:underline">
               Ver todos
             </Link>
@@ -115,7 +115,7 @@ export default async function AdminDashboard() {
               <tr>
                 <th>Curso</th>
                 <th>Estado</th>
-                <th>Matriculas</th>
+                <th>Matrículas</th>
                 <th className="w-36">Avance</th>
               </tr>
             </thead>
@@ -166,7 +166,7 @@ export default async function AdminDashboard() {
             <dl className="mt-4 space-y-3 text-sm">
               {[
                 ["Avance promedio", `${Math.round(avanceGlobal)}%`],
-                ["Tasa de finalizacion", `${enrollments.length ? Math.round((completados / enrollments.length) * 100) : 0}%`],
+                ["Tasa de finalización", `${enrollments.length ? Math.round((completados / enrollments.length) * 100) : 0}%`],
                 ["Horas certificadas", `${Math.round(horasCertificadas)} h`],
               ].map(([k, v]) => (
                 <div key={k} className="flex items-center justify-between gap-4">
@@ -180,10 +180,10 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Ultimos usuarios */}
+        {/* Últimos usuarios */}
         <div>
           <SectionTitle
-            title="Ultimos registros"
+            title="Últimos registros"
             action={
               <Link href="/admin/usuarios" className="btn-outline btn-sm">
                 Ver todos <IconArrowRight width={13} height={13} />
@@ -208,10 +208,10 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* Auditoria */}
+        {/* Auditoría */}
         <div>
           <SectionTitle
-            title="Auditoria reciente"
+            title="Auditoría reciente"
             action={
               <Link href="/admin/auditoria" className="btn-outline btn-sm">
                 Ver registro <IconArrowRight width={13} height={13} />
@@ -241,7 +241,7 @@ export default async function AdminDashboard() {
 
       <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-dashed border-navy-200 bg-white/60 p-5 text-center text-xs text-navy-400">
         <IconBuilding width={14} height={14} />
-        KG Academy &middot; Plataforma disenada y desarrollada por
+        KG Academy &middot; Plataforma diseñada y desarrollada por
         <CreditoDesarrollo />
       </div>
     </div>

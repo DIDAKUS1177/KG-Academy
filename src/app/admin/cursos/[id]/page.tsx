@@ -26,7 +26,7 @@ export default async function ConstructorPage({ params }: { params: { id: string
     <div>
       <Breadcrumb
         items={[
-          { label: "Administracion", href: "/admin" },
+          { label: "Administración", href: "/admin" },
           { label: "Cursos", href: "/admin/cursos" },
           { label: course.title },
         ]}
@@ -43,7 +43,7 @@ export default async function ConstructorPage({ params }: { params: { id: string
           </p>
         </div>
         <Link href={`/curso/${course.slug}`} target="_blank" className="btn-outline btn-sm">
-          <IconEye width={14} height={14} /> Vista publica
+          <IconEye width={14} height={14} /> Vista pública
         </Link>
       </div>
 

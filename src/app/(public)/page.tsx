@@ -22,26 +22,26 @@ export const dynamic = "force-dynamic";
 const SERVICIOS = [
   {
     icon: <IconShield width={26} height={26} />,
-    title: "Gestion SST",
-    text: "Capacitacion alineada al SG-SST, con evidencia descargable para auditorias y visitas de la ARL.",
+    title: "Gestión SST",
+    text: "Capacitación alineada al SG-SST, con evidencia descargable para auditorías y visitas de la ARL.",
   },
   {
     icon: <IconGraduation width={26} height={26} />,
     title: "E-Learning",
-    text: "Aula virtual con modulos, lecciones, recursos interactivos y evaluaciones automaticas.",
+    text: "Aula virtual con módulos, lecciones, recursos interactivos y evaluaciones automáticas.",
   },
   {
     icon: <IconChart width={26} height={26} />,
     title: "Business Analytics",
-    text: "Indicadores de cumplimiento por area, cargo y sede, exportables a Excel para su informe.",
+    text: "Indicadores de cumplimiento por área, cargo y sede, exportables a Excel para su informe.",
   },
 ];
 
 const PASOS = [
-  { n: "01", t: "La empresa carga sus trabajadores", d: "Individual o de forma masiva, organizados por area, cargo y sede." },
-  { n: "02", t: "Se asignan los cursos", d: "Con fecha limite y caracter obligatorio u opcional. El trabajador recibe la notificacion." },
-  { n: "03", t: "El trabajador estudia y se evalua", d: "Aula virtual con progreso guardado leccion a leccion y evaluacion final." },
-  { n: "04", t: "Se emite el certificado", d: "Automatico, con codigo unico y QR de verificacion publica." },
+  { n: "01", t: "La empresa carga sus trabajadores", d: "Individual o de forma masiva, organizados por área, cargo y sede." },
+  { n: "02", t: "Se asignan los cursos", d: "Con fecha límite y carácter obligatorio u opcional. El trabajador recibe la notificación." },
+  { n: "03", t: "El trabajador estudia y se evalua", d: "Aula virtual con progreso guardado lección a lección y evaluación final." },
+  { n: "04", t: "Se emite el certificado", d: "Automático, con código único y QR de verificación pública." },
 ];
 
 export default async function LandingPage() {
@@ -77,7 +77,7 @@ export default async function LandingPage() {
             </span>
 
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
-              Formacion que
+              Formación que
               <span className="relative mx-3 inline-block">
                 <span className="relative z-10 text-lime-400">protege vidas</span>
                 <span className="absolute inset-x-0 bottom-1.5 z-0 h-3 rounded bg-lime-500/25" />
@@ -86,9 +86,9 @@ export default async function LandingPage() {
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
-              KG Academy es el aula virtual de <strong className="font-semibold text-white">KG Gestion Integral S.A.S.</strong>{" "}
+              KG Academy es el aula virtual de <strong className="font-semibold text-white">KG Gestión Integral S.A.S.</strong>{" "}
               Cursos en Seguridad y Salud en el Trabajo con progreso trazable, evaluaciones y
-              certificados verificables por codigo unico y QR.
+              certificados verificables por código único y QR.
             </p>
 
             <div className="mt-9 flex flex-wrap gap-3">
@@ -174,13 +174,13 @@ export default async function LandingPage() {
             Los tres primeros cursos
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-navy-400">
-            La estructura pedagogica, las evaluaciones y los certificados ya estan listos. El contenido
-            audiovisual de cada leccion se carga desde el panel administrativo cuando KG lo tenga
+            La estructura pedagógica, las evaluaciones y los certificados ya están listos. El contenido
+            audiovisual de cada lección se carga desde el panel administrativo cuando KG lo tenga
             producido.
           </p>
           <p className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full bg-lime-100 px-4 py-2 text-xs font-bold text-lime-800">
             <IconCheck width={14} height={14} strokeWidth={3.5} />
-            Todo el catalogo esta incluido en el acceso a la plataforma
+            Todo el catálogo está incluido en el acceso a la plataforma
           </p>
           <span className="mx-auto mt-5 block h-1 w-16 rounded-full bg-kg-lime" />
         </div>
@@ -210,7 +210,7 @@ export default async function LandingPage() {
 
         <div className="mt-10 text-center">
           <Link href="/catalogo" className="btn-outline">
-            Ver el catalogo completo <IconArrowRight width={16} height={16} />
+            Ver el catálogo completo <IconArrowRight width={16} height={16} />
           </Link>
         </div>
       </section>
@@ -221,7 +221,7 @@ export default async function LandingPage() {
           <div className="mb-14 max-w-2xl">
             <p className="eyebrow">Del aula al indicador</p>
             <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-navy-700 sm:text-4xl">
-              Como funciona KG Academy
+              Cómo funciona KG Academy
             </h2>
           </div>
 
@@ -243,22 +243,22 @@ export default async function LandingPage() {
       <section id="empresas" className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           <div>
-            <p className="eyebrow">Modulo B2B</p>
+            <p className="eyebrow">Módulo B2B</p>
             <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-navy-700 sm:text-4xl">
-              Su matriz de capacitacion, siempre al dia
+              Su matriz de capacitación, siempre al día
             </h2>
             <p className="mt-4 text-navy-400">
-              El panel empresarial responde en un clic las preguntas que hace un auditor: quien inicio,
-              quien va en progreso, quien termino y quien no ha entrado.
+              El panel empresarial responde en un clic las preguntas que hace un auditor: quién inició,
+              quién va en progreso, quién terminó y quién no ha entrado.
             </p>
 
             <ul className="mt-8 space-y-4">
               {[
-                "Carga de trabajadores individual o masiva por area, cargo y sede.",
-                "Asignacion de cursos con fecha limite y recordatorios automaticos.",
+                "Carga de trabajadores individual o masiva por área, cargo y sede.",
+                "Asignación de cursos con fecha límite y recordatorios automáticos.",
                 "Seguimiento en tiempo real del porcentaje de avance de cada persona.",
-                "Descarga de certificados y exportacion de reportes a Excel/CSV.",
-                "Separacion total de la informacion entre empresas.",
+                "Descarga de certificados y exportación de reportes a Excel/CSV.",
+                "Separación total de la información entre empresas.",
               ].map((t) => (
                 <li key={t} className="flex gap-3">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-lime-500 text-navy-900">
@@ -303,7 +303,7 @@ export default async function LandingPage() {
                   { n: "Laura Cardenas", a: "Operaciones", p: 100 },
                   { n: "Jhon Ramirez", a: "Mantenimiento", p: 64 },
                   { n: "Sandra Molina", a: "Administrativa", p: 38 },
-                  { n: "Carlos Pineda", a: "Produccion", p: 0 },
+                  { n: "Carlos Pineda", a: "Producción", p: 0 },
                 ].map((r) => (
                   <div key={r.n} className="flex items-center gap-3">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-kg-gradient text-[10px] font-bold text-white">
@@ -327,7 +327,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* =========================== VERIFICACION ========================== */}
+      {/* =========================== VERIFICACIÓN ========================== */}
       <section className="relative overflow-hidden bg-kg-gradient py-20 text-white">
         <div className="pointer-events-none absolute inset-0 bg-kg-mesh opacity-70" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 text-center lg:px-8">
@@ -338,7 +338,7 @@ export default async function LandingPage() {
             Cada certificado se puede verificar
           </h2>
           <p className="max-w-2xl text-white/65">
-            Todo certificado emitido por KG Academy lleva un codigo unico y un codigo QR. Cualquier
+            Todo certificado emitido por KG Academy lleva un código único y un código QR. Cualquier
             persona puede confirmar su autenticidad, sin necesidad de tener cuenta.
           </p>
           <form action="/verificar" className="flex w-full max-w-md gap-2">
@@ -359,12 +359,12 @@ export default async function LandingPage() {
           <div className="relative grid items-center gap-10 lg:grid-cols-[auto_1fr_auto]">
             <LogoMark size={92} className="shadow-kg" />
             <div>
-              <p className="eyebrow">KG Gestion Integral S.A.S.</p>
+              <p className="eyebrow">KG Gestión Integral S.A.S.</p>
               <h2 className="mt-2 font-display text-2xl font-extrabold text-navy-700 sm:text-3xl">
-                Empiece hoy la capacitacion de su equipo
+                Empiece hoy la capacitación de su equipo
               </h2>
               <p className="mt-2 max-w-xl text-sm text-navy-400">
-                Cree su cuenta gratis, explore el catalogo y solicite su plan empresarial.
+                Cree su cuenta gratis, explore el catálogo y solicite su plan empresarial.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -385,7 +385,7 @@ export default async function LandingPage() {
                 Prefiere que le expliquemos?
               </h3>
               <p className="mt-2 max-w-lg text-sm leading-relaxed text-navy-400">
-                Escribanos por WhatsApp o por correo y le mostramos la plataforma, resolvemos sus
+                Escríbanos por WhatsApp o por correo y le mostramos la plataforma, resolvemos sus
                 dudas y le armamos el plan que necesita su empresa.
               </p>
             </div>
@@ -398,7 +398,7 @@ export default async function LandingPage() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-center text-xs text-navy-300">
           <IconUsers width={14} height={14} />
           <span>
-            Plataforma disenada y desarrollada por <CreditoDesarrollo /> para KG Gestion Integral
+            Plataforma diseñada y desarrollada por <CreditoDesarrollo /> para KG Gestión Integral
             S.A.S.
           </span>
           <IconClipboard width={14} height={14} />

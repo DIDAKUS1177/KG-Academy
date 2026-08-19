@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
 
-  // El usuario solo puede registrar avance sobre SU propia matricula
+  // El usuario solo puede registrar avance sobre SU propia matrícula
   const enrollment = await prisma.enrollment.findUnique({ where: { id: parsed.data.enrollmentId } });
   if (!enrollment || enrollment.userId !== user.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });

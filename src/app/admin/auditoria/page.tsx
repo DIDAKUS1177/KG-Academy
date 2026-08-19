@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/utils";
 import { SectionTitle, EmptyState } from "@/components/ui";
 import { IconShield, IconSearch } from "@/components/Icons";
 
-export const metadata: Metadata = { title: "Auditoria" };
+export const metadata: Metadata = { title: "Auditoría" };
 export const dynamic = "force-dynamic";
 
 const ACCION_TONO: Record<string, string> = {
@@ -45,7 +45,7 @@ export default async function AuditoriaPage({
     <div>
       <SectionTitle
         eyebrow="Sistema"
-        title="Registro de auditoria"
+        title="Registro de auditoría"
         description="Trazabilidad de las acciones relevantes de la plataforma (punto 17 del esqueleto funcional)."
       />
 
@@ -62,7 +62,7 @@ export default async function AuditoriaPage({
           </select>
         </div>
         <div className="min-w-[180px]">
-          <label className="label">Accion</label>
+          <label className="label">Acción</label>
           <select name="accion" defaultValue={searchParams.accion ?? ""} className="select">
             <option value="">Todas</option>
             {acciones.map((a) => (
@@ -81,7 +81,7 @@ export default async function AuditoriaPage({
       </form>
 
       {logs.length === 0 ? (
-        <EmptyState icon={<IconShield width={30} height={30} />} title="Sin registros de auditoria" />
+        <EmptyState icon={<IconShield width={30} height={30} />} title="Sin registros de auditoría" />
       ) : (
         <div className="card overflow-x-auto">
           <table className="table-kg">
@@ -89,7 +89,7 @@ export default async function AuditoriaPage({
               <tr>
                 <th>Fecha</th>
                 <th>Actor</th>
-                <th>Accion</th>
+                <th>Acción</th>
                 <th>Entidad</th>
                 <th>Detalle</th>
               </tr>
@@ -109,8 +109,8 @@ export default async function AuditoriaPage({
             </tbody>
           </table>
           <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-            {logs.length} registro(s). La tabla <code>audit_logs</code> conserva ademas el estado antes y
-            despues del cambio en formato JSON.
+            {logs.length} registro(s). La tabla <code>audit_logs</code> conserva además el estado antes y
+            después del cambio en formato JSON.
           </p>
         </div>
       )}

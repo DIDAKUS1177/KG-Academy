@@ -5,7 +5,7 @@ import { toCsv, formatDate } from "@/lib/utils";
 
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 
-/** Exportacion de reportes a CSV (punto 13 del esqueleto). */
+/** Exportación de reportes a CSV (punto 13 del esqueleto). */
 export async function GET(req: Request) {
   const user = await requireUser();
   if (!PERMITIDOS.includes(user.role.code)) {

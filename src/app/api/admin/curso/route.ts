@@ -14,7 +14,7 @@ const PERMITIDOS: string[] = [ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!PERMITIDOS.includes(user.role.code)) {
-    return NextResponse.json({ error: "Solo la administracion de KG puede publicar cursos" }, { status: 403 });
+    return NextResponse.json({ error: "Solo la administración de KG puede publicar cursos" }, { status: 403 });
   }
 
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     },
   });
 
-  // Al publicar el curso se publican sus modulos y las lecciones ya cargadas
+  // Al publicar el curso se publican sus módulos y las lecciones ya cargadas
   if (parsed.data.status === "publicado") {
     await prisma.module.updateMany({ where: { courseId: course.id }, data: { isPublished: true } });
     await prisma.lesson.updateMany({

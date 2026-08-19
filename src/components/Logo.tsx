@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Logotipo oficial de KATERINE GUANARITA - KG GESTION INTEGRAL S.A.S.
+ * Logotipo oficial de KATERINE GUAÑARITA - KG GESTIÓN INTEGRAL S.A.S.
  * Archivo: /public/brand/kg-logo.png
  */
 export function LogoMark({
@@ -26,7 +26,7 @@ export function LogoMark({
     >
       <Image
         src="/brand/kg-logo.png"
-        alt="Logo KG Gestion Integral S.A.S."
+        alt="Logo KG Gestión Integral S.A.S."
         width={size * 2}
         height={size * 2}
         className="h-full w-full object-cover"
@@ -42,7 +42,7 @@ export function LogoFull({ width = 220, className }: { width?: number; className
   return (
     <Image
       src="/brand/kg-logo.png"
-      alt="KATERINE GUANARITA - KG Gestion Integral S.A.S."
+      alt="KATERINE GUAÑARITA - KG Gestión Integral S.A.S."
       width={width}
       height={width}
       className={cn("h-auto w-auto", className)}
@@ -81,7 +81,7 @@ export function Logo({
               dark ? "text-white/60" : "text-navy-400"
             )}
           >
-            KG Gestion Integral S.A.S.
+            KG Gestión Integral S.A.S.
           </span>
         )}
       </span>

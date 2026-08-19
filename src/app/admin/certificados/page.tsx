@@ -39,9 +39,9 @@ export default async function AdminCertificados({ searchParams }: { searchParams
   return (
     <div>
       <SectionTitle
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Certificados emitidos"
-        description="Historial de certificados con codigo unico, verificacion publica y estado."
+        description="Historial de certificados con código único, verificación pública y estado."
       />
 
       <div className="mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -60,7 +60,7 @@ export default async function AdminCertificados({ searchParams }: { searchParams
               height={16}
               className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300"
             />
-            <input name="q" defaultValue={q} className="input pl-10" placeholder="Codigo, titular o documento" />
+            <input name="q" defaultValue={q} className="input pl-10" placeholder="Código, titular o documento" />
           </div>
         </div>
         <button className="btn-primary">Buscar</button>
@@ -76,7 +76,7 @@ export default async function AdminCertificados({ searchParams }: { searchParams
           <table className="table-kg">
             <thead>
               <tr>
-                <th>Codigo</th>
+                <th>Código</th>
                 <th>Titular</th>
                 <th>Curso</th>
                 <th>Empresa</th>
@@ -117,8 +117,8 @@ export default async function AdminCertificados({ searchParams }: { searchParams
             </tbody>
           </table>
           <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-            La revocacion de certificados con registro de motivo esta modelada en la base de datos
-            (campos <code>status</code>, <code>revokedReason</code>, <code>revokedById</code>); la accion
+            La revocación de certificados con registro de motivo está modelada en la base de datos
+            (campos <code>status</code>, <code>revokedReason</code>, <code>revokedById</code>); la acción
             desde la interfaz corresponde a la Fase 1 del backlog.
           </p>
         </div>

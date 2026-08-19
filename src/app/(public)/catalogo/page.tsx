@@ -4,7 +4,7 @@ import { CourseCard } from "@/components/CourseCard";
 import { EmptyState } from "@/components/ui";
 import { IconBook, IconSearch } from "@/components/Icons";
 
-export const metadata: Metadata = { title: "Catalogo de cursos" };
+export const metadata: Metadata = { title: "Catálogo de cursos" };
 export const dynamic = "force-dynamic";
 
 export default async function CatalogoPage({
@@ -36,12 +36,12 @@ export default async function CatalogoPage({
         <div className="pointer-events-none absolute inset-0 bg-kg-mesh" />
         <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:44px_44px] opacity-40" />
         <div className="relative mx-auto max-w-7xl px-4 lg:px-8">
-          <p className="eyebrow">Catalogo</p>
+          <p className="eyebrow">Catálogo</p>
           <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
             Cursos de KG Academy
           </h1>
           <p className="mt-3 max-w-2xl text-white/60">
-            Formacion virtual en Seguridad y Salud en el Trabajo con certificado verificable.
+            Formación virtual en Seguridad y Salud en el Trabajo con certificado verificable.
           </p>
 
           <form className="mt-8 flex max-w-xl gap-2">
@@ -54,7 +54,7 @@ export default async function CatalogoPage({
               <input
                 name="q"
                 defaultValue={q}
-                placeholder="Buscar por nombre o codigo del curso..."
+                placeholder="Buscar por nombre o código del curso..."
                 className="input border-white/20 bg-white/10 pl-11 text-white placeholder:text-white/40 focus:border-lime-500"
               />
             </div>
@@ -69,7 +69,7 @@ export default async function CatalogoPage({
             href="/catalogo"
             className={`badge px-4 py-2 text-xs ${!categoria ? "bg-navy-700 text-white" : "bg-navy-50 text-navy-500 hover:bg-navy-100"}`}
           >
-            Todas las categorias
+            Todas las categorías
           </a>
           {categories.map((c) => (
             <a
@@ -86,7 +86,7 @@ export default async function CatalogoPage({
           <EmptyState
             icon={<IconBook width={30} height={30} />}
             title="No se encontraron cursos"
-            description="Ajuste la busqueda o consulte otra categoria."
+            description="Ajuste la busqueda o consulte otra categoría."
           />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

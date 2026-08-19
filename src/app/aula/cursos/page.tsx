@@ -45,10 +45,10 @@ export default async function MisCursosPage({ searchParams }: { searchParams: { 
       <SectionTitle
         eyebrow="Mi aprendizaje"
         title="Mis cursos"
-        description="Todos los cursos en los que esta matriculado, con su estado y porcentaje de avance."
+        description="Todos los cursos en los que está matriculado, con su estado y porcentaje de avance."
         action={
           <Link href="/catalogo" className="btn-outline btn-sm">
-            Explorar catalogo
+            Explorar catálogo
           </Link>
         }
       />
@@ -73,11 +73,11 @@ export default async function MisCursosPage({ searchParams }: { searchParams: { 
       {enrollments.length === 0 ? (
         <EmptyState
           icon={<IconBook width={30} height={30} />}
-          title="No hay cursos en esta categoria"
-          description="Cambie el filtro o inscribase en un nuevo curso desde el catalogo."
+          title="No hay cursos en esta categoría"
+          description="Cambie el filtro o inscríbase en un nuevo curso desde el catálogo."
           action={
             <Link href="/catalogo" className="btn-lime">
-              Ver catalogo
+              Ver catálogo
             </Link>
           }
         />
@@ -87,7 +87,7 @@ export default async function MisCursosPage({ searchParams }: { searchParams: { 
             <div key={e.id} className="relative">
               {e.assignment?.dueDate && e.status !== "completado" && (
                 <span className="absolute right-3 top-3 z-10 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-navy-600 shadow">
-                  Limite {formatDate(e.assignment.dueDate)}
+                  Límite {formatDate(e.assignment.dueDate)}
                 </span>
               )}
               <CourseCard

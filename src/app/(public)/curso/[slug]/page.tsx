@@ -73,7 +73,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                 <IconClock width={16} height={16} className="text-lime-400" /> {course.durationHours} horas
               </span>
               <span className="inline-flex items-center gap-2">
-                <IconLayers width={16} height={16} className="text-lime-400" /> {course.modules.length} modulos
+                <IconLayers width={16} height={16} className="text-lime-400" /> {course.modules.length} módulos
               </span>
               <span className="inline-flex items-center gap-2">
                 <IconPlay width={16} height={16} className="text-lime-400" /> {totalLessons} lecciones
@@ -93,7 +93,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
             )}
           </div>
 
-          {/* Tarjeta de inscripcion */}
+          {/* Tarjeta de inscripción */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="card overflow-hidden p-0">
               <div className="border-b border-navy-50 bg-navy-50/50 p-6 text-center">
@@ -104,7 +104,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                   Acceso por suscripcion
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-navy-400">
-                  KG Academy se contrata como servicio: su empresa activa el plan y todo el catalogo,
+                  KG Academy se contrata como servicio: su empresa activa el plan y todo el catálogo,
                   con evaluaciones y certificados, queda disponible para sus trabajadores.
                 </p>
               </div>
@@ -135,9 +135,9 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                 <ul className="space-y-2.5 pt-3 text-sm text-navy-500">
                   {[
                     "Acceso 24/7 desde cualquier dispositivo",
-                    "Evaluacion diagnostica y final",
-                    "Certificado con codigo unico y QR",
-                    `Nota minima aprobatoria: ${course.minPassingScore}/100`,
+                    "Evaluación diagnóstica y final",
+                    "Certificado con código único y QR",
+                    `Nota mínima aprobatoria: ${course.minPassingScore}/100`,
                     `Intentos permitidos: ${course.maxAttempts}`,
                   ].map((t) => (
                     <li key={t} className="flex gap-2.5">
@@ -165,13 +165,13 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
             <h2 className="h-display text-2xl">Contenido programatico</h2>
             <span className="kg-rule mt-3 block" />
             <p className="mt-4 text-sm text-navy-400">
-              {course.modules.length} modulos &middot; {totalLessons} lecciones
+              {course.modules.length} módulos &middot; {totalLessons} lecciones
               {pendientes > 0 && (
                 <>
                   {" "}
                   &middot;{" "}
                   <span className="font-semibold text-amber-600">
-                    {pendientes} lecciones con contenido en produccion
+                    {pendientes} lecciones con contenido en producción
                   </span>
                 </>
               )}
@@ -225,7 +225,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                     <p className="text-xs text-navy-400">{a.description}</p>
                   </div>
                   <span className="badge-blue shrink-0">
-                    {a.type === "final" ? `Minimo ${a.minScore}` : "No calificable"}
+                    {a.type === "final" ? `Mínimo ${a.minScore}` : "No calificable"}
                   </span>
                 </div>
               ))}
@@ -234,8 +234,8 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
 
           {pendientes > 0 && (
             <ContentPlaceholder
-              title="Material audiovisual en produccion"
-              description="La estructura del curso, las evaluaciones y el certificado ya estan operativos. Cuando KG Gestion Integral tenga listos los videos, PDF o recursos de Genially, se cargan desde Administracion > Cursos > Constructor, sin intervencion del desarrollador."
+              title="Material audiovisual en producción"
+              description="La estructura del curso, las evaluaciones y el certificado ya están operativos. Cuando KG Gestión Integral tenga listos los videos, PDF o recursos de Genially, se cargan desde Administración > Cursos > Constructor, sin intervención del desarrollador."
             />
           )}
         </div>
@@ -251,17 +251,17 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
             <p className="mt-2 text-sm leading-relaxed text-navy-500">{course.requirements}</p>
           </div>
           <div className="panel">
-            <h3 className="font-display text-base font-bold text-navy-700">Metodologia</h3>
+            <h3 className="font-display text-base font-bold text-navy-700">Metodología</h3>
             <p className="mt-2 text-sm leading-relaxed text-navy-500">{course.methodology}</p>
           </div>
           <div className="panel bg-navy-50/60">
-            <h3 className="font-display text-base font-bold text-navy-700">Reglas de aprobacion</h3>
+            <h3 className="font-display text-base font-bold text-navy-700">Reglas de aprobación</h3>
             <dl className="mt-3 space-y-2 text-sm">
               {[
-                ["Nota minima", `${course.minPassingScore} / 100`],
+                ["Nota mínima", `${course.minPassingScore} / 100`],
                 ["Intentos", String(course.maxAttempts)],
-                ["Lecciones obligatorias", course.requiresAllLessons ? "Todas" : "Segun peso"],
-                ["Evaluacion final", course.requiresFinalExam ? "Obligatoria" : "Opcional"],
+                ["Lecciones obligatorias", course.requiresAllLessons ? "Todas" : "Según peso"],
+                ["Evaluación final", course.requiresFinalExam ? "Obligatoria" : "Opcional"],
                 ["Vigencia del certificado", course.certificateValidityMonths ? `${course.certificateValidityMonths} meses` : "Indefinida"],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4">

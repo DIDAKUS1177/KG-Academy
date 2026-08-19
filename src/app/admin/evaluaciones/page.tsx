@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
-import { ROLES } from "@/lib/constants";
+import { ROLES, ASSESSMENT_TYPE_LABEL } from "@/lib/constants";
 import { SectionTitle, StatCard, StatusBadge } from "@/components/ui";
 import { IconClipboard, IconCheck, IconChart, IconLayers } from "@/components/Icons";
 
@@ -28,9 +28,9 @@ export default async function AdminEvaluaciones() {
   return (
     <div>
       <SectionTitle
-        eyebrow="Administracion"
+        eyebrow="Administración"
         title="Evaluaciones y banco de preguntas"
-        description="Configuracion de evaluaciones diagnosticas, por modulo y finales."
+        description="Configuración de evaluaciones diagnósticas, por módulo y finales."
       />
 
       <div className="mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -42,7 +42,7 @@ export default async function AdminEvaluaciones() {
         />
         <StatCard label="Intentos" value={attempts.length} tone="amber" icon={<IconChart width={20} height={20} />} />
         <StatCard
-          label="Tasa de aprobacion"
+          label="Tasa de aprobación"
           value={`${attempts.length ? Math.round((aprobados / attempts.length) * 100) : 0}%`}
           hint={`Nota promedio: ${Math.round(notaProm)}`}
           tone="lime"
@@ -58,7 +58,7 @@ export default async function AdminEvaluaciones() {
           <thead>
             <tr>
               <th>Curso</th>
-              <th>Evaluacion</th>
+              <th>Evaluación</th>
               <th>Tipo</th>
               <th>Preguntas</th>
               <th>Nota min.</th>
@@ -73,7 +73,7 @@ export default async function AdminEvaluaciones() {
                 <td className="text-xs text-navy-500">{a.course.title}</td>
                 <td className="font-semibold text-navy-700">{a.title}</td>
                 <td>
-                  <span className="badge-blue capitalize">{a.type}</span>
+                  <span className="badge-blue">{ASSESSMENT_TYPE_LABEL[a.type] ?? a.type}</span>
                 </td>
                 <td className="font-bold">{a.questions.length}</td>
                 <td>{a.minScore}</td>
@@ -117,7 +117,7 @@ export default async function AdminEvaluaciones() {
           para poder probar el motor de calificacion. KG debe reemplazarlas por el banco oficial de cada
           curso. El editor visual de preguntas corresponde a la Fase 1 del backlog; el modelo de datos
           (<code>question_banks</code>, <code>questions</code>, <code>question_options</code>,{" "}
-          <code>assessment_questions</code>) ya soporta seleccion unica, multiple y verdadero/falso.
+          <code>assessment_questions</code>) ya soporta seleccion única, multiple y verdadero/falso.
         </p>
       </div>
     </div>

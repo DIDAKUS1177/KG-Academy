@@ -92,7 +92,7 @@ export function AppShell({
             <p className="truncate text-[11px] text-white/50">{user.roleLabel}</p>
           </div>
           <form action="/api/auth/logout" method="post">
-            <button className="rounded-lg p-2 text-white/50 transition hover:bg-white/10 hover:text-white" title="Cerrar sesion">
+            <button className="rounded-lg p-2 text-white/50 transition hover:bg-white/10 hover:text-white" title="Cerrar sesión">
               <IconLogout width={18} height={18} />
             </button>
           </form>
@@ -124,7 +124,7 @@ export function AppShell({
           </button>
           <div className="flex-1" />
           <Link href="/catalogo" className="hidden text-sm font-semibold text-navy-500 hover:text-lime-600 sm:block">
-            Catalogo
+            Catálogo
           </Link>
           <Link
             href="/aula/notificaciones"
@@ -145,7 +145,7 @@ export function AppShell({
         <main className="mx-auto max-w-[1400px] px-4 py-8 lg:px-8">{children}</main>
 
         <footer className="border-t border-navy-100 px-4 py-6 text-center text-[11px] text-navy-300 lg:px-8">
-          KG Academy &middot; KG Gestion Integral S.A.S. &middot; Desarrollado por{" "}
+          KG Academy &middot; KG Gestión Integral S.A.S. &middot; Desarrollado por{" "}
           <CreditoDesarrollo />
         </footer>
       </div>

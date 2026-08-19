@@ -18,10 +18,10 @@ export default function VerificarPage({ searchParams }: { searchParams: { codigo
           <IconQr width={32} height={32} />
         </span>
         <h1 className="mt-7 font-display text-4xl font-extrabold tracking-tight">
-          Verificacion de certificados
+          Verificación de certificados
         </h1>
         <p className="mx-auto mt-4 max-w-lg text-white/60">
-          Ingrese el codigo unico impreso en el certificado o escanee su codigo QR para confirmar su
+          Ingrese el código único impreso en el certificado o escanee su código QR para confirmar su
           autenticidad, el estado de vigencia y los datos del titular.
         </p>
 
@@ -37,7 +37,7 @@ export default function VerificarPage({ searchParams }: { searchParams: { codigo
 
         <p className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/45">
           <IconShield width={14} height={14} className="text-lime-400" />
-          Consulta publica &middot; no requiere iniciar sesion
+          Consulta pública &middot; no requiere iniciar sesión
         </p>
       </div>
     </section>

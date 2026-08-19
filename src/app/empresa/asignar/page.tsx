@@ -41,7 +41,7 @@ export default async function AsignarPage({ searchParams }: { searchParams: { em
       <SectionTitle
         eyebrow={company.tradeName ?? company.legalName}
         title="Asignar cursos"
-        description="Seleccione el curso, los trabajadores y la fecha limite. Puede asignar de forma individual o masiva."
+        description="Seleccione el curso, los trabajadores y la fecha límite. Puede asignar de forma individual o masiva."
       />
 
       <AsignarForm
@@ -53,7 +53,7 @@ export default async function AsignarPage({ searchParams }: { searchParams: { em
           name: `${m.user.firstName} ${m.user.lastName}`,
           email: m.user.email,
           areaId: m.areaId,
-          areaName: m.area?.name ?? "Sin area",
+          areaName: m.area?.name ?? "Sin área",
           position: m.position?.name ?? "—",
           employeeCode: m.employeeCode ?? "",
         }))}

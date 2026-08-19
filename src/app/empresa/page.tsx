@@ -36,7 +36,7 @@ export default async function EmpresaDashboard({ searchParams }: { searchParams:
       <EmptyState
         icon={<IconBuilding width={30} height={30} />}
         title="Su usuario no esta vinculado a una empresa"
-        description="Solicite al administrador de KG Academy la vinculacion de su cuenta a una empresa."
+        description="Solicite al administrador de KG Academy la vinculación de su cuenta a una empresa."
       />
     );
   }
@@ -71,10 +71,10 @@ export default async function EmpresaDashboard({ searchParams }: { searchParams:
     cursos.set(a.courseId, cur);
   }
 
-  // Agregado por area
+  // Agregado por área
   const areas = new Map<string, { total: number; avance: number }>();
   for (const m of porArea) {
-    const key = m.area?.name ?? "Sin area";
+    const key = m.area?.name ?? "Sin área";
     const cur = areas.get(key) ?? { total: 0, avance: 0 };
     const prom =
       m.user.enrollments.length > 0
@@ -157,15 +157,15 @@ export default async function EmpresaDashboard({ searchParams }: { searchParams:
               </div>
             ))}
             {cursos.size === 0 && (
-              <p className="py-6 text-center text-sm text-navy-300">Aun no hay cursos asignados</p>
+              <p className="py-6 text-center text-sm text-navy-300">Aún no hay cursos asignados</p>
             )}
           </div>
         </div>
 
-        {/* Avance por area */}
+        {/* Avance por área */}
         <div className="card p-6">
-          <p className="font-display text-base font-bold text-navy-700">Avance por area</p>
-          <p className="text-xs text-navy-400">Indicador de capacitacion por area organizacional</p>
+          <p className="font-display text-base font-bold text-navy-700">Avance por área</p>
+          <p className="text-xs text-navy-400">Indicador de capacitación por área organizacional</p>
           <div className="mt-5 space-y-5">
             {[...areas.entries()].map(([name, a]) => (
               <div key={name}>
@@ -202,7 +202,7 @@ export default async function EmpresaDashboard({ searchParams }: { searchParams:
                 <th>Curso</th>
                 <th className="w-48">Avance</th>
                 <th>Estado</th>
-                <th>Fecha limite</th>
+                <th>Fecha límite</th>
               </tr>
             </thead>
             <tbody>
@@ -239,7 +239,7 @@ export default async function EmpresaDashboard({ searchParams }: { searchParams:
       </div>
 
       <p className="flex items-center justify-center gap-2 text-center text-[11px] text-navy-300">
-        <IconUsers width={13} height={13} /> Los datos de esta empresa estan aislados de las demas
+        <IconUsers width={13} height={13} /> Los datos de esta empresa están aislados de las demás
         empresas de la plataforma.
       </p>
     </div>

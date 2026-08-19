@@ -10,9 +10,9 @@ const schema = z.object({
 });
 
 /**
- * Calificacion automatica de evaluaciones.
+ * Calificación automática de evaluaciones.
  * Registra el intento, cada respuesta, la nota y recalcula el progreso del curso
- * (lo que puede disparar la emision automatica del certificado).
+ * (lo que puede disparar la emisión automática del certificado).
  */
 export async function POST(req: Request) {
   const user = await requireUser();
@@ -26,12 +26,12 @@ export async function POST(req: Request) {
       questions: { include: { question: { include: { options: true } } } },
     },
   });
-  if (!assessment) return NextResponse.json({ error: "Evaluacion no encontrada" }, { status: 404 });
+  if (!assessment) return NextResponse.json({ error: "Evaluación no encontrada" }, { status: 404 });
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: assessment.courseId } },
   });
-  if (!enrollment) return NextResponse.json({ error: "No esta matriculado en el curso" }, { status: 403 });
+  if (!enrollment) return NextResponse.json({ error: "No está matriculado en el curso" }, { status: 403 });
 
   const previos = await prisma.assessmentAttempt.count({
     where: { assessmentId: assessment.id, enrollmentId: enrollment.id },
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Agoto los intentos permitidos" }, { status: 403 });
   }
 
-  // ---- Calificacion ----
+  // ---- Calificación ----
   const respuestas = new Map(parsed.data.answers.map((a) => [a.questionId, a.optionId]));
   let correctas = 0;
   let puntos = 0;
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     summary: `Intento ${previos + 1} de "${assessment.title}" - nota ${score}`,
   });
 
-  // Puede disparar la emision del certificado
+  // Puede disparar la emisión del certificado
   await recalcEnrollment(enrollment.id);
 
   return NextResponse.json({ ok: true, attemptId: attempt.id, score, passed });

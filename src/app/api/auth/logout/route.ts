@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       action: "logout",
       entity: "users",
       entityId: s.sub,
-      summary: "Cierre de sesion",
+      summary: "Cierre de sesión",
     });
   }
   await destroySession();

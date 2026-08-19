@@ -12,8 +12,8 @@ export default function RegistroPage() {
         Crear cuenta
       </h1>
       <p className="mt-2 text-sm text-navy-400">
-        Registrese para acceder a los cursos. Si su empresa ya esta en KG Academy, indique el NIT y
-        quedara vinculado automaticamente.
+        Regístrese para acceder a los cursos. Si su empresa ya está en KG Academy, indique el NIT y
+        quedará vinculado automaticamente.
       </p>
 
       <div className="mt-8">
@@ -23,7 +23,7 @@ export default function RegistroPage() {
       <p className="mt-6 text-center text-sm text-navy-400">
         Ya tiene cuenta?{" "}
         <Link href="/ingresar" className="link-kg">
-          Iniciar sesion
+          Iniciar sesión
         </Link>
       </p>
     </div>

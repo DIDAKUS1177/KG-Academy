@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { ProgressBar, SectionTitle, StatusBadge, StatCard } from "@/components/ui";
 import { IconBook, IconArrowRight, IconAlert, IconCheck, IconLayers } from "@/components/Icons";
 
-export const metadata: Metadata = { title: "Gestion de cursos" };
+export const metadata: Metadata = { title: "Gestión de cursos" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminCursos() {
@@ -38,9 +38,9 @@ export default async function AdminCursos() {
   return (
     <div>
       <SectionTitle
-        eyebrow="Administracion"
-        title="Gestion de cursos"
-        description="Estructura, estado de publicacion y carga de contenido de cada curso."
+        eyebrow="Administración"
+        title="Gestión de cursos"
+        description="Estructura, estado de publicación y carga de contenido de cada curso."
       />
 
       <div className="mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -87,7 +87,7 @@ export default async function AdminCursos() {
                   </div>
                   <p className="mt-1 line-clamp-2 max-w-2xl text-sm text-navy-400">{c.subtitle}</p>
                   <p className="mt-2 text-[11px] text-navy-300">
-                    {c.code} &middot; {c.durationHours} h &middot; {c.modules.length} modulos &middot;{" "}
+                    {c.code} &middot; {c.durationHours} h &middot; {c.modules.length} módulos &middot;{" "}
                     {lecciones} lecciones &middot; {c.assessments.length} evaluaciones
                     {c.instructor && ` · ${c.instructor.firstName} ${c.instructor.lastName}`}
                   </p>
@@ -117,13 +117,13 @@ export default async function AdminCursos() {
                     Constructor <IconArrowRight width={13} height={13} />
                   </Link>
                   <Link href={`/curso/${c.slug}`} target="_blank" className="btn-outline btn-sm">
-                    Vista publica
+                    Vista pública
                   </Link>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-6 border-t border-navy-50 bg-navy-50/40 px-6 py-3 text-[11px] text-navy-400">
-                <span>Matriculas: <strong className="text-navy-600">{c.enrollments.length}</strong></span>
+                <span>Matrículas: <strong className="text-navy-600">{c.enrollments.length}</strong></span>
                 <span>
                   Completados:{" "}
                   <strong className="text-navy-600">
@@ -131,7 +131,7 @@ export default async function AdminCursos() {
                   </strong>
                 </span>
                 <span>Certificados: <strong className="text-navy-600">{c.certificates.length}</strong></span>
-                <span>Nota minima: <strong className="text-navy-600">{c.minPassingScore}</strong></span>
+                <span>Nota mínima: <strong className="text-navy-600">{c.minPassingScore}</strong></span>
                 <span>Creado: <strong className="text-navy-600">{formatDate(c.createdAt)}</strong></span>
               </div>
             </div>

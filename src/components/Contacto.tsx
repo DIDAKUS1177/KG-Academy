@@ -4,7 +4,7 @@ import { IconMail, IconPhone, IconWhatsApp } from "./Icons";
 
 /**
  * Credito de desarrollo. Enlaza al perfil profesional del desarrollador.
- * Se usa en el pie publico, en los paneles y en la pantalla de acceso.
+ * Se usa en el pie público, en los paneles y en la pantalla de acceso.
  */
 export function CreditoDesarrollo({
   tone = "light",
@@ -75,8 +75,8 @@ export function EnlacesContacto({ tone = "dark" }: { tone?: "light" | "dark" }) 
 }
 
 /**
- * Boton flotante de WhatsApp para las paginas publicas.
- * Es la via de contacto mas directa para el modelo comercial de KG:
+ * Boton flotante de WhatsApp para las páginas públicas.
+ * Es la vía de contacto más directa para el modelo comercial de KG:
  * la plataforma se vende como servicio, no por autogestion de compra.
  */
 export function BotonWhatsApp() {
@@ -89,7 +89,7 @@ export function BotonWhatsApp() {
       className="group fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 rounded-full bg-[#25D366] py-3 pl-3.5 pr-4 text-navy-900 shadow-kg-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40 print:hidden"
     >
       <IconWhatsApp width={24} height={24} className="text-white" />
-      <span className="hidden text-sm font-bold text-white sm:inline">Escribanos</span>
+      <span className="hidden text-sm font-bold text-white sm:inline">Escríbanos</span>
     </a>
   );
 }

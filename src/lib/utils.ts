@@ -55,7 +55,7 @@ export function slugify(text: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-/** Genera un codigo unico de verificacion de certificado: KG-2026-A7F3C9 */
+/** Genera un código único de verificación de certificado: KG-2026-A7F3C9 */
 export function certificateCode(year = new Date().getFullYear()) {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";

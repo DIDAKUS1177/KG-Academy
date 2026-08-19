@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/catalogo", label: "Cursos" },
   { href: "/#empresas", label: "Para empresas" },
-  { href: "/#como-funciona", label: "Como funciona" },
+  { href: "/#como-funciona", label: "Cómo funciona" },
   { href: "/verificar", label: "Verificar certificado" },
 ];
 
@@ -66,7 +66,7 @@ export function SiteHeader({ session }: { session: { name: string; home: string 
                     : "text-white hover:bg-white/10"
                 )}
               >
-                Iniciar sesion
+                Iniciar sesión
               </Link>
               <Link href="/registro" className="btn-lime">
                 Crear cuenta

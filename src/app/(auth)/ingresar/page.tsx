@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 
-export const metadata: Metadata = { title: "Iniciar sesion" };
+export const metadata: Metadata = { title: "Iniciar sesión" };
 
 export default function IngresarPage() {
   return (
     <div>
       <p className="eyebrow">Bienvenido de nuevo</p>
       <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-navy-700">
-        Iniciar sesion
+        Iniciar sesión
       </h1>
       <p className="mt-2 text-sm text-navy-400">
-        Acceda a su aula virtual, su panel empresarial o la administracion de KG Academy.
+        Acceda a su aula virtual, su panel empresarial o la administración de KG Academy.
       </p>
 
       <div className="mt-8">
@@ -22,7 +22,7 @@ export default function IngresarPage() {
       <p className="mt-6 text-center text-sm text-navy-400">
         No tiene cuenta?{" "}
         <Link href="/registro" className="link-kg">
-          Registrese aqui
+          Regístrese aquí
         </Link>
       </p>
     </div>

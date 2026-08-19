@@ -75,8 +75,8 @@ export default async function SeguimientoPage({
     <div>
       <SectionTitle
         eyebrow={company.tradeName ?? company.legalName}
-        title="Seguimiento de capacitacion"
-        description="Quien inicio, quien va en progreso, quien termino y quien no ha entrado."
+        title="Seguimiento de capacitación"
+        description="Quién inició, quién va en progreso, quién terminó y quién no ha entrado."
         action={
           <a href={`/api/empresa/reporte?tipo=seguimiento&empresa=${company.id}`} className="btn-lime btn-sm">
             <IconDownload width={14} height={14} /> Exportar CSV
@@ -116,7 +116,7 @@ export default async function SeguimientoPage({
           </select>
         </div>
         <div className="min-w-[150px]">
-          <label className="label">Area</label>
+          <label className="label">Área</label>
           <select name="area" defaultValue={searchParams.area ?? ""} className="select">
             <option value="">Todas</option>
             {areas.map((a) => (
@@ -146,12 +146,12 @@ export default async function SeguimientoPage({
           <thead>
             <tr>
               <th>Trabajador</th>
-              <th>Area / Cargo</th>
+              <th>Área / Cargo</th>
               <th>Curso</th>
               <th className="w-44">Avance</th>
               <th>Nota</th>
               <th>Estado</th>
-              <th>Fecha limite</th>
+              <th>Fecha límite</th>
             </tr>
           </thead>
           <tbody>
@@ -192,7 +192,7 @@ export default async function SeguimientoPage({
                     </span>
                     {dias !== null && a.status !== "completado" && (
                       <span className="block text-[10px] text-navy-300">
-                        {dias >= 0 ? `${dias} dias restantes` : `vencido hace ${-dias} dias`}
+                        {dias >= 0 ? `${dias} días restantes` : `vencido hace ${-dias} días`}
                       </span>
                     )}
                   </td>

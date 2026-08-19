@@ -72,7 +72,7 @@ export function RegisterForm() {
           </select>
         </div>
         <div>
-          <label className="label">Numero de documento</label>
+          <label className="label">Número de documento</label>
           <input name="documentNumber" className="input" placeholder="1023456789" />
         </div>
       </div>
@@ -84,7 +84,7 @@ export function RegisterForm() {
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Telefono</label>
+          <label className="label">Teléfono</label>
           <input name="phone" className="input" placeholder="300 000 0000" />
         </div>
         <div>
@@ -94,21 +94,21 @@ export function RegisterForm() {
       </div>
 
       <div className="mt-4">
-        <label className="label">Contrasena</label>
+        <label className="label">Contraseña</label>
         <input
           name="password"
           type="password"
           required
           minLength={8}
           className="input"
-          placeholder="Minimo 8 caracteres"
+          placeholder="Mínimo 8 caracteres"
         />
       </div>
 
       <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl bg-navy-50/70 p-3 text-xs leading-relaxed text-navy-500">
         <input name="acceptedTerms" type="checkbox" required className="mt-0.5 h-4 w-4 accent-lime-500" />
         <span>
-          Autorizo a KG Gestion Integral S.A.S. el tratamiento de mis datos personales conforme a la
+          Autorizo a KG Gestión Integral S.A.S. el tratamiento de mis datos personales conforme a la
           Ley 1581 de 2012 y acepto los terminos de uso de la plataforma.
         </span>
       </label>

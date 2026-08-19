@@ -10,7 +10,7 @@ export default function NotFound() {
       <div className="relative">
         <LogoMark size={78} className="mx-auto" />
         <p className="mt-8 font-display text-7xl font-extrabold text-lime-400">404</p>
-        <h1 className="mt-3 font-display text-2xl font-extrabold">Pagina no encontrada</h1>
+        <h1 className="mt-3 font-display text-2xl font-extrabold">Página no encontrada</h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-white/60">
           El recurso que busca no existe o no tiene permisos para verlo.
         </p>
