@@ -306,7 +306,9 @@ cliente:
 3. **Pasarela de pagos** y facturación.
 4. **Proveedor SMTP** para el envío real de correos.
 5. **Proveedor de video** y política de retención.
-6. **Dominio definitivo** de producción.
+6. **Dominio definitivo** de producción, y con él el **correo corporativo de contacto**: hoy la
+   plataforma publica un Gmail personal porque un buzón que rebota sería peor. Se cambia en la
+   constante `CONTACTO` de `src/lib/constants.ts`.
 7. Matriz fina de permisos más allá de la propuesta implementada.
 8. Redacción final de la política de tratamiento de datos (revisión jurídica).
 

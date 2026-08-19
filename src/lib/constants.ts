@@ -25,6 +25,9 @@ export const CONTACTO = {
   /** Formato E.164 sin espacios, para los enlaces tel: y wa.me */
   telefonoE164: "+573207605561",
   whatsapp: "https://wa.me/573207605561",
+  // PENDIENTE: reemplazar por el correo corporativo (contacto@<dominio>) cuando
+  // KG contrate el dominio. Se deja el personal a proposito: un buzon que rebota
+  // es peor que uno poco elegante. Cambiar aqui basta para toda la plataforma.
   email: "katerineguanarita@gmail.com",
 } as const;
 
