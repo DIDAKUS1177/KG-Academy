@@ -36,14 +36,14 @@ W, H = Inches(13.333), Inches(7.5)
 
 
 class Deck:
-    """Envoltorio con numeracion automatica de laminas y cabecera de marca."""
+    """Envoltorio con numeración automática de laminas y cabecera de marca."""
 
     def __init__(self):
         self.prs = Presentation()
         self.prs.slide_width, self.prs.slide_height = W, H
         self.n = 0
 
-    # ----------------------------------------------------------- basicos
+    # ----------------------------------------------------------- básicos
     def blank(self):
         return self.prs.slide_layouts[6] and self.prs.slides.add_slide(self.prs.slide_layouts[6])
 
@@ -70,9 +70,9 @@ class Deck:
         text(s, Inches(0.95), Inches(4.4), Inches(7.0), Inches(1.3),
              [(blurb, 13, False, RGBColor(0xC5, 0xD5, 0xE5), 0)], spacing=1.25)
         text(s, Inches(0.95), Inches(5.9), Inches(7.4), Inches(1.1),
-             [("KG GESTION INTEGRAL S.A.S.  ·  KATERINE GUANARITA", 12, True, WHITE, 4),
-              ("Realizado por Diego Alejandro Hernandez Blanco", 12, True, LIME, 4),
-              ("Bogota D.C., Colombia  ·  2026", 10, False, GREY, 0)])
+             [("KG GESTIÓN INTEGRAL S.A.S.  ·  KATERINE GUAÑARITA", 12, True, WHITE, 4),
+              ("Realizado por Diego Alejandro Hernández Blanco", 12, True, LIME, 4),
+              ("Bogotá D.C., Colombia  ·  2026", 10, False, GREY, 0)])
         return s
 
     def page(self, eyebrow, title, sub=None):
@@ -89,7 +89,7 @@ class Deck:
 
         self.n += 1
         text(s, Inches(0.62), H - Inches(0.44), Inches(9), Inches(0.3),
-             [("KG Academy  ·  KG Gestion Integral S.A.S.  ·  Desarrollado por Diego Alejandro Hernandez Blanco",
+             [("KG Academy  ·  KG Gestión Integral S.A.S.  ·  Desarrollado por Diego Alejandro Hernández Blanco",
                8.5, False, GREY, 0)])
         text(s, W - Inches(1.1), H - Inches(0.44), Inches(0.5), Inches(0.3),
              [(str(self.n), 9, True, NAVY, 0)], align=PP_ALIGN.RIGHT)
@@ -104,11 +104,11 @@ class Deck:
         text(s, Inches(1.5), Inches(4.25), W - Inches(3.0), Inches(1.6),
              [("KG ACADEMY", 34, True, WHITE, 6),
               (claim, 15, False, LIME, 14),
-              ("KG GESTION INTEGRAL S.A.S.  ·  KATERINE GUANARITA", 12, True, RGBColor(0xC5, 0xD5, 0xE5), 4)],
+              ("KG GESTIÓN INTEGRAL S.A.S.  ·  KATERINE GUAÑARITA", 12, True, RGBColor(0xC5, 0xD5, 0xE5), 4)],
              align=PP_ALIGN.CENTER)
         rect(s, W / 2 - Inches(3.1), Inches(6.15), Inches(6.2), Inches(0.62), fill=NAVY_L)
         text(s, W / 2 - Inches(3.0), Inches(6.29), Inches(6.0), Inches(0.35),
-             [("Disenado y desarrollado por Diego Alejandro Hernandez Blanco", 11.5, True, LIME, 0)],
+             [("Diseñado y desarrollado por Diego Alejandro Hernández Blanco", 11.5, True, LIME, 0)],
              align=PP_ALIGN.CENTER)
         return s
 
@@ -136,7 +136,7 @@ def rect(s, x, y, w, h, fill=None, line=None, shape=MSO_SHAPE.ROUNDED_RECTANGLE,
 
 
 def text(s, x, y, w, h, runs, align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, spacing=1.0):
-    """runs = [(texto, tamano, negrita, color, espacio_despues_pt)]"""
+    """runs = [(texto, tamaño, negrita, color, espacio_despues_pt)]"""
     tb = s.shapes.add_textbox(x, y, w, h)
     tf = tb.text_frame
     tf.word_wrap = True

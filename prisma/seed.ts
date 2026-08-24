@@ -6,7 +6,7 @@
  * banco de preguntas de ejemplo, una empresa demo con trabajadores,
  * asignaciones y avances para poder revisar todos los paneles.
  *
- * Autor del desarrollo: Diego Alejandro Hernandez Blanco
+ * Autor del desarrollo: Diego Alejandro Hernández Blanco
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -465,7 +465,7 @@ async function main() {
       documentType: "CC",
       documentNumber: "1010101010",
       jobTitle: "Directora General",
-      city: "Bogota D.C.",
+      city: "Bogotá D.C.",
       roleId: roles.superadmin,
       status: "activo",
       emailVerified: true,
@@ -543,7 +543,7 @@ async function main() {
       contactName: "Marcela Ruiz",
       contactEmail: "rrhh@constructoraandina.com",
       contactPhone: "3001234567",
-      city: "Bogota D.C.",
+      city: "Bogotá D.C.",
       address: "Calle 100 # 15-20",
       status: "activa",
     },
@@ -554,7 +554,7 @@ async function main() {
   });
 
   const sedes = await Promise.all([
-    prisma.companyLocation.create({ data: { companyId: empresa.id, name: "Sede Principal Bogota", city: "Bogota D.C." } }),
+    prisma.companyLocation.create({ data: { companyId: empresa.id, name: "Sede Principal Bogotá", city: "Bogotá D.C." } }),
     prisma.companyLocation.create({ data: { companyId: empresa.id, name: "Obra Chia", city: "Chia" } }),
   ]);
   const areas = await Promise.all([

@@ -273,7 +273,7 @@ export function CursoConstructor({
           </dl>
           <p className="mt-4 flex gap-2 rounded-lg bg-navy-50/70 p-3 text-[11px] leading-relaxed text-navy-400">
             <IconFile width={13} height={13} className="mt-0.5 shrink-0" />
-            La edicion de estas reglas desde la interfaz corresponde a la Fase 1 del backlog; hoy se
+            La edición de estas reglas desde la interfaz corresponde a la Fase 1 del backlog; hoy se
             configuran en el seed o directamente en la base de datos.
           </p>
         </div>

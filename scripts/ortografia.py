@@ -44,6 +44,12 @@ FRASES_CONTEXTO = [
     ("Que aporta", "QUE_I aporta"),
     ("Que es", "QUE_I es"),
     ("que el codigo este escrito", "que el codigo ESTE_V escrito"),
+    # "publica" y "valida" son adjetivos casi siempre; en estas frases son verbos.
+    ("Publica cursos", "PUBLICA_V cursos"),
+    ("publica cursos", "publica_v cursos"),
+    ("y publica el curso", "y publica_v el curso"),
+    ("Cualquiera valida", "Cualquiera valida_v"),
+    ("KG produce cada modulo", "KG produce cada modulo"),
 ]
 
 # Los marcadores se resuelven al final
@@ -58,6 +64,9 @@ MARCADORES = {
     "como_i": "cómo",
     "QUE_I": "Qué",
     "ESTE_V": "esté",
+    "PUBLICA_V": "Publica",
+    "publica_v": "publica",
+    "valida_v": "valida",
 }
 
 # "esta" como verbo (seguido de participio, adjetivo o preposicion)
@@ -111,7 +120,7 @@ BASE = {
     "clinico": "clínico", "clinica": "clínica", "clinicas": "clínicas",
     "codigo": "código", "codigos": "códigos", "cronico": "crónico",
     "despues": "después", "ademas": "además", "tambien": "también", "segun": "según",
-    "dia": "día", "dias": "días", "diagnostico": "diagnóstico",
+    "dia": "día", "dias": "días", "diagnostico": "diagnóstico", "diagnostica": "diagnóstica",
     "electrico": "eléctrico", "electrica": "eléctrica",
     "especifico": "específico", "especifica": "específica",
     "facil": "fácil", "dificil": "difícil", "fisico": "físico", "fisica": "física",
@@ -178,6 +187,14 @@ BASE = {
     "seleccion": "selección", "demostracion": "demostración",
     "distribucion": "distribución", "expedicion": "expedición",
     "facturacion": "facturación",
+    "autenticacion": "autenticación", "solucion": "solución", "peticion": "petición",
+    "validacion": "validación", "justificacion": "justificación",
+    "tecnologia": "tecnología", "tecnologias": "tecnologías", "tecnologico": "tecnológico",
+    "monolitico": "monolítico", "monolitica": "monolítica",
+    "estatico": "estático", "estatica": "estática", "estaticos": "estáticos",
+    "numeracion": "numeración", "version": "versión",
+    "catalogo": "catálogo", "catalogos": "catálogos",
+    "bogota": "bogotá", "hernandez": "hernández",
     "matricula": "matrícula", "matriculas": "matrículas", "demas": "demás",
     "envio": "envío", "actualizacion": "actualización", "duracion": "duración",
     "estandar": "estándar", "estandares": "estándares",
@@ -272,13 +289,15 @@ def corregir_jsx(t):
         ultimo = m.end()
     out.append(corregir_texto(t[ultimo:]))
     return "".join(out)
-RE_COMENTARIO = re.compile(r"^(\s*(?://|\*|/\*)\s?)(.*)$")
+RE_COMENTARIO = re.compile(r"^(\s*(?://|#|\*|/\*)\s?)(.*)$")
 RE_COMENTARIO_JSX = re.compile(r"\{/\*([^*]*)\*/\}")
 
 
 def procesar(ruta):
     original = io.open(ruta, encoding="utf-8").read()
     s = original
+    # En Python no hay JSX; aplicar esa regla ahi tocaria diccionarios y f-strings.
+    es_python = ruta.endswith(".py")
 
     # --- frases con contexto ---
     for viejo, nuevo in FRASES_CONTEXTO:
@@ -313,10 +332,12 @@ def procesar(ruta):
         return "`" + corregir_template(t) + "`"
 
     s = RE_BACKTICK.sub(sub_backtick, s)
-    s = RE_JSX.sub(lambda m: corregir_jsx(m.group(1)), s)
+    if not es_python:
+        s = RE_JSX.sub(lambda m: corregir_jsx(m.group(1)), s)
 
     # comentarios JSX: {/* ... */}
-    s = RE_COMENTARIO_JSX.sub(lambda m: "{/*" + corregir_texto(m.group(1)) + "*/}", s)
+    if not es_python:
+        s = RE_COMENTARIO_JSX.sub(lambda m: "{/*" + corregir_texto(m.group(1)) + "*/}", s)
 
     # --- resolver marcadores ---
     for marca, valor in MARCADORES.items():
@@ -329,11 +350,16 @@ def procesar(ruta):
 
 
 if __name__ == "__main__":
-    archivos = sorted(
-        glob.glob("src/**/*.tsx", recursive=True)
-        + glob.glob("src/**/*.ts", recursive=True)
-        + ["prisma/seed.ts"]
-    )
+    # Sin argumentos corrige la aplicacion; con argumentos, los archivos dados
+    # (asi se corrigen tambien los generadores de los documentos de KG).
+    if len(sys.argv) > 1:
+        archivos = sorted(sys.argv[1:])
+    else:
+        archivos = sorted(
+            glob.glob("src/**/*.tsx", recursive=True)
+            + glob.glob("src/**/*.ts", recursive=True)
+            + ["prisma/seed.ts"]
+        )
     cambiados = [f for f in archivos if procesar(f)]
     print("Archivos corregidos: %d de %d" % (len(cambiados), len(archivos)))
     for f in cambiados:
