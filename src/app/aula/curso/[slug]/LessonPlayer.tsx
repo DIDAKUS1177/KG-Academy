@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { IconCheck, IconArrowRight, IconFile, IconPlay, IconClock } from "@/components/Icons";
+import { IconCheck, IconArrowRight, IconFile, IconPlay, IconClock, IconAlert } from "@/components/Icons";
 
 type Lesson = {
   id: string;
@@ -74,6 +74,9 @@ export function LessonPlayer({
     router.refresh();
   }
 
+  // Sin contenido no hay nada que estudiar, asi que no hay nada que completar.
+  const sinContenido = lesson.contentType === "pendiente";
+
   const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
   const ss = String(seconds % 60).padStart(2, "0");
 
@@ -117,7 +120,11 @@ export function LessonPlayer({
           )}
 
           <div className="ml-auto flex flex-wrap items-center gap-3">
-            {!completed ? (
+            {sinContenido ? (
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-amber-600">
+                <IconAlert width={16} height={16} /> Disponible cuando KG publique el contenido
+              </span>
+            ) : !completed ? (
               <button onClick={marcar} disabled={saving} className="btn-lime">
                 {saving ? "Guardando..." : "Marcar como completada"}
                 {!saving && <IconCheck width={16} height={16} strokeWidth={3} />}

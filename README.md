@@ -65,15 +65,15 @@ En la pantalla de ingreso hay accesos rápidos que rellenan estas credenciales.
 
 ## 3. Los tres primeros cursos
 
-**KG-PA-001 ya tiene contenido real:** el Módulo 1 se sirve con la presentación interactiva de
-Genially entregada por KG, embebida por URL pública. Los módulos 2 a 7 y los otros dos cursos
-conservan el espacio reservado hasta que KG produzca el material.
+**Cada curso arranca con un solo módulo**, y se agregan los siguientes a medida que KG los
+produzca. KG-PA-001 ya tiene su Módulo 1 terminado: se sirve con la presentación interactiva de
+Genially, embebida por URL pública.
 
 | Código | Curso | Módulos | Lecciones | Horas | Estado | Lanzamiento |
 |---|---|---|---|---|---|---|
-| KG-PA-001 | Curso Básico de Primeros Auxilios | 7 | 7 | 40 | Publicado | 22 de agosto de 2026 |
-| KG-PA-002 | Primeros Auxilios Pediátricos | 4 | 14 | 60 | Borrador | Finales de agosto |
-| KG-PA-003 | Primeros Auxilios Psicológicos | 4 | 12 | 12 | Borrador | Finales de agosto |
+| KG-PA-001 | Curso Básico de Primeros Auxilios | 1 | 1 | 40 | Publicado | 22 de agosto de 2026 |
+| KG-PA-002 | Primeros Auxilios Pediátricos | 1 | 1 | 60 | Borrador | Por definir |
+| KG-PA-003 | Primeros Auxilios Psicológicos | 1 | 1 | 12 | Borrador | Por definir |
 
 ### Modelo comercial
 

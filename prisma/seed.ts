@@ -82,6 +82,18 @@ const CURSOS = [
     launch: "22 de agosto de 2026",
     // Temario oficial de KG, tomado del indice de la presentación entregada.
     // Hoy solo el Módulo 1 tiene contenido producido; el resto queda reservado.
+    // Se siembra solo el Módulo 1, el único que KG tiene producido. Sembrar los
+    // otros seis vacíos permitía que un trabajador los marcara como completados
+    // sin estudiar nada y saliera certificado.
+    //
+    // Temario oficial completo, tomado del índice de la presentación de KG. Los
+    // módulos 2 a 7 se agregan aquí a medida que KG entregue cada presentación:
+    //   2. Valoración de la Escena, Bioseguridad y Activación del SEM
+    //   3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)
+    //   4. Manejo de la Vía Aérea y Obstrucción (OVACE)
+    //   5. Control de Hemorragias, Heridas y Quemaduras
+    //   6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia
+    //   7. Movilización, Transporte de Pacientes y Casos Prácticos
     modules: [
       {
         title: "Módulo 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista",
@@ -98,36 +110,6 @@ const CURSOS = [
             isPreview: true,
           },
         ],
-      },
-      {
-        title: "Módulo 2. Valoración de la Escena, Bioseguridad y Activación del SEM",
-        description: "Seguridad de la escena, elementos de protección personal y activación del sistema de emergencias médicas.",
-        lessons: ["Valoración de la Escena, Bioseguridad y Activación del SEM"],
-      },
-      {
-        title: "Módulo 3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)",
-        description: "Valoración primaria, cadena de supervivencia, reanimación cardiopulmonar y uso del desfibrilador externo automático.",
-        lessons: ["Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)"],
-      },
-      {
-        title: "Módulo 4. Manejo de la Vía Aérea y Obstrucción (OVACE)",
-        description: "Permeabilización de la vía aérea y manejo de la obstrucción por cuerpo extraño.",
-        lessons: ["Manejo de la Vía Aérea y Obstrucción (OVACE)"],
-      },
-      {
-        title: "Módulo 5. Control de Hemorragias, Heridas y Quemaduras",
-        description: "Control de sangrado, manejo de heridas y atención inicial de quemaduras.",
-        lessons: ["Control de Hemorragias, Heridas y Quemaduras"],
-      },
-      {
-        title: "Módulo 6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia",
-        description: "Fracturas e inmovilización, reconocimiento y manejo del shock, y alteraciones del estado de conciencia.",
-        lessons: ["Lesiones Osteomusculares, Shock y Alteraciones de Conciencia"],
-      },
-      {
-        title: "Módulo 7. Movilización, Transporte de Pacientes y Casos Prácticos",
-        description: "Técnicas de movilización y traslado seguro, y resolución de casos prácticos.",
-        lessons: ["Movilización, Transporte de Pacientes y Casos Prácticos"],
       },
     ],
   },
@@ -148,44 +130,13 @@ const CURSOS = [
     status: "borrador",
     accessType: "pago",
     launch: "Finales de agosto de 2026",
+    // Estructura tentativa: KG aún no entrega el material. Se siembra un solo
+    // módulo, igual que KG-PA-001, y el temario real se define cuando llegue.
     modules: [
       {
         title: "Módulo 1. El paciente pediátrico es diferente",
-        description: "Diferencias anatómicas y fisiológicas, triangulo de evaluación pediátrica.",
-        lessons: [
-          "Lactante, niño y adolescente: por que cambia la atención",
-          "Triangulo de evaluación pediátrica",
-          "Signos de alarma que exigen traslado inmediato",
-        ],
-      },
-      {
-        title: "Módulo 2. RCP y OVACE pediátrico",
-        description: "Reanimación en lactantes y niños, desobstrucción de vía aérea.",
-        lessons: [
-          "RCP en el lactante",
-          "RCP en el niño",
-          "Atragantamiento en menores de 1 año",
-          "Atragantamiento en mayores de 1 año",
-        ],
-      },
-      {
-        title: "Módulo 3. Urgencias frecuentes en la infancia",
-        description: "Fiebre, convulsión febril, intoxicaciones, quemaduras y caidas.",
-        lessons: [
-          "Fiebre y convulsión febril",
-          "Intoxicaciones y consumo accidental de sustancias",
-          "Quemaduras y caidas en el hogar",
-          "Crisis respiratoria y alergias",
-        ],
-      },
-      {
-        title: "Módulo 4. Prevención de accidentes",
-        description: "Entorno seguro en casa, colegio y jardin infantil.",
-        lessons: [
-          "Mapa de riesgos en el hogar",
-          "Entorno seguro en instituciones educativas",
-          "Botiquín pediátrico y plan familiar de emergencia",
-        ],
+        description: "Diferencias anatómicas y fisiológicas, y triángulo de evaluación pediátrica.",
+        lessons: ["El paciente pediátrico es diferente"],
       },
     ],
   },
@@ -206,42 +157,12 @@ const CURSOS = [
     status: "borrador",
     accessType: "pago",
     launch: "Finales de agosto de 2026",
+    // Estructura tentativa: KG aún no entrega el material.
     modules: [
       {
         title: "Módulo 1. Crisis y reacción humana",
-        description: "Qué es una crisis, respuestas normales ante eventos anormales.",
-        lessons: [
-          "Qué son los primeros auxilios psicológicos",
-          "Reacciones esperadas ante un evento critico",
-          "Cuando derivar a un profesional de salud mental",
-        ],
-      },
-      {
-        title: "Módulo 2. Modelo ABCDE de intervención",
-        description: "Escucha activa, ventilación emocional, categorización de necesidades y derivación.",
-        lessons: [
-          "A y B: escucha activa y ventilación emocional",
-          "C y D: categorización de necesidades y derivación",
-          "E: psicoeducación y cierre del acompañamiento",
-        ],
-      },
-      {
-        title: "Módulo 3. Comunicación en situaciones dificiles",
-        description: "Qué decir, Qué no decir, comunicación de malas noticias.",
-        lessons: [
-          "Frases que ayudan y frases que dañan",
-          "Comunicación de malas noticias en el entorno laboral",
-          "Acompañamiento a compañeros tras un accidente de trabajo",
-        ],
-      },
-      {
-        title: "Módulo 4. Cuidado del que cuida",
-        description: "Fatiga por compasión, autocuidado y riesgo psicosocial.",
-        lessons: [
-          "Fatiga por compasión y desgaste emocional",
-          "Estrategias de autocuidado del auxiliador",
-          "Articulación con el sistema de riesgo psicosocial de la empresa",
-        ],
+        description: "Qué es una crisis y qué reacciones son esperables ante un evento crítico.",
+        lessons: ["Crisis y reacción humana"],
       },
     ],
   },

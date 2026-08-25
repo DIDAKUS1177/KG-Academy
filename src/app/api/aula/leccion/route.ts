@@ -24,6 +24,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
+  // Una lección sin contenido no se puede dar por vista: si se pudiera, bastaría
+  // con recorrer pantallas vacías para completar el curso y salir certificado.
+  if (parsed.data.completed) {
+    const leccion = await prisma.lesson.findUnique({
+      where: { id: parsed.data.lessonId },
+      select: { contentType: true },
+    });
+    if (leccion?.contentType === "pendiente") {
+      return NextResponse.json(
+        { error: "Esta lección aún no tiene contenido publicado." },
+        { status: 409 }
+      );
+    }
+  }
+
   const updated = await trackLesson({ ...parsed.data, userId: user.id });
   return NextResponse.json({ ok: true, progress: updated?.progress ?? 0, status: updated?.status });
 }

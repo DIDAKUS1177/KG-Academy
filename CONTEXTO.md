@@ -100,15 +100,26 @@ el certificado solo y la página pública de verificación lo validó.
 Respuesta».* El temario **no es inventado**: se tomó del índice de la presentación entregada
 por KG el 19 de agosto de 2026.
 
-| Módulo | Contenido |
-|---|---|
-| 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista | **Terminado** — Genially embebido |
-| 2. Valoración de la Escena, Bioseguridad y Activación del SEM | Pendiente |
-| 3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA) | Pendiente |
-| 4. Manejo de la Vía Aérea y Obstrucción (OVACE) | Pendiente |
-| 5. Control de Hemorragias, Heridas y Quemaduras | Pendiente |
-| 6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia | Pendiente |
-| 7. Movilización, Transporte de Pacientes y Casos Prácticos | Pendiente |
+**Cada curso se siembra con un solo módulo**, decisión de KG del 25 de agosto de 2026: se publica
+lo que existe y se agregan los módulos a medida que se produzcan.
+
+No es solo estética. Sembrar los otros seis módulos vacíos y obligatorios abría un hueco real:
+el botón «Marcar como completada» aparecía igual en una lección sin contenido, así que un
+trabajador podía recorrer seis pantallas en blanco, presentar la evaluación y salir certificado
+sin haber estudiado. Hoy eso está cerrado en dos capas:
+
+- **En el servidor**, `/api/aula/leccion` responde 409 si se intenta completar una lección con
+  `contentType` en `pendiente`. Es la barrera que cuenta.
+- **En pantalla**, el aula muestra «Disponible cuando KG publique el contenido» en vez de un
+  botón que iba a fallar.
+
+El temario oficial de los siete módulos queda documentado como comentario en `prisma/seed.ts`,
+para no perderlo: los módulos 2 a 7 se agregan ahí a medida que KG entregue cada presentación.
+
+**Intensidad horaria: decisión de KG.** El certificado del Curso Básico acredita **40 horas**
+aunque hoy solo se dicte el Módulo 1. Se advirtió que en un contexto de SST el certificado es
+evidencia ante la ARL y que lo consecuente sería certificar lo realmente cursado; KG optó por
+conservar las 40 horas. Queda registrado aquí para que nadie lo cambie por error.
 
 **Cómo se sirve el contenido.** KG produce cada módulo como una presentación de Genially y la
 publica. La plataforma **solo guarda la URL pública** y la embebe en un iframe 16:9; el material
