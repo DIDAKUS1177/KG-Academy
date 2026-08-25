@@ -15,7 +15,9 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:postgres": "node scripts/proveedor-bd.mjs postgresql",
+    "db:sqlite": "node scripts/proveedor-bd.mjs sqlite"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

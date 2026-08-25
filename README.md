@@ -201,19 +201,60 @@ congelados, y sincroniza el estado de la asignación empresarial.
 
 ---
 
-## 7. Despliegue en producción (Hostinger)
+## 7. Despliegue
 
-1. En `prisma/schema.prisma` cambiar `provider = "sqlite"` por `provider = "postgresql"`.
-2. En el `.env` del servidor:
-   ```
-   DATABASE_URL="postgresql://usuario:clave@host:5432/kg_academy?schema=public"
-   AUTH_SECRET="<cadena aleatoria larga>"
-   NEXT_PUBLIC_APP_URL="https://kgacademy.co"
-   ```
-3. `npm ci && npx prisma migrate deploy && npm run build && npm start`
-4. Mantener el proceso con PM2 o systemd detrás del proxy de Hostinger con HTTPS.
+### 7.1 Vista rápida para el cliente (túnel temporal)
 
-No hay ningún otro cambio de código entre ambientes.
+Sirve la plataforma que corre en este equipo a través de una dirección pública, sin
+contratar nada. Útil para que KG revise, **no** para producción.
+
+```bash
+npm run dev
+```
+
+```bash
+npx cloudflared@latest tunnel --url http://localhost:3000
+```
+
+El comando imprime una dirección `https://….trycloudflare.com`. Antes de compartirla,
+poner esa dirección en `NEXT_PUBLIC_APP_URL` del `.env` y reiniciar `npm run dev`, para que
+los QR de los certificados apunten al túnel y no a `localhost`.
+
+Límites: solo funciona mientras el equipo esté encendido y el servidor corriendo, la
+dirección cambia cada vez, y la pantalla de ingreso muestra las credenciales de prueba a
+cualquiera que abra el enlace.
+
+### 7.2 Producción recomendada (Vercel + Neon)
+
+Next.js corre nativamente en Vercel y Neon da PostgreSQL administrado; ambos tienen plan
+gratuito suficiente para arrancar. SQLite **no** sirve en producción: Vercel borra el disco
+en cada despliegue.
+
+1. Crear la base en Neon y copiar su cadena de conexión.
+2. Cambiar el motor del esquema y publicar las tablas:
+   ```bash
+   npm run db:postgres
+   ```
+   ```bash
+   npx prisma db push
+   ```
+3. Crear el proyecto en Vercel importando este repositorio y definir las variables:
+
+   | Variable | Valor |
+   |---|---|
+   | `DATABASE_URL` | cadena de conexión de Neon (con `?sslmode=require`) |
+   | `AUTH_SECRET` | cadena aleatoria larga, distinta a la de desarrollo |
+   | `NEXT_PUBLIC_APP_URL` | dominio final, p. ej. `https://kgacademy.co` |
+
+4. Cargar los datos iniciales **una sola vez** y con cuidado: `npm run db:seed` **borra y
+   reescribe** la base. En producción real hay que reemplazarlo por una carga que solo
+   inserte catálogos (ver pendientes en `CONTEXTO.md`).
+5. Para volver a trabajar en local: `npm run db:sqlite`.
+
+`npm run db:postgres` / `db:sqlite` existen porque Prisma exige que `provider` sea un valor
+literal en el esquema: no admite una variable de entorno. El modelo es portable entre los dos
+motores (sin enum nativo, arrays ni tipos propios de PostgreSQL), así que no hay ningún otro
+cambio de código entre ambientes.
 
 ---
 

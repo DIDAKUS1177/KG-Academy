@@ -408,6 +408,25 @@ Aproximadamente US$ 10–34 al mes.
 El detalle completo, con criterios, costos y el plan de 12 pasos, está en
 `docs/KG_Academy_Analisis_de_Despliegue.pptx`.
 
+### Cómo se le muestra hoy a KG
+
+Mientras no exista dominio ni cuenta contratada, la plataforma se le enseña al cliente con un
+túnel de Cloudflare sobre el servidor local (`npx cloudflared@latest tunnel --url
+http://localhost:3000`). Es una vista temporal: vive mientras el equipo esté encendido, la
+dirección cambia en cada arranque y expone las credenciales de prueba a quien tenga el enlace.
+El procedimiento está en la sección 7 del README.
+
+Antes de compartir el enlace hay que poner esa dirección en `NEXT_PUBLIC_APP_URL` y reiniciar,
+porque si no los QR de los certificados quedan apuntando a `localhost` y no resuelven desde el
+celular de nadie. Al terminar la revisión, devolver la variable a `http://localhost:3000`.
+
+### Cambio de motor de base de datos
+
+Prisma no admite una variable de entorno en `provider`: exige un literal en el esquema. Por eso
+el cambio se hace con `npm run db:postgres` / `npm run db:sqlite`
+(`scripts/proveedor-bd.mjs`), no con configuración. El esquema está validado contra los dos
+motores. **No editar `provider` a mano**: quedan desincronizados el esquema y el `.env`.
+
 ---
 
 © 2026 KG Gestión Integral S.A.S. — Desarrollado por Diego Alejandro Hernández Blanco.
