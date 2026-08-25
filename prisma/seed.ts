@@ -54,9 +54,12 @@ type LeccionSemilla = {
  * Se embebe por URL pública: el material vive en Genially y la plataforma solo
  * lo referencia. Si KG edita la presentación, el cambio se refleja sin
  * necesidad de volver a desplegar.
+ *
+ * Se usa la URL canónica por identificador, sin el fragmento del título. KG ya
+ * renombró la presentación una vez (de "CU RSO" a "CURSO") y eso cambió el
+ * final de la dirección; la forma corta sobrevive a ese tipo de cambios.
  */
-const GENIALLY_PA_MODULO_1 =
-  "https://view.genially.com/6a839aee6503b7aa52feb9d8/presentation-cu-rso-basico-de-primeros-auxilios";
+const GENIALLY_PA_MODULO_1 = "https://view.genially.com/6a839aee6503b7aa52feb9d8";
 const CURSOS = [
   {
     code: "KG-PA-001",
@@ -91,7 +94,7 @@ const CURSOS = [
               "Presentación interactiva del módulo: fundamentos y objetivos, rol y competencias del primer respondiente, responsabilidad y consentimiento.",
             contentType: "genially",
             contentUrl: GENIALLY_PA_MODULO_1,
-            durationMin: 35,
+            durationMin: 60,
             isPreview: true,
           },
         ],

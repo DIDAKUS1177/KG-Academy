@@ -102,7 +102,7 @@ por KG el 19 de agosto de 2026.
 
 | Módulo | Contenido |
 |---|---|
-| 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista | **Genially embebido** |
+| 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista | **Terminado** — Genially embebido |
 | 2. Valoración de la Escena, Bioseguridad y Activación del SEM | Pendiente |
 | 3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA) | Pendiente |
 | 4. Manejo de la Vía Aérea y Obstrucción (OVACE) | Pendiente |
@@ -116,9 +116,27 @@ vive en Genially. Ventaja: si KG edita la presentación, el cambio se ve al inst
 desplegar. La constante está en `prisma/seed.ts` (`GENIALLY_PA_MODULO_1`) y, una vez en
 producción, se administra desde `/admin/cursos/[id]`.
 
-El export offline de Genially (unos 22 MB por módulo) se conserva en la carpeta local `cursos/`
+**Usar siempre la URL corta, por identificador**
+(`https://view.genially.com/<id>`), nunca la larga que incluye el título. KG renombró la
+presentación el 24 de agosto de 2026 —de «CU RSO» a «CURSO»— y eso cambió el final de la
+dirección. La forma corta sobrevive a ese tipo de cambios; la larga solo funcionaba gracias a una
+redirección de Genially, que no conviene dar por garantizada.
+
+El export offline de Genially (20+ MB por entrega) se conserva en la carpeta local `cursos/`
 como respaldo, pero **no se versiona**: está en `.gitignore`. Servir esos archivos desde el
 servidor consumiría el ancho de banda del VPS.
+
+**Estado del Módulo 1 (entrega del 24 de agosto de 2026).** KG lo dio por terminado: pasó de 11 a
+31 diapositivas. Cubre marco legal (Decreto 1072 de 2015), definición y objetivos de los primeros
+auxilios, rol, competencias y límites del brigadista, y responsabilidad y consentimiento.
+
+Dos cosas que KG debe corregir **dentro de Genially**, no en el código:
+
+- Las **diapositivas 27 a 31 son texto de relleno de la plantilla** («Escribe un texto genial,
+  haciendo clic en Texto…», «Disciplinas como el Visual Thinking…»). Hay que borrarlas: hoy
+  el trabajador las ve al final del módulo.
+- La **primera diapositiva sigue diciendo «CU RSO BÁSICO»**, con el espacio de más. El título del
+  archivo ya se corrigió, pero el texto dentro de la portada no.
 
 ### Los otros dos cursos
 
