@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ensureEnrollment } from "@/lib/progress";
@@ -40,7 +40,7 @@ export default async function AulaCursoPage({
   });
   if (!course) notFound();
 
-  const enrollment = await ensureEnrollment(user.id, course.id, "gratuito");
+  let enrollment = await ensureEnrollment(user.id, course.id, "gratuito");
 
   const [progressRows, attempts, certificate] = await Promise.all([
     prisma.lessonProgress.findMany({ where: { enrollmentId: enrollment.id } }),
@@ -78,8 +78,23 @@ export default async function AulaCursoPage({
   const completedCount = allLessons.filter((l) => doneMap.get(l.id)?.status === "completado").length;
   const lessonsDone = completedCount === allLessons.length;
 
+  // Abrir una lección cuenta como iniciar el curso: es lo que ve la empresa en
+  // el seguimiento. Se actualiza en el momento y se sigue renderizando; antes
+  // aquí había un redirect a esta misma dirección, que dejaba el aula en un
+  // bucle y devolvía una pantalla vacía al entrar a cualquier lección.
   if (enrollment.status === "no_iniciado" && searchParams.leccion) {
-    redirect(`/aula/curso/${course.slug}?leccion=${searchParams.leccion}`);
+    enrollment = await prisma.enrollment.update({
+      where: { id: enrollment.id },
+      data: {
+        status: "en_progreso",
+        startedAt: enrollment.startedAt ?? new Date(),
+        lastAccessAt: new Date(),
+      },
+    });
+    await prisma.courseAssignment.updateMany({
+      where: { userId: user.id, courseId: course.id, status: "asignado" },
+      data: { status: "en_progreso" },
+    });
   }
 
   return (

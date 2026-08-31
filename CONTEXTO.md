@@ -170,6 +170,14 @@ Tres cosas que KG debe corregir **dentro de Genially**:
 La duración de 60 minutos por módulo es una **estimación**, no un dato de KG: falta que
 confirmen la intensidad real de cada módulo para que cuadre con las 40 horas del certificado.
 
+**Trampa que apareció al publicar el segundo módulo.** El aula tenía un `redirect` a la misma
+dirección que ya estaba sirviendo cuando un estudiante con la matrícula en `no_iniciado` abría
+una lección desde el índice. Con un solo módulo casi nadie lo pisaba —la única lección ya venía
+abierta—, pero con dos, entrar al Módulo 2 es lo primero que hace cualquiera: el bucle devolvía
+una pantalla en blanco. Hoy ese caso **marca la matrícula y la asignación como iniciadas** y
+sigue renderizando, que era la intención original. Abrir el curso sin elegir lección **no**
+cuenta como iniciarlo.
+
 ### Los otros dos cursos
 
 KG-PA-002 y KG-PA-003 conservan la estructura tentativa derivada de la especificación. **Cuando
