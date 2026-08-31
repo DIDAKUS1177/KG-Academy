@@ -65,13 +65,13 @@ En la pantalla de ingreso hay accesos rápidos que rellenan estas credenciales.
 
 ## 3. Los tres primeros cursos
 
-**Cada curso arranca con un solo módulo**, y se agregan los siguientes a medida que KG los
-produzca. KG-PA-001 ya tiene su Módulo 1 terminado: se sirve con la presentación interactiva de
-Genially, embebida por URL pública.
+**Solo se publican los módulos que KG ya produjo**, y se agregan los siguientes a medida que
+los entregue. KG-PA-001 tiene terminados los módulos 1 y 2: cada uno se sirve con su
+presentación interactiva de Genially, embebida por URL pública.
 
 | Código | Curso | Módulos | Lecciones | Horas | Estado | Lanzamiento |
 |---|---|---|---|---|---|---|
-| KG-PA-001 | Curso Básico de Primeros Auxilios | 1 | 1 | 40 | Publicado | 22 de agosto de 2026 |
+| KG-PA-001 | Curso Básico de Primeros Auxilios | 2 | 2 | 40 | Publicado | 22 de agosto de 2026 |
 | KG-PA-002 | Primeros Auxilios Pediátricos | 1 | 1 | 60 | Borrador | Por definir |
 | KG-PA-003 | Primeros Auxilios Psicológicos | 1 | 1 | 12 | Borrador | Por definir |
 
@@ -93,6 +93,10 @@ más adelante; los planes se administran en `/admin/empresas`.
 No hace falta tocar el código: todo queda registrado en la tabla `lessons` y en `audit_logs`.
 
 Las **preguntas cargadas son de ejemplo** y deben reemplazarse por el banco oficial de KG.
+
+El temario oficial de KG-PA-001 tiene **7 módulos**; faltan del 3 al 7. Un módulo sin
+presentación **no se siembra vacío**: si existiera, un trabajador podría marcarlo como visto sin
+estudiar nada y salir certificado.
 
 ---
 

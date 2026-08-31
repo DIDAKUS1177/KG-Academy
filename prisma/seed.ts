@@ -35,6 +35,7 @@ const ROLES = [
 /*                                                                     */
 /*  Contenido entregado por KG a la fecha:                             */
 /*    - KG-PA-001, Módulo 1: presentación interactiva en Genially.     */
+/*    - KG-PA-001, Módulo 2: presentación interactiva en Genially.     */
 /*  El resto de módulos queda con el contenedor reservado              */
 /*  (contentType "pendiente") hasta que KG produzca el material.       */
 /* ------------------------------------------------------------------ */
@@ -60,6 +61,16 @@ type LeccionSemilla = {
  * final de la dirección; la forma corta sobrevive a ese tipo de cambios.
  */
 const GENIALLY_PA_MODULO_1 = "https://view.genially.com/6a839aee6503b7aa52feb9d8";
+
+/**
+ * Módulo 2 del Curso Básico. Entregado por KG el 31 de agosto de 2026.
+ *
+ * A diferencia del Módulo 1, está construido como narrativa ramificada: el
+ * participante acompaña a un personaje (Vera) por tres misiones y cierra con una
+ * decisión que lleva a dos finales distintos. Las actividades viven dentro de la
+ * presentación, no en la tabla `assessments`.
+ */
+const GENIALLY_PA_MODULO_2 = "https://view.genially.com/6a8cb026f9ab92630df290da";
 const CURSOS = [
   {
     code: "KG-PA-001",
@@ -80,15 +91,12 @@ const CURSOS = [
     status: "publicado",
     accessType: "pago",
     launch: "22 de agosto de 2026",
-    // Temario oficial de KG, tomado del indice de la presentación entregada.
-    // Hoy solo el Módulo 1 tiene contenido producido; el resto queda reservado.
-    // Se siembra solo el Módulo 1, el único que KG tiene producido. Sembrar los
-    // otros seis vacíos permitía que un trabajador los marcara como completados
-    // sin estudiar nada y saliera certificado.
+    // Se siembran solo los módulos que KG tiene producidos. Sembrar los demás
+    // vacíos permitía que un trabajador los marcara como completados sin
+    // estudiar nada y saliera certificado.
     //
     // Temario oficial completo, tomado del índice de la presentación de KG. Los
-    // módulos 2 a 7 se agregan aquí a medida que KG entregue cada presentación:
-    //   2. Valoración de la Escena, Bioseguridad y Activación del SEM
+    // módulos 3 a 7 se agregan aquí a medida que KG entregue cada presentación:
     //   3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)
     //   4. Manejo de la Vía Aérea y Obstrucción (OVACE)
     //   5. Control de Hemorragias, Heridas y Quemaduras
@@ -108,6 +116,21 @@ const CURSOS = [
             contentUrl: GENIALLY_PA_MODULO_1,
             durationMin: 60,
             isPreview: true,
+          },
+        ],
+      },
+      {
+        title: "Módulo 2. Valoración de la Escena, Bioseguridad y Activación del SEM",
+        description:
+          "Por qué no se corre hacia la víctima: evaluar primero si la escena es segura, reconocer los riesgos del lugar, protegerse con los elementos adecuados antes del contacto y activar el sistema de emergencias.",
+        lessons: [
+          {
+            title: "Valoración de la Escena, Bioseguridad y Activación del SEM",
+            description:
+              "Presentación interactiva en formato de caso: tres misiones guiadas —valoración de la escena, condiciones y riesgos del lugar, y bioseguridad— y una decisión final que muestra las consecuencias de atender antes de protegerse.",
+            contentType: "genially",
+            contentUrl: GENIALLY_PA_MODULO_2,
+            durationMin: 60,
           },
         ],
       },
@@ -751,7 +774,12 @@ async function main() {
     orderBy: [{ module: { order: "asc" } }, { order: "asc" }],
   });
 
-  // Distribución de avance: 0%, 100%, 35%, 0%, 70%, 100%, 15%, 0%
+  // Proporción del curso que cada trabajador demo lleva recorrida.
+  //
+  // El avance que ve la empresa se calcula por lecciones completadas, no por
+  // fracciones de lección, así que el porcentaje final depende de cuántas
+  // lecciones publicadas tenga el curso: hoy son dos, y los valores posibles
+  // son 0, 50 y 100. Al publicar más módulos, el tablero se abre solo.
   const AVANCES = [0, 1, 0.35, 0, 0.7, 1, 0.15, 0];
 
   for (const [i, t] of trabajadores.entries()) {
