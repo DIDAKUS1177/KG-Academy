@@ -36,6 +36,7 @@ const ROLES = [
 /*  Contenido entregado por KG a la fecha:                             */
 /*    - KG-PA-001, Módulo 1: presentación interactiva en Genially.     */
 /*    - KG-PA-001, Módulo 2: presentación interactiva en Genially.     */
+/*    - KG-PA-001, Módulo 3: presentación interactiva en Genially.     */
 /*  El resto de módulos queda con el contenedor reservado              */
 /*  (contentType "pendiente") hasta que KG produzca el material.       */
 /* ------------------------------------------------------------------ */
@@ -71,6 +72,17 @@ const GENIALLY_PA_MODULO_1 = "https://view.genially.com/6a839aee6503b7aa52feb9d8
  * presentación, no en la tabla `assessments`.
  */
 const GENIALLY_PA_MODULO_2 = "https://view.genially.com/6a8cb026f9ab92630df290da";
+
+/**
+ * Módulo 3 del Curso Básico. Entregado por KG el 31 de agosto de 2026.
+ *
+ * Es el más extenso de los tres: 31 diapositivas de exploración por zonas del
+ * cuerpo y por maniobra. La técnica de RCP y el uso del DEA se enseñan con dos
+ * videos de YouTube incrustados dentro de la presentación, así que esa parte
+ * depende de que esos videos sigan disponibles en su canal de origen.
+ */
+const GENIALLY_PA_MODULO_3 = "https://view.genially.com/6a839a1d6503b7aa52fe73bd";
+
 const CURSOS = [
   {
     code: "KG-PA-001",
@@ -96,9 +108,10 @@ const CURSOS = [
     // estudiar nada y saliera certificado.
     //
     // Temario oficial completo, tomado del índice de la presentación de KG. Los
-    // módulos 3 a 7 se agregan aquí a medida que KG entregue cada presentación:
-    //   3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)
-    //   4. Manejo de la Vía Aérea y Obstrucción (OVACE)
+    // módulos 4 a 7 se agregan aquí a medida que KG entregue cada presentación:
+    //   4. Manejo de la Vía Aérea y Obstrucción (OVACE)  <- ojo: el Módulo 3
+    //      entregado ya cubre OVACE (obstrucción leve y grave). Confirmar con
+    //      KG si el 4 se reduce, se fusiona o cambia de alcance.
     //   5. Control de Hemorragias, Heridas y Quemaduras
     //   6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia
     //   7. Movilización, Transporte de Pacientes y Casos Prácticos
@@ -131,6 +144,21 @@ const CURSOS = [
             contentType: "genially",
             contentUrl: GENIALLY_PA_MODULO_2,
             durationMin: 60,
+          },
+        ],
+      },
+      {
+        title: "Módulo 3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)",
+        description:
+          "Valoración primaria del paciente —consciencia, vía aérea, respiración y circulación—, recorrido céfalo-caudal en busca de lesiones, reanimación cardiopulmonar, uso del desfibrilador externo automático y manejo de la obstrucción de la vía aérea.",
+        lessons: [
+          {
+            title: "Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)",
+            description:
+              "Presentación interactiva: exploración por zonas del cuerpo y por órgano, señales de alarma en cráneo, tórax, pelvis y extremidades, maniobras de RCP y DEA en video, obstrucción leve y grave de la vía aérea, y una sección final de autoevaluación.",
+            contentType: "genially",
+            contentUrl: GENIALLY_PA_MODULO_3,
+            durationMin: 90,
           },
         ],
       },
@@ -777,9 +805,10 @@ async function main() {
   // Proporción del curso que cada trabajador demo lleva recorrida.
   //
   // El avance que ve la empresa se calcula por lecciones completadas, no por
-  // fracciones de lección, así que el porcentaje final depende de cuántas
-  // lecciones publicadas tenga el curso: hoy son dos, y los valores posibles
-  // son 0, 50 y 100. Al publicar más módulos, el tablero se abre solo.
+  // fracciones de lección, así que el porcentaje real depende de cuántas
+  // lecciones publicadas tenga el curso: con pocas lecciones estos valores se
+  // redondean a unos pocos escalones, y el tablero se abre a medida que KG
+  // publica más módulos.
   const AVANCES = [0, 1, 0.35, 0, 0.7, 1, 0.15, 0];
 
   for (const [i, t] of trabajadores.entries()) {

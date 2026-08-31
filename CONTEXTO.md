@@ -102,7 +102,7 @@ por KG el 19 de agosto de 2026.
 
 **Solo se siembran los módulos con contenido producido**, decisión de KG del 25 de agosto de
 2026: se publica lo que existe y se agregan los módulos a medida que se produzcan. KG-PA-001 ya
-tiene dos (entregas del 24 y del 31 de agosto de 2026); KG-PA-002 y KG-PA-003 siguen con uno.
+tiene tres (entregas del 24 y del 31 de agosto de 2026); KG-PA-002 y KG-PA-003 siguen con uno.
 
 No es solo estética. Sembrar los otros seis módulos vacíos y obligatorios abría un hueco real:
 el botón «Marcar como completada» aparecía igual en una lección sin contenido, así que un
@@ -115,10 +115,10 @@ sin haber estudiado. Hoy eso está cerrado en dos capas:
   botón que iba a fallar.
 
 El temario oficial de los siete módulos queda documentado como comentario en `prisma/seed.ts`,
-para no perderlo: los módulos 3 a 7 se agregan ahí a medida que KG entregue cada presentación.
+para no perderlo: los módulos 4 a 7 se agregan ahí a medida que KG entregue cada presentación.
 
 **Intensidad horaria: decisión de KG.** El certificado del Curso Básico acredita **40 horas**
-aunque hoy solo se dicten los módulos 1 y 2 de los siete del temario. Se advirtió que en un contexto de SST el certificado es
+aunque hoy solo se dicten los módulos 1, 2 y 3 de los siete del temario. Se advirtió que en un contexto de SST el certificado es
 evidencia ante la ARL y que lo consecuente sería certificar lo realmente cursado; KG optó por
 conservar las 40 horas. Queda registrado aquí para que nadie lo cambie por error.
 
@@ -126,7 +126,8 @@ conservar las 40 horas. Queda registrado aquí para que nadie lo cambie por erro
 publica. La plataforma **solo guarda la URL pública** y la embebe en un iframe 16:9; el material
 vive en Genially. Ventaja: si KG edita la presentación, el cambio se ve al instante sin volver a
 desplegar. Las constantes están en `prisma/seed.ts` (`GENIALLY_PA_MODULO_1`,
-`GENIALLY_PA_MODULO_2`) y, una vez en producción, se administran desde `/admin/cursos/[id]`.
+`GENIALLY_PA_MODULO_2`, `GENIALLY_PA_MODULO_3`) y, una vez en producción, se administran desde
+`/admin/cursos/[id]`.
 
 **Usar siempre la URL corta, por identificador**
 (`https://view.genially.com/<id>`), nunca la larga que incluye el título. KG renombró la
@@ -177,6 +178,27 @@ abierta—, pero con dos, entrar al Módulo 2 es lo primero que hace cualquiera:
 una pantalla en blanco. Hoy ese caso **marca la matrícula y la asignación como iniciadas** y
 sigue renderizando, que era la intención original. Abrir el curso sin elegir lección **no**
 cuenta como iniciarlo.
+
+**Estado del Módulo 3 (entrega del 31 de agosto de 2026).** «Evaluación Primaria y Soporte Vital
+Básico (SVB, RCP y DEA)», 31 diapositivas. Es el más extenso y el más limpio de los tres: no trae
+relleno de plantilla ni marcadores sin llenar. Cubre la valoración primaria (consciencia, vía
+aérea, respiración y circulación), el recorrido céfalo-caudal con señales de alarma por zona
+—cráneo, tórax, miembros superiores, pelvis, miembros inferiores—, la función de cada órgano en
+una emergencia, RCP, uso del DEA, obstrucción leve y grave de la vía aérea, y cierra con una
+sección de autoevaluación.
+
+Dos cosas que conviene tener presentes:
+
+- La **técnica de RCP y el uso del DEA se enseñan con dos videos de YouTube** incrustados en la
+  presentación, de un canal que no es de KG. Si esos videos se retiran, esa parte del módulo
+  queda en blanco y KG tendría que reemplazarlos. Es el único contenido del curso que no
+  controla KG.
+- El temario oficial define el **Módulo 4 como «Manejo de la Vía Aérea y Obstrucción (OVACE)»**,
+  pero el Módulo 3 entregado **ya cubre OVACE**. Falta que KG confirme si el 4 se reduce, se
+  fusiona con el 3 o cambia de alcance. Queda anotado también en `prisma/seed.ts`.
+
+Se le asignaron **90 minutos** frente a los 60 de los anteriores, por su extensión. Sigue siendo
+una estimación pendiente de confirmar con KG.
 
 ### Los otros dos cursos
 
