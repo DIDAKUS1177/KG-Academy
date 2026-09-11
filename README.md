@@ -41,6 +41,10 @@ Abrir <http://localhost:3000>.
 - Para volver al estado inicial de datos en cualquier momento: `npm run db:reset`
 - Para inspeccionar la base de datos con interfaz visual: `npm run db:studio`
 
+> Todo lo relativo a la base de datos (crearla en local y en producción, las dos
+> semillas, el SQL de las 43 tablas, copias de seguridad) está en
+> **[docs/BASES_DE_DATOS.md](docs/BASES_DE_DATOS.md)**.
+
 > Si `npm install` muestra el aviso `allow-scripts` de npm 11, ejecutar una vez:
 > `npm approve-scripts @prisma/client prisma @prisma/engines esbuild` y repetir `npm install`.
 
@@ -82,6 +86,23 @@ curso por curso. Por eso la interfaz no muestra precios individuales, sino la et
 *«Incluido en el plan»*. Los campos `price` y `discountPrice` y las tablas `orders`,
 `order_items` y `coupons` se conservan en el modelo por si KG habilita venta B2C directa
 más adelante; los planes se administran en `/admin/empresas`.
+
+### Qué administra KG desde el panel
+
+Nada de lo de abajo exige tocar código ni la base de datos. Todo queda en `audit_logs`
+con quién lo hizo y con los valores anteriores y nuevos.
+
+| Dónde | Qué se puede hacer |
+|---|---|
+| `/admin/usuarios` | Crear cuentas con cualquier rol (con contraseña propia o temporal generada), editar datos, cambiar rol, empresa o estado, restablecer contraseña |
+| `/admin/empresas` | Crear empresa con su plan y su administrador en un paso, editar, suspender o reactivar; crear y editar planes |
+| `/admin/cursos` | Crear curso (y su categoría si es nueva), agregar, editar, reordenar y eliminar módulos y lecciones, cargar contenido, editar la ficha pública y las reglas (nota mínima, intentos, vigencia del certificado), publicar |
+| `/admin/certificados` | Revocar con motivo y restituir |
+| `/admin/configuracion` | Editar parámetros del sistema en línea (solo superadministrador) |
+
+**Nada se borra.** Usuarios, empresas y certificados se inactivan, suspenden o revocan,
+porque son evidencia ante la ARL. Solo módulos y lecciones sin avance de estudiantes se
+pueden eliminar; con avance, el servidor lo rechaza.
 
 ### Cómo cargar el contenido de una lección
 
@@ -172,9 +193,10 @@ Navegador
 
 ## 6. Base de datos
 
-**44 tablas en 11 dominios funcionales.** El detalle completo está en el PowerPoint
-`docs/KG_Academy_Infraestructura_y_Base_de_Datos.pptx` y el modelo fuente en
-`prisma/schema.prisma`.
+**43 tablas en 11 dominios funcionales.** El modelo fuente es `prisma/schema.prisma`; el
+SQL generado para cada motor está en `docs/sql/` y la guía de creación y operación en
+`docs/BASES_DE_DATOS.md`. El PowerPoint `docs/KG_Academy_Infraestructura_y_Base_de_Datos.pptx`
+las presenta al cliente.
 
 | Dominio | Tablas |
 |---|---|
@@ -250,9 +272,12 @@ en cada despliegue.
    | `AUTH_SECRET` | cadena aleatoria larga, distinta a la de desarrollo |
    | `NEXT_PUBLIC_APP_URL` | dominio final, p. ej. `https://kgacademy.co` |
 
-4. Cargar los datos iniciales **una sola vez** y con cuidado: `npm run db:seed` **borra y
-   reescribe** la base. En producción real hay que reemplazarlo por una carga que solo
-   inserte catálogos (ver pendientes en `CONTEXTO.md`).
+4. Cargar los catálogos y el primer administrador con la **semilla de producción**, que
+   no borra nada y se puede repetir:
+   ```bash
+   SEED_ADMIN_EMAIL="direccion@kggestionintegral.com" SEED_ADMIN_PASSWORD="una-clave-larga" npm run db:seed:prod
+   ```
+   Nunca `npm run db:seed` en producción: esa **borra y reescribe** la base.
 5. Para volver a trabajar en local: `npm run db:sqlite`.
 
 `npm run db:postgres` / `db:sqlite` existen porque Prisma exige que `provider` sea un valor
@@ -274,16 +299,19 @@ KG-Academy/
 │   ├── KG_Academy_Analisis_de_Despliegue.pptx            ← dónde y cómo publicarla
 │   ├── Esqueleto_Especificaciones_KG_Academy.docx
 │   └── Portafolio_KG_Gestion_Integral.pdf
+├── docs/BASES_DE_DATOS.md   crear, cargar y operar la base en local y producción
+├── docs/sql/                SQL de las 43 tablas para PostgreSQL y SQLite (generado)
 ├── prisma/
-│   ├── schema.prisma        44 tablas
-│   ├── seed.ts              cursos, empresa demo, usuarios y avances
+│   ├── schema.prisma        43 tablas
+│   ├── seed.ts              DEMO: borra todo y carga empresa, usuarios, cursos y avances
+│   ├── seed-produccion.ts   PRODUCCIÓN: solo catálogos y un administrador, no borra
 │   └── kg_academy.db        base SQLite local (se genera)
 ├── public/brand/kg-logo.png logotipo oficial
 ├── scripts/                 generadores de PPTX y utilidades de ortografía
 └── src/
     ├── app/
     │   ├── (public)/  (auth)/  aula/  empresa/  admin/  api/
-    ├── components/    Logo · AppShell · CourseCard · ui · Icons
+    ├── components/    Logo · AppShell · CourseCard · ui · Icons · admin/Formulario
     ├── lib/           auth · prisma · progress · certificates · empresa · constants
     └── styles/globals.css   design system KG
 ```

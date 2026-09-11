@@ -10,16 +10,32 @@ import { IconEye } from "@/components/Icons";
 export const dynamic = "force-dynamic";
 
 export default async function ConstructorPage({ params }: { params: { id: string } }) {
-  await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
+  const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
 
-  const course = await prisma.course.findUnique({
-    where: { id: params.id },
-    include: {
-      category: true,
-      modules: { include: { lessons: { orderBy: { order: "asc" } } }, orderBy: { order: "asc" } },
-      assessments: { include: { questions: true }, orderBy: { order: "asc" } },
-    },
-  });
+  const [course, categorias, instructores] = await Promise.all([
+    prisma.course.findUnique({
+      where: { id: params.id },
+      include: {
+        category: true,
+        modules: {
+          include: {
+            lessons: {
+              orderBy: { order: "asc" },
+              include: { _count: { select: { progress: true } } },
+            },
+          },
+          orderBy: { order: "asc" },
+        },
+        assessments: { include: { questions: true }, orderBy: { order: "asc" } },
+      },
+    }),
+    prisma.category.findMany({ where: { isActive: true }, orderBy: { order: "asc" } }),
+    prisma.user.findMany({
+      where: { role: { code: { in: [ROLES.INSTRUCTOR, ROLES.ADMIN_KG, ROLES.SUPERADMIN] } }, status: "activo" },
+      orderBy: { firstName: "asc" },
+      select: { id: true, firstName: true, lastName: true },
+    }),
+  ]);
   if (!course) notFound();
 
   return (
@@ -48,16 +64,32 @@ export default async function ConstructorPage({ params }: { params: { id: string
       </div>
 
       <CursoConstructor
+        puedePublicar={actor.role.code !== ROLES.INSTRUCTOR}
+        categorias={categorias.map((c) => ({ id: c.id, nombre: c.name }))}
+        instructores={instructores.map((i) => ({ id: i.id, nombre: `${i.firstName} ${i.lastName}`.trim() }))}
         course={{
           id: course.id,
           status: course.status,
+          title: course.title,
+          subtitle: course.subtitle,
+          description: course.description,
+          objective: course.objective,
+          targetAudience: course.targetAudience,
+          requirements: course.requirements,
+          methodology: course.methodology,
+          level: course.level,
+          modality: course.modality,
+          durationHours: course.durationHours,
+          categoryId: course.categoryId,
+          instructorId: course.instructorId,
+          progressRule: course.progressRule,
           minPassingScore: course.minPassingScore,
           maxAttempts: course.maxAttempts,
-          progressRule: course.progressRule,
           requiresFinalExam: course.requiresFinalExam,
           requiresAllLessons: course.requiresAllLessons,
           certificateEnabled: course.certificateEnabled,
           certificateValidityMonths: course.certificateValidityMonths,
+          allowRetake: course.allowRetake,
         }}
         modules={course.modules.map((m) => ({
           id: m.id,
@@ -66,11 +98,14 @@ export default async function ConstructorPage({ params }: { params: { id: string
           lessons: m.lessons.map((l) => ({
             id: l.id,
             title: l.title,
+            description: l.description,
             contentType: l.contentType,
             contentUrl: l.contentUrl,
             durationMin: l.durationMin,
             isRequired: l.isRequired,
+            isPreview: l.isPreview,
             isPublished: l.isPublished,
+            conAvance: l._count.progress > 0,
           })),
         }))}
         assessments={course.assessments.map((a) => ({

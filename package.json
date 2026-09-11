@@ -17,7 +17,9 @@
     "setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
     "postinstall": "prisma generate",
     "db:postgres": "node scripts/proveedor-bd.mjs postgresql",
-    "db:sqlite": "node scripts/proveedor-bd.mjs sqlite"
+    "db:sqlite": "node scripts/proveedor-bd.mjs sqlite",
+    "db:seed:prod": "tsx prisma/seed-produccion.ts",
+    "db:sql": "node scripts/generar-sql.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

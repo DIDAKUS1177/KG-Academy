@@ -6,6 +6,7 @@ import { ROLES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { ProgressBar, SectionTitle, StatusBadge, StatCard } from "@/components/ui";
 import { IconBook, IconArrowRight, IconAlert, IconCheck, IconLayers } from "@/components/Icons";
+import { NuevoCurso } from "./NuevoCurso";
 
 export const metadata: Metadata = { title: "Gestión de cursos" };
 export const dynamic = "force-dynamic";
@@ -13,17 +14,25 @@ export const dynamic = "force-dynamic";
 export default async function AdminCursos() {
   await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
 
-  const courses = await prisma.course.findMany({
-    include: {
-      category: true,
-      instructor: true,
-      modules: { include: { lessons: true } },
-      enrollments: true,
-      assessments: true,
-      certificates: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
+  const [courses, categorias, instructores] = await Promise.all([
+    prisma.course.findMany({
+      include: {
+        category: true,
+        instructor: true,
+        modules: { include: { lessons: true } },
+        enrollments: true,
+        assessments: true,
+        certificates: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.category.findMany({ where: { isActive: true }, orderBy: { order: "asc" } }),
+    prisma.user.findMany({
+      where: { role: { code: { in: [ROLES.INSTRUCTOR, ROLES.ADMIN_KG, ROLES.SUPERADMIN] } }, status: "activo" },
+      orderBy: { firstName: "asc" },
+      select: { id: true, firstName: true, lastName: true },
+    }),
+  ]);
 
   const totalLecciones = courses.reduce(
     (s, c) => s + c.modules.reduce((x, m) => x + m.lessons.length, 0),
@@ -40,7 +49,13 @@ export default async function AdminCursos() {
       <SectionTitle
         eyebrow="Administración"
         title="Gestión de cursos"
-        description="Estructura, estado de publicación y carga de contenido de cada curso."
+        description="Cree cursos, arme su estructura, cargue el contenido y publíquelos."
+        action={
+          <NuevoCurso
+            categorias={categorias.map((c) => ({ id: c.id, nombre: c.name }))}
+            instructores={instructores.map((i) => ({ id: i.id, nombre: `${i.firstName} ${i.lastName}`.trim() }))}
+          />
+        }
       />
 
       <div className="mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

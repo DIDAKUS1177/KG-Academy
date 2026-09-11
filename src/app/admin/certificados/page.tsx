@@ -6,6 +6,7 @@ import { ROLES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { SectionTitle, StatCard, StatusBadge, EmptyState } from "@/components/ui";
 import { IconAward, IconSearch, IconArrowRight, IconQr, IconAlert } from "@/components/Icons";
+import { AccionesCertificado } from "./AccionesCertificado";
 
 export const metadata: Metadata = { title: "Certificados" };
 export const dynamic = "force-dynamic";
@@ -106,20 +107,26 @@ export default async function AdminCertificados({ searchParams }: { searchParams
                   </td>
                   <td>
                     <StatusBadge status={c.status} />
+                    {c.status === "revocado" && c.revokedReason && (
+                      <p className="mt-1 max-w-[180px] text-[10px] leading-snug text-red-600">{c.revokedReason}</p>
+                    )}
                   </td>
                   <td className="text-right">
-                    <Link href={`/verificar/${c.code}`} target="_blank" className="btn-outline btn-sm">
-                      Verificar <IconArrowRight width={12} height={12} />
-                    </Link>
+                    <div className="flex justify-end gap-1.5">
+                      <Link href={`/verificar/${c.code}`} target="_blank" className="btn-outline btn-sm">
+                        Verificar <IconArrowRight width={12} height={12} />
+                      </Link>
+                      <AccionesCertificado id={c.id} code={c.code} status={c.status} titular={c.studentName} />
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-            La revocación de certificados con registro de motivo está modelada en la base de datos
-            (campos <code>status</code>, <code>revokedReason</code>, <code>revokedById</code>); la acción
-            desde la interfaz corresponde a la Fase 1 del backlog.
+            Un certificado revocado no desaparece: su código sigue resolviendo en la verificación
+            pública, marcado como revocado y con el motivo. Se puede restituir si la revocación fue un
+            error.
           </p>
         </div>
       )}

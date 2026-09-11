@@ -6,6 +6,7 @@ import { LogoFull } from "@/components/Logo";
 import { SectionTitle } from "@/components/ui";
 import { CreditoDesarrollo } from "@/components/Contacto";
 import { IconSettings, IconShield, IconAward, IconBell, IconPhone } from "@/components/Icons";
+import { EditarParametro } from "./EditarParametro";
 
 export const metadata: Metadata = { title: "Configuración" };
 export const dynamic = "force-dynamic";
@@ -20,7 +21,8 @@ const GRUPO_ICON: Record<string, JSX.Element> = {
 };
 
 export default async function ConfiguracionPage() {
-  await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
+  const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
+  const puedeEditar = actor.role.code === ROLES.SUPERADMIN;
 
   const [settings, templates, notifTemplates] = await Promise.all([
     prisma.systemSetting.findMany({ orderBy: [{ group: "asc" }, { key: "asc" }] }),
@@ -36,7 +38,11 @@ export default async function ConfiguracionPage() {
       <SectionTitle
         eyebrow="Sistema"
         title="Configuración general"
-        description="Parametros de marca, certificados, seguridad y plantillas de notificación."
+        description={
+          puedeEditar
+            ? "Haga clic sobre un valor para editarlo. Cada cambio queda en auditoría."
+            : "Parámetros de marca, certificados, seguridad y plantillas de notificación."
+        }
       />
 
       {/* Identidad de marca */}
@@ -91,7 +97,13 @@ export default async function ConfiguracionPage() {
                     <span className="block text-xs font-semibold text-navy-600">{s.label ?? s.key}</span>
                     <span className="block font-mono text-[10px] text-navy-300">{s.key}</span>
                   </dt>
-                  <dd className="shrink-0 text-right text-xs font-bold text-navy-700">{s.value}</dd>
+                  <dd className="shrink-0 text-right text-xs font-bold text-navy-700">
+                    {puedeEditar ? (
+                      <EditarParametro clave={s.key} valor={s.value} tipo={s.type} />
+                    ) : (
+                      s.value
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>

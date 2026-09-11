@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { ROLES, ROLE_LABEL } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { Avatar, SectionTitle, StatusBadge } from "@/components/ui";
-import { IconSearch, IconUsers } from "@/components/Icons";
+import { SectionTitle } from "@/components/ui";
+import { IconSearch } from "@/components/Icons";
+import { TablaUsuarios } from "./TablaUsuarios";
 
 export const metadata: Metadata = { title: "Usuarios y roles" };
 export const dynamic = "force-dynamic";
@@ -15,10 +16,10 @@ export default async function AdminUsuarios({
 }: {
   searchParams: { q?: string; rol?: string; estado?: string };
 }) {
-  await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
+  const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const q = searchParams.q?.trim();
 
-  const [users, roles] = await Promise.all([
+  const [users, roles, empresas] = await Promise.all([
     prisma.user.findMany({
       where: {
         ...(searchParams.rol ? { role: { code: searchParams.rol } } : {}),
@@ -34,11 +35,20 @@ export default async function AdminUsuarios({
             }
           : {}),
       },
-      include: { role: true, company: true, enrollments: true, certificates: true },
+      include: {
+        role: true,
+        company: true,
+        _count: { select: { enrollments: true, certificates: true } },
+      },
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
     prisma.role.findMany({ orderBy: { code: "asc" } }),
+    prisma.company.findMany({
+      where: { status: { not: "inactiva" } },
+      select: { id: true, tradeName: true, legalName: true },
+      orderBy: { legalName: "asc" },
+    }),
   ]);
 
   return (
@@ -46,7 +56,7 @@ export default async function AdminUsuarios({
       <SectionTitle
         eyebrow="Administración"
         title="Usuarios y roles"
-        description="Gestión de todas las cuentas de la plataforma, su rol y estado."
+        description="Cree cuentas de cualquier rol, cambie su empresa o estado y restablezca contraseñas."
       />
 
       <form className="card mb-6 flex flex-wrap items-end gap-3 p-4">
@@ -88,60 +98,30 @@ export default async function AdminUsuarios({
         </Link>
       </form>
 
-      <div className="card overflow-x-auto">
-        <table className="table-kg">
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Rol</th>
-              <th>Empresa</th>
-              <th>Cursos</th>
-              <th>Cert.</th>
-              <th>Último acceso</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td>
-                  <div className="flex items-center gap-3">
-                    <Avatar first={u.firstName} last={u.lastName} size={34} />
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-navy-700">
-                        {u.firstName} {u.lastName}
-                      </p>
-                      <p className="truncate text-[11px] text-navy-400">{u.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span className="badge-blue">{ROLE_LABEL[u.role.code] ?? u.role.name}</span>
-                </td>
-                <td className="text-xs text-navy-500">{u.company?.tradeName ?? "—"}</td>
-                <td className="text-xs font-bold text-navy-700">{u.enrollments.length}</td>
-                <td className="text-xs font-bold text-lime-600">{u.certificates.length}</td>
-                <td className="text-xs text-navy-400">{u.lastLoginAt ? formatDate(u.lastLoginAt) : "Nunca"}</td>
-                <td>
-                  <StatusBadge status={u.status} />
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && (
-              <tr>
-                <td colSpan={7} className="py-12 text-center text-sm text-navy-300">
-                  <IconUsers width={26} height={26} className="mx-auto mb-2 text-navy-200" />
-                  No hay usuarios con esos criterios
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-          {users.length} usuario(s). La creación y edición de cuentas desde este panel corresponde a la
-          Fase 1 del backlog; el modelo de datos y los permisos ya están implementados.
-        </p>
-      </div>
+      <TablaUsuarios
+        actorRole={actor.role.code}
+        actorId={actor.id}
+        roles={roles.map((r) => ({ id: r.code, nombre: ROLE_LABEL[r.code] ?? r.name }))}
+        empresas={empresas.map((c) => ({ id: c.id, nombre: c.tradeName ?? c.legalName }))}
+        filas={users.map((u) => ({
+          id: u.id,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          email: u.email,
+          roleCode: u.role.code,
+          companyId: u.companyId,
+          companyName: u.company?.tradeName ?? null,
+          documentType: u.documentType,
+          documentNumber: u.documentNumber,
+          phone: u.phone,
+          jobTitle: u.jobTitle,
+          city: u.city,
+          status: u.status,
+          cursos: u._count.enrollments,
+          certificados: u._count.certificates,
+          ultimoAcceso: u.lastLoginAt ? formatDate(u.lastLoginAt) : "Nunca",
+        }))}
+      />
     </div>
   );
 }

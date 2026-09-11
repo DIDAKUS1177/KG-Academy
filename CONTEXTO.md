@@ -385,7 +385,8 @@ Usuarios de prueba (contraseña **`KgAcademy2026*`** para todos):
 
 ## 11. Trampas conocidas
 
-- **`npm run db:seed` BORRA la base antes de sembrar.** En producción solo debe ejecutarse la
+- **`npm run db:seed` BORRA la base antes de sembrar.** Para producción existe
+  `npm run db:seed:prod`, que no borra nada (ver arriba). En producción `db:seed` solo debe ejecutarse la
   parte de catálogos (roles, permisos, plantillas, configuración), nunca el seed completo
   después del lanzamiento.
 - **`NEXT_PUBLIC_APP_URL` debe tener el dominio definitivo antes de emitir el primer
@@ -470,6 +471,62 @@ El procedimiento está en la sección 7 del README.
 Antes de compartir el enlace hay que poner esa dirección en `NEXT_PUBLIC_APP_URL` y reiniciar,
 porque si no los QR de los certificados quedan apuntando a `localhost` y no resuelven desde el
 celular de nadie. Al terminar la revisión, devolver la variable a `http://localhost:3000`.
+
+### Panel de administración completo (11 de septiembre de 2026)
+
+Hasta esta fecha el panel `/admin` solo **listaba**: la propia página de usuarios decía
+que crear y editar cuentas «corresponde a la Fase 1 del backlog». Ese backlog se cerró.
+Hoy el superadministrador gestiona usuarios, empresas, planes, cursos (estructura,
+contenido, ficha, reglas y publicación), certificados y parámetros del sistema desde la
+interfaz, sin tocar código ni base de datos.
+
+Piezas nuevas:
+
+- `src/lib/admin-api.ts`: contrato común de las rutas `/api/admin/*` (exigir rol, validar
+  con Zod devolviendo el primer mensaje legible, respuesta uniforme, contraseña temporal).
+- Nueve rutas en `src/app/api/admin/`: `usuario`, `empresa`, `plan`, `cursos` (alta),
+  `curso` (estado y ficha/reglas), `modulo`, `leccion`, `certificado`, `configuracion`.
+- `src/components/admin/Formulario.tsx`: ventana emergente, aviso, campo, caja de
+  contraseña generada y `llamar()` para las peticiones.
+- Componentes cliente por página: `TablaUsuarios`/`GestionUsuarios`, `PanelEmpresas`/
+  `GestionEmpresas`, `NuevoCurso`, `CursoConstructor` (reescrito), `AccionesCertificado`,
+  `EditarParametro`.
+
+Reglas que el servidor hace cumplir (no solo la interfaz):
+
+- **Nada se borra.** Usuarios, empresas, planes y certificados cambian de estado. Solo
+  módulos y lecciones **sin avance de estudiantes** se eliminan; con avance, 400.
+- Nadie se cambia su propio rol ni se desactiva a sí mismo.
+- Solo un superadministrador crea o modifica a otro superadministrador, y solo él edita
+  parámetros del sistema.
+- Un administrador o supervisor de empresa necesita empresa asignada.
+- Correo, documento, NIT y código de curso son únicos: 409 si se repiten.
+- Las URL de contenido deben empezar por `http://` o `https://`.
+- Suspender o inactivar una empresa bloquea el ingreso de todas sus cuentas; reactivarla
+  lo devuelve. El historial no se toca.
+- La nota mínima del curso se propaga a su evaluación final para que no discrepen.
+
+Todo pasa por `audit()` con el antes y el después. Verificado con 17 llamadas de punta a
+punta, incluidas las que deben fallar.
+
+### Dos semillas, y el SQL de las tablas
+
+`prisma/seed.ts` sigue siendo la **demo**: borra todo y carga empresa, trabajadores,
+cursos y avances. `prisma/seed-produccion.ts` (`npm run db:seed:prod`) es la de
+**producción**: no borra nada, es idempotente, carga solo catálogos y crea un
+superadministrador únicamente si no existe, con credenciales por variables de entorno
+(`SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`). Rechaza claves de menos de 12 caracteres y
+la de la demo, y **valida antes de escribir**: una ejecución mal configurada no deja la
+base a medias.
+
+`npm run db:sql` (`scripts/generar-sql.mjs`) genera `docs/sql/kg_academy_postgresql.sql`
+y `kg_academy_sqlite.sql` a partir del esquema: 43 tablas, 49 índices, 68 llaves
+foráneas. Son de referencia; el camino normal sigue siendo `prisma db push`. La guía
+completa está en `docs/BASES_DE_DATOS.md`.
+
+**Corrección de conteo**: el modelo tiene **43** tablas, no 44 como decían el README y el
+PowerPoint. El README ya está corregido; el PowerPoint se regenera con
+`python scripts/generar_pptx.py` cuando se vuelva a entregar.
 
 ### Cambio de motor de base de datos
 
