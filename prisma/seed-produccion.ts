@@ -86,6 +86,7 @@ const CATEGORIAS = [
   { slug: "sst", name: "Seguridad y Salud en el Trabajo", description: "SG-SST, riesgos, COPASST y normatividad.", icon: "shield", color: "#0A2D4D", order: 2 },
   { slug: "riesgo-psicosocial", name: "Riesgo Psicosocial", description: "Bienestar mental y clima laboral.", icon: "spark", color: "#1B4A73", order: 3 },
   { slug: "analitica", name: "Business Analytics", description: "Indicadores y analítica aplicada a la gestión.", icon: "chart", color: "#759F11", order: 4 },
+  { slug: "emergencias", name: "Emergencias", description: "Prevención y control de incendios, evacuación y brigadas.", icon: "flame", color: "#E4572E", order: 5 },
 ];
 
 const PLANES = [

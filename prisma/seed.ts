@@ -3,6 +3,7 @@
  * KG ACADEMY - Semilla de la base de datos
  * Crea: roles, permisos, configuración, plantilla de certificado, categorías,
  * los TRES primeros cursos (estructura lista / contenido pendiente),
+ * dos cursos interactivos de demostración (prisma/cursos-interactivos.ts),
  * banco de preguntas de ejemplo, una empresa demo con trabajadores,
  * asignaciones y avances para poder revisar todos los paneles.
  *
@@ -11,6 +12,8 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import QRCode from "qrcode";
+import { CURSOS, type LeccionSemilla } from "./catalogo-cursos";
+import { CURSOS_INTERACTIVOS } from "./cursos-interactivos";
 
 const prisma = new PrismaClient();
 const PASS = "KgAcademy2026*";
@@ -28,195 +31,6 @@ const ROLES = [
   { code: "admin_empresa", name: "Administrador de empresa", scope: "empresa", description: "Gestiona trabajadores, asigna cursos y consulta cumplimiento." },
   { code: "supervisor", name: "Supervisor", scope: "empresa", description: "Consulta trabajadores y áreas autorizadas." },
   { code: "estudiante", name: "Estudiante / Trabajador", scope: "empresa", description: "Realiza cursos, evaluaciones y descarga certificados." },
-];
-
-/* ------------------------------------------------------------------ */
-/*  ESTRUCTURA DE LOS TRES PRIMEROS CURSOS                             */
-/*                                                                     */
-/*  Contenido entregado por KG a la fecha:                             */
-/*    - KG-PA-001, Módulo 1: presentación interactiva en Genially.     */
-/*    - KG-PA-001, Módulo 2: presentación interactiva en Genially.     */
-/*    - KG-PA-001, Módulo 3: presentación interactiva en Genially.     */
-/*  El resto de módulos queda con el contenedor reservado              */
-/*  (contentType "pendiente") hasta que KG produzca el material.       */
-/* ------------------------------------------------------------------ */
-
-/** Una lección de la semilla: texto simple si el contenido está pendiente. */
-type LeccionSemilla = {
-  title: string;
-  description?: string;
-  contentType?: string;
-  contentUrl?: string;
-  durationMin?: number;
-  isPreview?: boolean;
-};
-
-/**
- * Presentación interactiva del Módulo 1 del Curso Básico de Primeros Auxilios.
- * Se embebe por URL pública: el material vive en Genially y la plataforma solo
- * lo referencia. Si KG edita la presentación, el cambio se refleja sin
- * necesidad de volver a desplegar.
- *
- * Se usa la URL canónica por identificador, sin el fragmento del título. KG ya
- * renombró la presentación una vez (de "CU RSO" a "CURSO") y eso cambió el
- * final de la dirección; la forma corta sobrevive a ese tipo de cambios.
- */
-const GENIALLY_PA_MODULO_1 = "https://view.genially.com/6a839aee6503b7aa52feb9d8";
-
-/**
- * Módulo 2 del Curso Básico. Entregado por KG el 31 de agosto de 2026.
- *
- * A diferencia del Módulo 1, está construido como narrativa ramificada: el
- * participante acompaña a un personaje (Vera) por tres misiones y cierra con una
- * decisión que lleva a dos finales distintos. Las actividades viven dentro de la
- * presentación, no en la tabla `assessments`.
- */
-const GENIALLY_PA_MODULO_2 = "https://view.genially.com/6a8cb026f9ab92630df290da";
-
-/**
- * Módulo 3 del Curso Básico. Entregado por KG el 31 de agosto de 2026.
- *
- * Es el más extenso de los tres: 31 diapositivas de exploración por zonas del
- * cuerpo y por maniobra. La técnica de RCP y el uso del DEA se enseñan con dos
- * videos de YouTube incrustados dentro de la presentación, así que esa parte
- * depende de que esos videos sigan disponibles en su canal de origen.
- */
-const GENIALLY_PA_MODULO_3 = "https://view.genially.com/6a839a1d6503b7aa52fe73bd";
-
-const CURSOS = [
-  {
-    code: "KG-PA-001",
-    slug: "primeros-auxilios-basicos",
-    title: "Curso Básico de Primeros Auxilios",
-    subtitle:
-      "Para brigadas de emergencia y equipos de primera respuesta: protocolos estandarizados, valoración inicial y gestión segura de la escena.",
-    objective:
-      "Capacitar al personal integrante de las brigadas de emergencia en la aplicación estandarizada de protocolos internacionales de primeros auxilios y soporte vital; proveer las bases fisiopatológicas, normativas y prácticas para realizar una valoración clínica inicial, estabilización temporal y manejo seguro de lesiones agudas; y desarrollar competencias operativas y de liderazgo en la gestión de escenas de emergencias empresariales, priorizando la autoprotección y la articulación con los sistemas de emergencia.",
-    targetAudience:
-      "Integrantes de brigadas de emergencia, equipos de primera respuesta, COPASST y personal designado para la atención inicial de emergencias.",
-    requirements: "No requiere conocimientos previos. Se recomienda computador o celular con internet.",
-    methodology:
-      "100% virtual asincrónico. Cada módulo se desarrolla en una presentación interactiva de Genially, con evaluación diagnóstica, evaluaciones por módulo y evaluación final.",
-    level: "basico",
-    durationHours: 40,
-    price: 149000,
-    status: "publicado",
-    accessType: "pago",
-    launch: "22 de agosto de 2026",
-    // Se siembran solo los módulos que KG tiene producidos. Sembrar los demás
-    // vacíos permitía que un trabajador los marcara como completados sin
-    // estudiar nada y saliera certificado.
-    //
-    // Temario oficial completo, tomado del índice de la presentación de KG. Los
-    // módulos 4 a 7 se agregan aquí a medida que KG entregue cada presentación:
-    //   4. Manejo de la Vía Aérea y Obstrucción (OVACE)  <- ojo: el Módulo 3
-    //      entregado ya cubre OVACE (obstrucción leve y grave). Confirmar con
-    //      KG si el 4 se reduce, se fusiona o cambia de alcance.
-    //   5. Control de Hemorragias, Heridas y Quemaduras
-    //   6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia
-    //   7. Movilización, Transporte de Pacientes y Casos Prácticos
-    modules: [
-      {
-        title: "Módulo 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista",
-        description:
-          "Definición y objetivos de los primeros auxilios, rol y límites del primer respondiente, responsabilidad y consentimiento.",
-        lessons: [
-          {
-            title: "Introducción a los Primeros Auxilios y Marco Legal del Brigadista",
-            description:
-              "Presentación interactiva del módulo: fundamentos y objetivos, rol y competencias del primer respondiente, responsabilidad y consentimiento.",
-            contentType: "genially",
-            contentUrl: GENIALLY_PA_MODULO_1,
-            durationMin: 60,
-            isPreview: true,
-          },
-        ],
-      },
-      {
-        title: "Módulo 2. Valoración de la Escena, Bioseguridad y Activación del SEM",
-        description:
-          "Por qué no se corre hacia la víctima: evaluar primero si la escena es segura, reconocer los riesgos del lugar, protegerse con los elementos adecuados antes del contacto y activar el sistema de emergencias.",
-        lessons: [
-          {
-            title: "Valoración de la Escena, Bioseguridad y Activación del SEM",
-            description:
-              "Presentación interactiva en formato de caso: tres misiones guiadas —valoración de la escena, condiciones y riesgos del lugar, y bioseguridad— y una decisión final que muestra las consecuencias de atender antes de protegerse.",
-            contentType: "genially",
-            contentUrl: GENIALLY_PA_MODULO_2,
-            durationMin: 60,
-          },
-        ],
-      },
-      {
-        title: "Módulo 3. Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)",
-        description:
-          "Valoración primaria del paciente —consciencia, vía aérea, respiración y circulación—, recorrido céfalo-caudal en busca de lesiones, reanimación cardiopulmonar, uso del desfibrilador externo automático y manejo de la obstrucción de la vía aérea.",
-        lessons: [
-          {
-            title: "Evaluación Primaria y Soporte Vital Básico (SVB, RCP y DEA)",
-            description:
-              "Presentación interactiva: exploración por zonas del cuerpo y por órgano, señales de alarma en cráneo, tórax, pelvis y extremidades, maniobras de RCP y DEA en video, obstrucción leve y grave de la vía aérea, y una sección final de autoevaluación.",
-            contentType: "genially",
-            contentUrl: GENIALLY_PA_MODULO_3,
-            durationMin: 90,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    code: "KG-PA-002",
-    slug: "primeros-auxilios-pediatricos",
-    title: "Primeros Auxilios Pediátricos",
-    subtitle: "Lactantes y niños: valoración, RCP pediátrica, atragantamiento, fiebre y accidentes en el hogar.",
-    objective:
-      "Capacitar al participante en la atención inicial de emergencias en lactantes y niños, reconociendo las diferencias anatómicas y fisiológicas frente al adulto.",
-    targetAudience:
-      "Padres, cuidadores, docentes, personal de jardines infantiles y trabajadores con población infantil a cargo.",
-    requirements: "Se recomienda haber cursado Primeros Auxilios Básicos.",
-    methodology: "100% virtual asincrónico con casos clínicos guiados y evaluación final.",
-    level: "intermedio",
-    durationHours: 60,
-    price: 169000,
-    status: "borrador",
-    accessType: "pago",
-    launch: "Finales de agosto de 2026",
-    // Estructura tentativa: KG aún no entrega el material. Se siembra un solo
-    // módulo, igual que KG-PA-001, y el temario real se define cuando llegue.
-    modules: [
-      {
-        title: "Módulo 1. El paciente pediátrico es diferente",
-        description: "Diferencias anatómicas y fisiológicas, y triángulo de evaluación pediátrica.",
-        lessons: ["El paciente pediátrico es diferente"],
-      },
-    ],
-  },
-  {
-    code: "KG-PA-003",
-    slug: "primeros-auxilios-psicologicos",
-    title: "Primeros Auxilios Psicológicos",
-    subtitle: "Contención emocional en crisis: escucha activa, modelo ABCDE y cuidado de quién ayuda.",
-    objective:
-      "Entregar herramientas prácticas de contención emocional para acompañar a una persona en crisis dentro del entorno laboral, respetando sus límites y los del auxiliador.",
-    targetAudience:
-      "Lideres de equipo, talento humano, brigadistas, COPASST y responsables del SG-SST.",
-    requirements: "No requiere formación previa en salud mental.",
-    methodology: "100% virtual asincrónico con simulaciones de diálogo y evaluación final.",
-    level: "basico",
-    durationHours: 12,
-    price: 139000,
-    status: "borrador",
-    accessType: "pago",
-    launch: "Finales de agosto de 2026",
-    // Estructura tentativa: KG aún no entrega el material.
-    modules: [
-      {
-        title: "Módulo 1. Crisis y reacción humana",
-        description: "Qué es una crisis y qué reacciones son esperables ante un evento crítico.",
-        lessons: ["Crisis y reacción humana"],
-      },
-    ],
-  },
 ];
 
 /** Banco de preguntas de EJEMPLO. KG debe reemplazarlo por el oficial de cada curso. */
@@ -426,6 +240,17 @@ async function main() {
       { slug: "analitica", name: "Business Analytics", description: "Indicadores y analitica aplicada a la gestión.", icon: "chart", color: "#759F11", order: 4 },
     ],
   });
+  const catEM = await prisma.category.create({
+    data: {
+      slug: "emergencias",
+      name: "Emergencias",
+      description: "Prevención y control de incendios, evacuación y brigadas.",
+      icon: "flame",
+      color: "#E4572E",
+      order: 5,
+    },
+  });
+  const categorias: Record<string, string> = { "primeros-auxilios": catPA.id, emergencias: catEM.id };
 
   /* -------------------------------- USUARIOS -------------------------------- */
   console.log("Creando usuarios...");
@@ -614,7 +439,7 @@ async function main() {
   }
 
   // Estudiante B2C independiente
-  await prisma.user.create({
+  const estudianteB2C = await prisma.user.create({
     data: {
       email: "estudiante@correo.com",
       passwordHash: hash,
@@ -777,6 +602,121 @@ async function main() {
     }
 
     cursosCreados.push({ course, finalEval });
+  }
+
+  /* ------------------------ CURSOS INTERACTIVOS (DEMO) ----------------------- */
+  // Prototipos construidos con el motor de lecciones nativo. Se publican solo en
+  // la base de demostración para que KG los pruebe; su contenido técnico debe
+  // ser validado por los profesionales de KG antes de usarlos en producción.
+  console.log("Creando los cursos interactivos de demostración...");
+  const cursosInteractivos = [];
+  for (const c of CURSOS_INTERACTIVOS) {
+    const course = await prisma.course.create({
+      data: {
+        code: c.code,
+        slug: c.slug,
+        title: c.title,
+        subtitle: c.subtitle,
+        description: `${c.objective}
+
+Prototipo interactivo: contenido pendiente de validación técnica por KG.`,
+        objective: c.objective,
+        targetAudience: c.targetAudience,
+        requirements: c.requirements,
+        methodology: c.methodology,
+        level: c.level,
+        modality: "virtual",
+        durationHours: c.durationHours,
+        categoryId: categorias[c.categoria] ?? catPA.id,
+        instructorId: instructorBomberos.id,
+        status: "publicado",
+        accessType: "plan_empresarial",
+        price: 0,
+        progressRule: "obligatorios",
+        minPassingScore: c.examen.minScore,
+        maxAttempts: c.examen.maxAttempts,
+        requiresFinalExam: true,
+        requiresAllLessons: true,
+        certificateEnabled: true,
+        certificateValidityMonths: 24,
+        publishedAt: new Date(),
+      },
+    });
+
+    const pesoModulo = 100 / c.modules.length;
+    for (const [mi, m] of c.modules.entries()) {
+      const mod = await prisma.module.create({
+        data: {
+          courseId: course.id,
+          title: m.title,
+          description: m.description,
+          order: mi + 1,
+          weight: pesoModulo,
+          isRequired: true,
+          isPublished: true,
+        },
+      });
+      for (const [li, l] of m.lessons.entries()) {
+        await prisma.lesson.create({
+          data: {
+            moduleId: mod.id,
+            title: l.title,
+            description: l.description,
+            order: li + 1,
+            contentType: "interactivo",
+            contentBody: JSON.stringify(l.contenido),
+            durationMin: l.durationMin,
+            isRequired: true,
+            isPreview: mi === 0 && li === 0,
+            weight: pesoModulo / m.lessons.length,
+            completionRule: "manual",
+            isPublished: true,
+          },
+        });
+      }
+    }
+
+    const bank = await prisma.questionBank.create({
+      data: {
+        name: `Banco de preguntas - ${c.title}`,
+        description: "Banco del prototipo interactivo. Pendiente de validación técnica por KG.",
+        courseId: course.id,
+        topic: c.categoria,
+      },
+    });
+    const finalEval = await prisma.assessment.create({
+      data: {
+        courseId: course.id,
+        title: c.examen.title,
+        description: c.examen.description,
+        type: "final",
+        minScore: c.examen.minScore,
+        maxAttempts: c.examen.maxAttempts,
+        timeLimitMin: c.examen.timeLimitMin,
+        isRequired: true,
+        isPublished: true,
+        order: 99,
+        showFeedback: true,
+        showCorrectAnswers: true,
+      },
+    });
+    for (const [i, q] of c.examen.preguntas.entries()) {
+      const pregunta = await prisma.question.create({
+        data: {
+          bankId: bank.id,
+          type: q.type ?? "unica",
+          statement: q.statement,
+          explanation: q.explanation,
+          difficulty: "media",
+          points: 1,
+          options: { create: q.options.map((o, j) => ({ text: o.text, isCorrect: o.ok, order: j + 1 })) },
+        },
+      });
+      await prisma.assessmentQuestion.create({
+        data: { assessmentId: finalEval.id, questionId: pregunta.id, order: i + 1, points: 1 },
+      });
+    }
+    cursosInteractivos.push(course);
   }
 
   /* --------------------- ASIGNACIONES, AVANCE Y CERTIFICADO ------------------- */
@@ -990,6 +930,28 @@ async function main() {
     await prisma.streak.create({
       data: { userId: t.id, currentDays: completo ? 5 : 2, longestDays: completo ? 7 : 3, lastActiveAt: new Date() },
     });
+  }
+
+  // Laura (empresa) y el estudiante B2C pueden probar los cursos interactivos.
+  const laura = trabajadores.find((t) => t.email === "laura.cardenas@constructoraandina.com");
+  for (const course of cursosInteractivos) {
+    for (const u of [laura, estudianteB2C]) {
+      if (!u) continue;
+      await prisma.enrollment.create({
+        data: { userId: u.id, courseId: course.id, origin: "cortesia", status: "no_iniciado" },
+      });
+    }
+    if (laura) {
+      await prisma.notification.create({
+        data: {
+          userId: laura.id,
+          title: "Nuevo curso interactivo",
+          message: `Ya puede tomar "${course.title}".`,
+          linkUrl: `/aula/curso/${course.slug}`,
+          type: "info",
+        },
+      });
+    }
   }
 
   await prisma.auditLog.createMany({

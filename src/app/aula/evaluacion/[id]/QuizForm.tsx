@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconAlert, IconCheck, IconClock } from "@/components/Icons";
+import { IconAlert, IconArrowRight, IconCheck, IconClock } from "@/components/Icons";
+import { barajar } from "@/lib/barajar";
 
 type Q = {
   id: string;
@@ -11,28 +12,47 @@ type Q = {
   options: { id: string; text: string }[];
 };
 
+const LETRAS = ["A", "B", "C", "D", "E", "F"];
+
+/**
+ * Presenta la evaluación una pregunta por pantalla, con un navegador para
+ * saltar entre preguntas y una revisión antes de enviar.
+ *
+ * El orden de preguntas y opciones se baraja con una semilla que llega del
+ * servidor (matrícula + número de intento): es estable al hidratar y cambia en
+ * cada intento, para que no se aprenda "la C" de memoria.
+ */
 export function QuizForm({
   assessmentId,
   questions,
   shuffle,
+  shuffleOptions,
+  semilla,
   timeLimitMin,
 }: {
   assessmentId: string;
   questions: Q[];
   shuffle: boolean;
+  shuffleOptions: boolean;
+  semilla: string;
   timeLimitMin: number | null;
 }) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [actual, setActual] = useState(0);
+  const [revisando, setRevisando] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [left, setLeft] = useState(timeLimitMin ? timeLimitMin * 60 : null);
 
-  // Orden estable por render (evita re-barajar en cada cambio de estado)
   const list = useMemo(() => {
-    if (!shuffle) return questions;
-    return [...questions].sort(() => Math.random() - 0.5);
-  }, [questions, shuffle]);
+    const qs = shuffle ? barajar(questions, `${semilla}-preguntas`) : questions;
+    if (!shuffleOptions) return qs;
+    // Verdadero/Falso conserva su orden natural.
+    return qs.map((q) =>
+      q.type === "verdadero_falso" ? q : { ...q, options: barajar(q.options, `${semilla}-${q.id}`) }
+    );
+  }, [questions, shuffle, shuffleOptions, semilla]);
 
   useEffect(() => {
     if (left === null) return;
@@ -46,7 +66,18 @@ export function QuizForm({
   }, [left]);
 
   const answered = Object.keys(answers).length;
-  const allAnswered = answered === list.length;
+  const pendientes = list.length - answered;
+  const q = list[actual];
+  const esUltima = actual === list.length - 1;
+
+  function responder(qid: string, oid: string) {
+    setAnswers((a) => ({ ...a, [qid]: oid }));
+  }
+
+  function ir(n: number) {
+    setRevisando(false);
+    setActual(Math.max(0, Math.min(list.length - 1, n)));
+  }
 
   async function submit() {
     if (sending) return;
@@ -57,7 +88,7 @@ export function QuizForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         assessmentId,
-        answers: list.map((q) => ({ questionId: q.id, optionId: answers[q.id] ?? null })),
+        answers: list.map((p) => ({ questionId: p.id, optionId: answers[p.id] ?? null })),
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -74,55 +105,91 @@ export function QuizForm({
   const ss = left !== null ? String(left % 60).padStart(2, "0") : "";
 
   return (
-    <div className="card overflow-hidden">
+    // overflow-clip (no hidden): recorta las esquinas sin volver la tarjeta un
+    // contenedor de desplazamiento, así la barra fija sigue pegada a la pantalla.
+    <div className="card overflow-clip">
       {/* Barra de estado */}
-      <div className="sticky top-16 z-10 flex flex-wrap items-center gap-4 border-b border-navy-50 bg-white/95 px-6 py-4 backdrop-blur">
-        <div className="min-w-[160px] flex-1">
-          <div className="flex items-center justify-between text-[11px] font-bold text-navy-500">
-            <span>
-              {answered} de {list.length} respondidas
+      <div className="sticky top-16 z-10 border-b border-navy-50 bg-white/95 px-6 py-4 backdrop-blur">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="min-w-[160px] flex-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-navy-500">
+              <span>
+                {answered} de {list.length} respondidas
+              </span>
+              <span>{Math.round((answered / list.length) * 100)}%</span>
+            </div>
+            <div className="progress-track mt-1.5">
+              <div className="progress-fill" style={{ width: `${(answered / list.length) * 100}%` }} />
+            </div>
+          </div>
+          {left !== null && (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-sm font-bold ${
+                left < 120 ? "bg-red-50 text-red-600" : "bg-navy-50 text-navy-600"
+              }`}
+              aria-live={left < 60 ? "polite" : "off"}
+            >
+              <IconClock width={15} height={15} /> {mm}:{ss}
             </span>
-            <span>{Math.round((answered / list.length) * 100)}%</span>
-          </div>
-          <div className="progress-track mt-1.5">
-            <div className="progress-fill" style={{ width: `${(answered / list.length) * 100}%` }} />
-          </div>
+          )}
         </div>
-        {left !== null && (
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-sm font-bold ${
-              left < 120 ? "bg-red-50 text-red-600" : "bg-navy-50 text-navy-600"
-            }`}
-          >
-            <IconClock width={15} height={15} /> {mm}:{ss}
-          </span>
-        )}
-      </div>
 
-      <div className="divide-y divide-navy-50">
-        {list.map((q, i) => (
-          <fieldset key={q.id} className="p-6">
-            <legend className="mb-4 flex gap-3">
-              <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                  answers[q.id] ? "bg-lime-500 text-white" : "bg-navy-100 text-navy-500"
+        {/* Navegador de preguntas */}
+        <nav aria-label="Preguntas" className="mt-3 flex flex-wrap gap-1.5">
+          {list.map((p, i) => {
+            const hecha = !!answers[p.id];
+            const esta = !revisando && i === actual;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => ir(i)}
+                aria-label={`Pregunta ${i + 1}${hecha ? ", respondida" : ""}`}
+                aria-current={esta ? "step" : undefined}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition ${
+                  esta
+                    ? "bg-navy-700 text-white ring-2 ring-navy-700 ring-offset-2"
+                    : hecha
+                      ? "bg-lime-500 text-white hover:bg-lime-600"
+                      : "bg-navy-50 text-navy-500 hover:bg-navy-100"
                 }`}
               >
                 {i + 1}
-              </span>
-              <span className="pt-1 text-sm font-semibold leading-snug text-navy-700">{q.statement}</span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setRevisando(true)}
+            className={`ml-auto rounded-lg px-3 text-xs font-bold transition ${
+              revisando ? "bg-navy-700 text-white" : "bg-navy-50 text-navy-600 hover:bg-navy-100"
+            }`}
+          >
+            Revisar y enviar
+          </button>
+        </nav>
+      </div>
+
+      {!revisando ? (
+        <div key={q.id} className="animate-fade-up p-6 sm:p-8">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-lime-600">
+            Pregunta {actual + 1} de {list.length}
+          </p>
+          <fieldset className="mt-3">
+            <legend className="font-display text-xl font-extrabold leading-snug text-navy-700 sm:text-2xl">
+              {q.statement}
             </legend>
 
-            <div className="space-y-2 pl-10">
-              {q.options.map((o) => {
+            <div className="mt-6 space-y-3">
+              {q.options.map((o, i) => {
                 const selected = answers[q.id] === o.id;
                 return (
                   <label
                     key={o.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition ${
+                    className={`group flex cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-3.5 text-[15px] transition ${
                       selected
                         ? "border-lime-500 bg-lime-50 font-semibold text-navy-800 shadow-glow"
-                        : "border-navy-100 bg-white text-navy-600 hover:border-navy-300 hover:bg-navy-50/60"
+                        : "border-navy-100 bg-white text-navy-600 hover:-translate-y-0.5 hover:border-navy-300 hover:shadow-sm"
                     }`}
                   >
                     <input
@@ -130,15 +197,15 @@ export function QuizForm({
                       name={q.id}
                       value={o.id}
                       checked={selected}
-                      onChange={() => setAnswers((a) => ({ ...a, [q.id]: o.id }))}
+                      onChange={() => responder(q.id, o.id)}
                       className="sr-only"
                     />
                     <span
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                        selected ? "border-lime-500 bg-lime-500 text-white" : "border-navy-200"
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold transition ${
+                        selected ? "bg-lime-500 text-white" : "bg-navy-50 text-navy-500 group-hover:bg-navy-100"
                       }`}
                     >
-                      {selected && <IconCheck width={11} height={11} strokeWidth={4} />}
+                      {selected ? <IconCheck width={15} height={15} strokeWidth={4} /> : LETRAS[i]}
                     </span>
                     {o.text}
                   </label>
@@ -146,26 +213,75 @@ export function QuizForm({
               })}
             </div>
           </fieldset>
-        ))}
-      </div>
 
-      <div className="border-t border-navy-50 bg-navy-50/40 p-6">
-        {error && (
-          <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
-            {error}
+          <div className="mt-8 flex items-center gap-3">
+            {actual > 0 && (
+              <button type="button" onClick={() => ir(actual - 1)} className="btn-ghost btn-sm">
+                Anterior
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => (esUltima ? setRevisando(true) : ir(actual + 1))}
+              className={`ml-auto ${answers[q.id] ? "btn-lime" : "btn-outline"}`}
+            >
+              {esUltima ? "Revisar y enviar" : answers[q.id] ? "Siguiente" : "Saltar por ahora"}
+              <IconArrowRight width={16} height={16} />
+            </button>
           </div>
-        )}
-        {!allAnswered && (
-          <p className="mb-4 text-xs text-navy-400">
-            Faltan {list.length - answered} pregunta(s) por responder. Puede enviar de todas formas; las
-            no respondidas se califican como incorrectas.
+        </div>
+      ) : (
+        <div className="animate-fade-up p-6 sm:p-8">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-lime-600">Antes de enviar</p>
+          <h3 className="mt-2 font-display text-2xl font-extrabold text-navy-700">
+            {pendientes === 0 ? "Respondió todas las preguntas" : `Le faltan ${pendientes} por responder`}
+          </h3>
+          <p className="mt-1 text-sm text-navy-500">
+            Toque una pregunta para volver a ella. Las que queden sin responder se califican como incorrectas.
           </p>
-        )}
-        <button onClick={submit} disabled={sending} className="btn-lime w-full py-3.5 text-base">
-          {sending ? "Calificando..." : "Enviar evaluación"}
-        </button>
-      </div>
+
+          <ul className="mt-5 space-y-2">
+            {list.map((p, i) => {
+              const elegida = p.options.find((o) => o.id === answers[p.id]);
+              return (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => ir(i)}
+                    className={`flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left text-sm transition hover:border-navy-300 ${
+                      elegida ? "border-navy-100 bg-white" : "border-amber-200 bg-amber-50"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${
+                        elegida ? "bg-lime-500 text-white" : "bg-amber-400 text-white"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold text-navy-700">{p.statement}</span>
+                      <span className={`mt-0.5 block text-xs ${elegida ? "text-navy-500" : "font-bold text-amber-700"}`}>
+                        {elegida ? elegida.text : "Sin responder"}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {error && (
+            <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
+              {error}
+            </div>
+          )}
+          <button onClick={submit} disabled={sending} className="btn-lime mt-6 w-full py-3.5 text-base">
+            {sending ? "Calificando..." : "Enviar evaluación"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

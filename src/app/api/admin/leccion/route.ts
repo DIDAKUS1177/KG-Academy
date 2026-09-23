@@ -53,7 +53,9 @@ export async function POST(req: Request) {
   if (!before) return respuestaError("Lección no encontrada", 404);
 
   const url = limpiar(d.contentUrl);
-  if (d.contentType !== "pendiente" && d.contentType !== "texto" && !url) {
+  // Texto e interactiva viven en contentBody, no en una URL.
+  const sinUrl = d.contentType === "pendiente" || d.contentType === "texto" || d.contentType === "interactivo";
+  if (!sinUrl && !url) {
     return respuestaError("Indique la URL del recurso");
   }
   if (url && !/^https?:\/\//i.test(url)) {
@@ -64,7 +66,7 @@ export async function POST(req: Request) {
     where: { id: d.lessonId },
     data: {
       contentType: d.contentType,
-      contentUrl: d.contentType === "pendiente" ? null : url,
+      contentUrl: sinUrl ? null : url,
       contentBody: d.contentBody ?? before.contentBody,
       isPublished: d.contentType !== "pendiente",
     },

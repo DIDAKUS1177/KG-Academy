@@ -235,14 +235,19 @@ export function CursoConstructor({
                         onChange={(e) => setDraft((s) => ({ ...s, [l.id]: { ...s[l.id], contentType: e.target.value } }))}
                         className="select py-2 text-sm"
                       >
-                        {TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
+                        {/* Una lección interactiva se arma con su guion (JSON), no desde este
+                            selector: la opción aparece solo si la lección ya lo es. */}
+                        {(l.contentType === "interactivo"
+                          ? [{ v: "interactivo", l: "Lección interactiva (KG Academy)" }, ...TIPOS]
+                          : TIPOS
+                        ).map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
                       </select>
                       <input
                         value={d.contentUrl}
                         onChange={(e) => setDraft((s) => ({ ...s, [l.id]: { ...s[l.id], contentUrl: e.target.value } }))}
                         placeholder="https://... (URL del video, Genially, PDF o recurso)"
                         className="input py-2 text-sm"
-                        disabled={d.contentType === "pendiente"}
+                        disabled={d.contentType === "pendiente" || d.contentType === "interactivo"}
                       />
                       <button onClick={() => guardarContenido(l.id)} disabled={!cambio || saving === l.id} className="btn-lime btn-sm">
                         {saving === l.id ? "..." : "Guardar"}
@@ -280,7 +285,7 @@ export function CursoConstructor({
             <tbody>
               {assessments.map((a) => (
                 <tr key={a.id}>
-                  <td className="font-semibold text-navy-700">{a.title}</td>
+                  <td className="font-semibold text-navy-700"><Link href={`/admin/evaluaciones/${a.id}`} className="link-kg">{a.title}</Link></td>
                   <td className="text-xs text-navy-500">{ASSESSMENT_TYPE_LABEL[a.type] ?? a.type}</td>
                   <td className="font-bold">{a.questions}</td>
                   <td>{a.minScore}</td>
@@ -290,8 +295,8 @@ export function CursoConstructor({
             </tbody>
           </table>
           <p className="border-t border-navy-50 px-5 py-3 text-[11px] text-navy-400">
-            El banco de preguntas cargado es de EJEMPLO. KG debe reemplazarlo por el banco oficial de
-            cada curso desde <Link href="/admin/evaluaciones" className="link-kg">Evaluaciones</Link>.
+            Toque una evaluación para cargar o editar sus preguntas. Si el curso aún no tiene evaluación
+            final, créela desde <Link href="/admin/evaluaciones" className="link-kg">Evaluaciones</Link>.
           </p>
         </div>
       </div>

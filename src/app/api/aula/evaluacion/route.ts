@@ -26,7 +26,9 @@ export async function POST(req: Request) {
       questions: { include: { question: { include: { options: true } } } },
     },
   });
-  if (!assessment) return NextResponse.json({ error: "Evaluación no encontrada" }, { status: 404 });
+  if (!assessment || !assessment.isPublished) {
+    return NextResponse.json({ error: "Evaluación no encontrada" }, { status: 404 });
+  }
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: assessment.courseId } },

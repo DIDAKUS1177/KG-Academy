@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconCheck, IconArrowRight, IconFile, IconPlay, IconClock, IconAlert } from "@/components/Icons";
+import { LeccionInteractiva } from "@/components/leccion/LeccionInteractiva";
+import { leerLeccionInteractiva } from "@/lib/leccion-interactiva";
 
 type Lesson = {
   id: string;
@@ -37,6 +39,15 @@ export function LessonPlayer({
   const [saving, setSaving] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const startedRef = useRef(false);
+
+  // Lección interactiva nativa: se completa al terminar su práctica.
+  const interactiva = useMemo(
+    () => (lesson.contentType === "interactivo" ? leerLeccionInteractiva(lesson.contentBody) : null),
+    [lesson.contentType, lesson.contentBody]
+  );
+  const esInteractiva = lesson.contentType === "interactivo";
+  const [practicaLista, setPracticaLista] = useState(false);
+  const alTerminar = useCallback(() => setPracticaLista(true), []);
 
   // Cronometro de permanencia en la lección (trazabilidad de tiempo)
   useEffect(() => {
@@ -102,11 +113,34 @@ export function LessonPlayer({
 
       {/* Contenedor del contenido */}
       <div className="p-6">
-        <h2 className="font-display text-xl font-extrabold text-navy-700 lg:text-2xl">{lesson.title}</h2>
-        {lesson.description && <p className="mt-2 text-sm text-navy-400">{lesson.description}</p>}
+        {/* La interactiva trae su propia portada con título y objetivos. */}
+        {!esInteractiva && (
+          <>
+            <h2 className="font-display text-xl font-extrabold text-navy-700 lg:text-2xl">{lesson.title}</h2>
+            {lesson.description && <p className="mt-2 text-sm text-navy-400">{lesson.description}</p>}
+          </>
+        )}
 
-        <div className="mt-6">
-          <ContentSlot lesson={lesson} />
+        <div className={esInteractiva ? "" : "mt-6"}>
+          {esInteractiva ? (
+            interactiva ? (
+              <LeccionInteractiva
+                leccionId={lesson.id}
+                contenido={interactiva}
+                completada={completed}
+                guardando={saving}
+                onTerminar={alTerminar}
+                onCompletar={marcar}
+              />
+            ) : (
+              <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+                <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
+                El contenido de esta lección interactiva no se pudo leer. Avise a la administración de KG.
+              </div>
+            )
+          ) : (
+            <ContentSlot lesson={lesson} />
+          )}
         </div>
 
         {/* Barra de acciones */}
@@ -123,6 +157,10 @@ export function LessonPlayer({
             {sinContenido ? (
               <span className="inline-flex items-center gap-2 text-sm font-semibold text-amber-600">
                 <IconAlert width={16} height={16} /> Disponible cuando KG publique el contenido
+              </span>
+            ) : esInteractiva && !completed && !practicaLista ? (
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-navy-400">
+                <IconClock width={16} height={16} /> Termine la práctica para completar la lección
               </span>
             ) : !completed ? (
               <button onClick={marcar} disabled={saving} className="btn-lime">

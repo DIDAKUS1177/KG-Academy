@@ -78,6 +78,7 @@ export const CONTENT_TYPES = [
   "texto",
   "enlace",
   "genially",
+  "interactivo",
   "scorm",
   "quiz",
   "actividad",

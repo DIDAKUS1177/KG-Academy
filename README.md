@@ -79,6 +79,45 @@ presentación interactiva de Genially, embebida por URL pública.
 | KG-PA-002 | Primeros Auxilios Pediátricos | 1 | 1 | 60 | Borrador | Por definir |
 | KG-PA-003 | Primeros Auxilios Psicológicos | 1 | 1 | 12 | Borrador | Por definir |
 
+La estructura de los tres vive en `prisma/catalogo-cursos.ts`, compartida por la semilla de
+demostración y por el script que los crea en producción (ver 7.2).
+
+### Cursos interactivos de demostración
+
+La base **local** trae además dos prototipos hechos con el motor de lecciones nativo, cada uno
+con 3 módulos, 6 lecciones y evaluación final de 12 preguntas (nota mínima 80, 3 intentos):
+
+| Código | Curso | Guía |
+|---|---|---|
+| KG-EM-001 | Fuego bajo control: extintores y evacuación | Lucía Torres, líder de brigada |
+| KG-PA-004 | Detén el sangrado: control de hemorragias | Andrés Rincón, paramédico |
+
+Laura (empresa) y el estudiante B2C quedan matriculados para probarlos. Son **prototipos**:
+su contenido sigue recomendaciones generales pero lo debe validar un profesional de KG antes de
+certificar a nadie, y las 4 horas de cada uno son una estimación. Por eso no se cargan en
+producción. El contenido está en `prisma/cursos-interactivos.ts`.
+
+### Lecciones interactivas nativas
+
+Una lección de tipo `interactivo` guarda en `lessons.contentBody` un JSON que el aula dibuja
+como una secuencia de pantallas (`src/lib/leccion-interactiva.ts` define y valida el esquema;
+`src/components/leccion/` lo dibuja):
+
+| Pantalla | Qué hace el trabajador |
+|---|---|
+| `portada`, `explicacion`, `resumen` | Lee; la explicación admite ideas clave, un dato destacado y una ilustración |
+| `tarjetas` | Voltea tarjetas de mito o realidad |
+| `decision` | Elige qué hacer en una situación y ve la consecuencia de cada opción |
+| `contrarreloj` | Decide lo mismo, con segundos contados |
+| `ordenar` | Pone los pasos de un procedimiento en orden |
+| `clasificar` | Asigna cada elemento a su categoría |
+
+Las de práctica hay que resolverlas para avanzar y dan puntos (10 al primer intento, 6 al
+segundo, 2 después). La lección solo se puede completar al llegar al final. El avance de la
+práctica se recuerda en el navegador; una lección completada se abre en modo repaso.
+
+A diferencia de un Genially, el contenido queda en la base: se versiona, se audita y se mide.
+
 ### Modelo comercial
 
 KG Academy se vende como **servicio: acceso a la plataforma por suscripción de la empresa**, no
@@ -97,6 +136,7 @@ con quién lo hizo y con los valores anteriores y nuevos.
 | `/admin/usuarios` | Crear cuentas con cualquier rol (con contraseña propia o temporal generada), editar datos, cambiar rol, empresa o estado, restablecer contraseña |
 | `/admin/empresas` | Crear empresa con su plan y su administrador en un paso, editar, suspender o reactivar; crear y editar planes |
 | `/admin/cursos` | Crear curso (y su categoría si es nueva), agregar, editar, reordenar y eliminar módulos y lecciones, cargar contenido, editar la ficha pública y las reglas (nota mínima, intentos, vigencia del certificado), publicar |
+| `/admin/evaluaciones` | Crear la evaluación final de un curso que no la tiene; en cada evaluación, agregar, editar y quitar preguntas, cargarlas en bloque desde Excel, configurar nota, intentos, tiempo y retroalimentación, y publicarla |
 | `/admin/certificados` | Revocar con motivo y restituir |
 | `/admin/configuracion` | Editar parámetros del sistema en línea (solo superadministrador) |
 
@@ -114,6 +154,27 @@ pueden eliminar; con avance, el servidor lo rechaza.
 No hace falta tocar el código: todo queda registrado en la tabla `lessons` y en `audit_logs`.
 
 Las **preguntas cargadas son de ejemplo** y deben reemplazarse por el banco oficial de KG.
+
+### Cómo cargar el banco de preguntas
+
+1. **Evaluaciones** → botón **Preguntas** de la evaluación (o **Crear evaluación final** si el
+   curso aún no la tiene).
+2. **Carga masiva**: una pregunta por línea, con los campos separados por `|` o en columnas de
+   Excel copiadas tal cual:
+   ```
+   Enunciado | Opción A | Opción B | Opción C | Opción D | Letra correcta | Explicación
+   Enunciado | V o F | Explicación
+   ```
+   La vista previa marca las líneas con error antes de guardar.
+3. Revisar y pulsar **Publicar evaluación**. Sin preguntas no deja publicarla.
+
+Una pregunta que ya fue respondida en algún intento solo admite corregir el enunciado y la
+explicación: cambiar sus opciones alteraría notas ya emitidas. Si se quita, queda inactiva en el
+banco para conservar el historial.
+
+Un curso que exige evaluación final **no se aprueba ni certifica sin ella**: si todavía no la
+tiene, aparece en **Evaluaciones** como pendiente. Las evaluaciones en borrador no se muestran
+al estudiante. Preguntas y opciones se barajan en cada intento.
 
 El temario oficial de KG-PA-001 tiene **7 módulos**; faltan del 4 al 7. Un módulo sin
 presentación **no se siembra vacío**: si existiera, un trabajador podría marcarlo como visto sin
@@ -274,6 +335,10 @@ La carga inicial (catálogos y primer superadministrador) se hizo con
 `scripts/sembrar-produccion.ps1`, que toma la conexión de Neon por sí mismo y pide la
 contraseña oculta. Se puede repetir sin riesgo: no borra nada.
 
+Los cursos del catálogo se crean en producción con `scripts/cursos-produccion.ps1`: solo
+agrega los que falten, **en borrador** y sin evaluaciones, y nunca modifica uno existente. Luego
+KG crea la evaluación final desde el panel, carga sus preguntas y publica.
+
 `.vercelignore` deja fuera de la subida el `.env` local, la base SQLite de demostración,
 `node_modules`, `.next`, `cursos/` y `docs/`.
 
@@ -352,7 +417,9 @@ tanto **no se asumieron**; el modelo de datos ya los soporta:
 
 - Pasarela de pagos y facturación (tablas `orders`, `order_items`, `coupons` listas).
 - Proveedor SMTP para el envío real de correos (tabla `notification_templates` lista).
-- Banco oficial de preguntas de cada curso (el cargado es de ejemplo).
+- Banco oficial de preguntas de cada curso (el de la base de demostración es de ejemplo; se
+  carga desde `/admin/evaluaciones`).
+- Validación técnica de KG para los dos cursos interactivos de demostración.
 - Matriz fina de permisos por rol más allá de la propuesta implementada.
 - Proveedor de alojamiento de video y política de retención.
 

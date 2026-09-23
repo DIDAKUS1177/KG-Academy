@@ -35,7 +35,8 @@ export default async function AulaCursoPage({
     where: { slug: params.slug },
     include: {
       modules: { include: { lessons: { orderBy: { order: "asc" } } }, orderBy: { order: "asc" } },
-      assessments: { orderBy: { order: "asc" } },
+      // Las evaluaciones en borrador no se muestran al estudiante.
+      assessments: { where: { isPublished: true }, orderBy: { order: "asc" } },
     },
   });
   if (!course) notFound();
@@ -269,6 +270,9 @@ export default async function AulaCursoPage({
         {/* Reproductor / contenido */}
         <section>
           <LessonPlayer
+            // Una instancia por lección: al pasar a la siguiente se reinician el
+            // cronómetro, el registro de inicio y el estado de la práctica.
+            key={active.id}
             enrollmentId={enrollment.id}
             courseSlug={course.slug}
             lesson={{

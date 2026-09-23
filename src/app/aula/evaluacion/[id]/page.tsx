@@ -28,7 +28,8 @@ export default async function EvaluacionPage({
       },
     },
   });
-  if (!assessment) notFound();
+  // Una evaluación en borrador no se puede presentar.
+  if (!assessment || !assessment.isPublished) notFound();
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: assessment.courseId } },
@@ -258,6 +259,8 @@ export default async function EvaluacionPage({
         <QuizForm
           assessmentId={assessment.id}
           shuffle={assessment.shuffleQuestions}
+          shuffleOptions={assessment.shuffleOptions}
+          semilla={`${enrollment.id}-${attempts.length + 1}`}
           timeLimitMin={assessment.timeLimitMin}
           questions={assessment.questions.map((aq) => ({
             id: aq.question.id,

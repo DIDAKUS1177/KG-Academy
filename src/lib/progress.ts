@@ -102,9 +102,12 @@ export async function recalcEnrollment(enrollmentId: string) {
 
   // ---- 3. Evaluación final aprobada ----
   const finalAssessment = course.assessments.find((a) => a.type === "final");
+  // Si el curso exige evaluación final y todavía no tiene una, no se puede dar
+  // por aprobada: antes el curso se completaba solo con ver las lecciones y
+  // salía un certificado sin que nadie hubiera respondido una pregunta.
   const finalPassed = finalAssessment
     ? enrollment.attempts.some((a) => a.assessmentId === finalAssessment.id && a.passed)
-    : true;
+    : !course.requiresFinalExam;
   const bestFinal = finalAssessment
     ? Math.max(
         0,
