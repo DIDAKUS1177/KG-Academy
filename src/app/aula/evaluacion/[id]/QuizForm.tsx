@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconAlert, IconArrowRight, IconCheck, IconClock } from "@/components/Icons";
+import { IconAlert, IconArrowRight, IconCheck, IconClock, IconFire } from "@/components/Icons";
 import { barajar } from "@/lib/barajar";
 
 type Q = {
@@ -29,6 +29,8 @@ export function QuizForm({
   shuffleOptions,
   semilla,
   timeLimitMin,
+  modoJuego = false,
+  minScore,
 }: {
   assessmentId: string;
   questions: Q[];
@@ -36,6 +38,9 @@ export function QuizForm({
   shuffleOptions: boolean;
   semilla: string;
   timeLimitMin: number | null;
+  /** Curso en modo juego: la evaluación se presenta como desafío final. */
+  modoJuego?: boolean;
+  minScore?: number;
 }) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -43,6 +48,8 @@ export function QuizForm({
   const [revisando, setRevisando] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // En modo juego el reloj arranca al aceptar el desafío, no al abrir la página.
+  const [iniciado, setIniciado] = useState(!modoJuego);
   const [left, setLeft] = useState(timeLimitMin ? timeLimitMin * 60 : null);
 
   const list = useMemo(() => {
@@ -55,7 +62,7 @@ export function QuizForm({
   }, [questions, shuffle, shuffleOptions, semilla]);
 
   useEffect(() => {
-    if (left === null) return;
+    if (left === null || !iniciado) return;
     if (left <= 0) {
       void submit();
       return;
@@ -63,7 +70,7 @@ export function QuizForm({
     const t = setTimeout(() => setLeft((s) => (s === null ? null : s - 1)), 1000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [left]);
+  }, [left, iniciado]);
 
   const answered = Object.keys(answers).length;
   const pendientes = list.length - answered;
@@ -99,6 +106,40 @@ export function QuizForm({
     }
     router.push(`/aula/evaluacion/${assessmentId}?intento=${data.attemptId}`);
     router.refresh();
+  }
+
+  if (!iniciado) {
+    return (
+      <div className="relative overflow-hidden rounded-3xl bg-navy-900 p-8 text-center text-white shadow-kg-lg sm:p-12">
+        <div className="pointer-events-none absolute inset-0 bg-kg-mesh opacity-70" />
+        <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:30px_30px] opacity-20" />
+        <div className="relative">
+          <span className="mx-auto flex h-24 w-24 animate-pulse items-center justify-center rounded-3xl bg-gradient-to-br from-red-500 to-amber-400 text-white shadow-kg-lg">
+            <IconFire width={52} height={52} fill="currentColor" />
+          </span>
+          <p className="mt-6 font-display text-xs font-extrabold tracking-[0.3em] text-amber-300">DESAFÍO FINAL</p>
+          <h3 className="mt-2 font-display text-3xl font-extrabold sm:text-4xl">Demuestre todo lo que aprendió</h3>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/70">
+            Aquí no hay pistas ni vidas extra: las respuestas se revelan al final. Supérelo para ganar su certificado.
+          </p>
+          <div className="mx-auto mt-7 grid max-w-xl grid-cols-3 gap-3">
+            {[
+              ["Preguntas", String(questions.length)],
+              ["Para ganar", minScore !== undefined ? `${minScore}/100` : "—"],
+              ["Tiempo", timeLimitMin ? `${timeLimitMin} min` : "Libre"],
+            ].map(([k, v]) => (
+              <div key={k} className="rounded-xl bg-white/10 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-white/55">{k}</p>
+                <p className="mt-0.5 font-display text-xl font-extrabold">{v}</p>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => setIniciado(true)} className="btn-lime mt-8 px-10 py-4 text-base">
+            ¡Aceptar el desafío! <IconArrowRight width={18} height={18} />
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const mm = left !== null ? String(Math.floor(left / 60)).padStart(2, "0") : "";

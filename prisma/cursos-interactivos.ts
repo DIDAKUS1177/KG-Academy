@@ -57,7 +57,7 @@ const VF = (ok: boolean) => [
 /*  CURSO 1 · FUEGO BAJO CONTROL                                             */
 /* ======================================================================== */
 
-const LUCIA = { nombre: "Lucía Torres", rol: "Líder de brigada" };
+const LUCIA = { nombre: "Lucía Torres", rol: "Líder de brigada", avatar: "brigadista" as const };
 
 const fuego: CursoInteractivo = {
   code: "KG-EM-001",
@@ -70,7 +70,7 @@ const fuego: CursoInteractivo = {
   targetAudience: "Todo el personal, brigadistas, COPASST y responsables del plan de emergencias.",
   requirements: "No requiere conocimientos previos. Se recomienda complementar con práctica presencial de extintores.",
   methodology:
-    "100% virtual con lecciones interactivas: decisiones con consecuencias, ejercicios de ordenar y clasificar, contrarreloj y evaluación final.",
+    "100% virtual y en formato de videojuego: mundos y niveles con vidas, XP y estrellas, cacería de riesgos en escenas ilustradas, misiones contra el reloj, decisiones con consecuencias y desafío final.",
   level: "basico",
   durationHours: 4,
   categoria: "emergencias",
@@ -476,6 +476,105 @@ const fuego: CursoInteractivo = {
                 ],
               },
               {
+                tipo: "mision",
+                titulo: "Conato en la bodega",
+                intro: "Son las 10:40. Mientras revisa un pedido en la bodega, ve humo y una llama que sale de una caja de cartón junto a la estantería. El fuego apenas empieza, pero crece cada segundo. Cada decisión correcta lo acerca a controlarlo; cada error le da ventaja al fuego.",
+                medidor: {
+                  etiqueta: "Tamaño del fuego",
+                  tipo: "amenaza"
+                },
+                velocidad: 2,
+                penalizacion: 25,
+                pasos: [
+                  {
+                    situacion: "La llama es del tamaño de una papelera. Nadie más la ha visto.",
+                    pregunta: "¿Qué hace primero?",
+                    opciones: [
+                      {
+                        texto: "Grito «¡fuego!» y activo la alarma",
+                        correcta: true,
+                        retro: "La ayuda viene en camino aunque el extintor no alcance."
+                      },
+                      {
+                        texto: "Voy directo por el extintor sin avisar",
+                        retro: "Si el extintor no alcanza, nadie sabrá que hay un incendio. Avisar toma segundos."
+                      },
+                      {
+                        texto: "Le tomo una foto para reportarlo",
+                        retro: "El reporte puede esperar; el fuego no."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "En la pared hay dos extintores: uno de agua a presión y uno de polvo químico seco (PQS) multipropósito. En la caja hay cartón y una lata de solvente.",
+                    pregunta: "¿Cuál toma?",
+                    opciones: [
+                      {
+                        texto: "El de PQS multipropósito",
+                        correcta: true,
+                        retro: "Sirve para sólidos (A) y líquidos inflamables (B)."
+                      },
+                      {
+                        texto: "El de agua",
+                        retro: "Con solvente cerca, el agua puede regar el líquido encendido."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Tiene el extintor en la mano.",
+                    pregunta: "¿Dónde se ubica?",
+                    opciones: [
+                      {
+                        texto: "A 2 o 3 metros, con la salida a mi espalda",
+                        correcta: true,
+                        retro: "Así puede retirarse si el fuego crece."
+                      },
+                      {
+                        texto: "Pegado al fuego, para no desperdiciar agente",
+                        retro: "Tan cerca, el calor lo quema y el chorro dispersa el material encendido."
+                      },
+                      {
+                        texto: "Entre el fuego y la pared del fondo",
+                        retro: "Quedó atrapado: si el fuego crece, no tiene por dónde salir."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Ya retiró el pasador.",
+                    pregunta: "¿Hacia dónde apunta?",
+                    opciones: [
+                      {
+                        texto: "A la base de las llamas, barriendo de lado a lado",
+                        correcta: true,
+                        retro: "Así ataca el combustible."
+                      },
+                      {
+                        texto: "A la punta de las llamas",
+                        retro: "El agente pasa de largo por el gas que arde."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "La llama se apagó. Queda humo y la caja humea.",
+                    pregunta: "¿Y ahora?",
+                    opciones: [
+                      {
+                        texto: "Me retiro sin darle la espalda, vigilo que no se reavive y espero a la brigada",
+                        correcta: true,
+                        retro: "Un fuego apagado puede reavivarse: la brigada revisa la zona y reporta."
+                      },
+                      {
+                        texto: "Vuelvo a mi trabajo: ya pasó",
+                        retro: "El fuego puede reavivarse desde la brasa, y hay que reportar el evento y recargar el extintor."
+                      }
+                    ]
+                  }
+                ],
+                exito: "¡Conato controlado! Avisó, eligió el extintor correcto y lo usó con la técnica HAAB. La brigada revisa la zona.",
+                fracaso: "El fuego superó lo que un extintor portátil puede controlar. En la vida real, en este punto se evacúa y se deja el trabajo a los bomberos.",
+                dice: "Ahora sí: póngalo todo en práctica. Y rápido, que el fuego no espera."
+              },
+              {
                 tipo: "resumen",
                 titulo: "Lo que se lleva de esta lección",
                 puntos: [
@@ -516,22 +615,6 @@ const fuego: CursoInteractivo = {
                 dice: "Esta vez usted es el protagonista. Son las 3:10 de la tarde, está en el cuarto piso y suena la alarma.",
               },
               {
-                tipo: "decision",
-                titulo: "Los primeros segundos",
-                situacion:
-                  "Suena la alarma de evacuación. Tiene un informe a medio guardar, su bolso está en el escritorio y el ascensor queda frente a su puesto.",
-                pregunta: "¿Qué hace?",
-                opciones: [
-                  {
-                    texto: "Dejarlo todo e ir a la escalera por la ruta señalizada",
-                    correcta: true,
-                    retro: "Así es. Las cosas se reponen, usted no. Los ascensores pueden detenerse o abrirse en el piso del incendio.",
-                  },
-                  { texto: "Tomar el ascensor, es más rápido", retro: "En un incendio el ascensor puede quedarse sin energía o llevarlo al piso donde está el fuego. Siempre escaleras." },
-                  { texto: "Guardar el informe y recoger el bolso", retro: "Esos segundos pueden ser los que le falten. Lleve solo lo que tenga en la mano, como el celular." },
-                ],
-              },
-              {
                 tipo: "explicacion",
                 titulo: "Cómo moverse por la ruta",
                 parrafos: [
@@ -543,36 +626,130 @@ const fuego: CursoInteractivo = {
                 clave: "Siga la señalización hasta el punto de encuentro, aunque crea conocer un camino más corto.",
               },
               {
-                tipo: "contrarreloj",
-                titulo: "Humo en el pasillo",
-                segundos: 10,
-                situacion: "Al salir de su oficina, el pasillo tiene humo gris que baja desde el techo.",
-                pregunta: "¿Cómo avanza?",
-                opciones: [
+                tipo: "mision",
+                titulo: "Escape del cuarto piso",
+                intro: "Son las 3:10 de la tarde. Está en el cuarto piso y suena la alarma de evacuación: hay fuego en el tercero. El humo empieza a subir por el edificio. Tiene que llegar al punto de encuentro antes de que llene el piso.",
+                medidor: {
+                  etiqueta: "Humo en el piso",
+                  tipo: "amenaza"
+                },
+                velocidad: 1.8,
+                penalizacion: 22,
+                pasos: [
                   {
-                    texto: "Agachado o gateando, cubriéndose nariz y boca",
-                    correcta: true,
-                    retro: "Correcto. El humo caliente sube, así que el aire más limpio queda cerca del piso. Una tela sobre nariz y boca ayuda.",
+                    situacion: "Tiene un informe a medio guardar y su bolso en el escritorio.",
+                    pregunta: "¿Qué hace?",
+                    opciones: [
+                      {
+                        texto: "Dejo todo y salgo por la ruta señalizada",
+                        correcta: true,
+                        retro: "Las cosas se reponen; usted no."
+                      },
+                      {
+                        texto: "Guardo el informe y recojo el bolso",
+                        retro: "Esos segundos pueden ser los que le falten."
+                      },
+                      {
+                        texto: "Espero a ver si es un simulacro",
+                        retro: "Toda alarma se atiende como real."
+                      }
+                    ]
                   },
-                  { texto: "De pie, lo más rápido posible", retro: "A la altura de la cara el humo es más denso y tóxico. Pocas respiraciones pueden desorientarlo." },
-                  { texto: "Volver a la oficina y esperar", retro: "Solo si la ruta está bloqueada por completo. Si puede avanzar agachado, salga." },
-                ],
-                alAgotar: "En el humo se pierde la orientación en segundos. Recuerde: abajo está el aire.",
-              },
-              {
-                tipo: "decision",
-                titulo: "La puerta de la escalera",
-                situacion: "Llega a la puerta de la escalera. No sabe si del otro lado hay fuego.",
-                pregunta: "¿Qué hace antes de abrirla?",
-                opciones: [
                   {
-                    texto: "Tocar la puerta y la manija con el dorso de la mano",
-                    correcta: true,
-                    retro: "Bien. Si está caliente, no la abra: hay fuego detrás; busque la ruta alterna. Si está fría, ábrala despacio.",
+                    situacion: "El ascensor está frente a su puesto; la escalera, al fondo del pasillo.",
+                    pregunta: "¿Por dónde baja?",
+                    opciones: [
+                      {
+                        texto: "Por la escalera",
+                        correcta: true,
+                        retro: "Siempre escaleras."
+                      },
+                      {
+                        texto: "Por el ascensor, es más rápido",
+                        retro: "El ascensor puede quedarse sin energía o abrirse en el piso del incendio."
+                      }
+                    ]
                   },
-                  { texto: "Abrirla de golpe para salir rápido", retro: "Si hay fuego detrás, al abrir de golpe entra aire y las llamas pueden salir hacia usted." },
-                  { texto: "Tocarla con la palma", retro: "Con la palma se puede quemar la mano que va a necesitar para sujetarse. Use el dorso." },
+                  {
+                    situacion: "En el pasillo, un humo gris baja desde el techo.",
+                    pregunta: "¿Cómo avanza?",
+                    opciones: [
+                      {
+                        texto: "Agachado, cubriéndome nariz y boca con una tela",
+                        correcta: true,
+                        retro: "El aire más limpio está cerca del piso."
+                      },
+                      {
+                        texto: "De pie y corriendo",
+                        retro: "A la altura de la cara el humo es más denso y tóxico."
+                      },
+                      {
+                        texto: "Me devuelvo a la oficina",
+                        retro: "Solo si la ruta está bloqueada por completo. Aquí puede avanzar."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Llega a la puerta de la escalera. No sabe qué hay del otro lado.",
+                    pregunta: "¿Qué hace?",
+                    opciones: [
+                      {
+                        texto: "Toco la puerta y la manija con el dorso de la mano",
+                        correcta: true,
+                        retro: "Está fría: puede abrirla despacio."
+                      },
+                      {
+                        texto: "La abro de golpe",
+                        retro: "Si hubiera fuego detrás, las llamas saldrían hacia usted."
+                      },
+                      {
+                        texto: "La toco con la palma",
+                        retro: "Podría quemarse la mano que necesita para sujetarse."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "En la escalera baja mucha gente.",
+                    pregunta: "¿Cómo baja?",
+                    opciones: [
+                      {
+                        texto: "Por un costado, sujeto del pasamanos, sin correr",
+                        correcta: true,
+                        retro: "Así se evitan caídas y tapones."
+                      },
+                      {
+                        texto: "Corro y adelanto a los demás",
+                        retro: "Correr causa caídas y empujones en la escalera."
+                      },
+                      {
+                        texto: "Me devuelvo por el celular",
+                        retro: "Nunca se devuelva. Nada vale más que su vida."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Ya está afuera del edificio.",
+                    pregunta: "¿Qué hace?",
+                    opciones: [
+                      {
+                        texto: "Voy al punto de encuentro y me reporto con el brigadista",
+                        correcta: true,
+                        retro: "Si no se reporta, pueden arriesgar a alguien buscándolo adentro."
+                      },
+                      {
+                        texto: "Me voy para la casa",
+                        retro: "La brigada creería que sigue adentro."
+                      },
+                      {
+                        texto: "Me quedo en la puerta mirando",
+                        retro: "Estorba la salida de los demás y la entrada de los bomberos."
+                      }
+                    ]
+                  }
                 ],
+                exito: "¡Llegó al punto de encuentro y la brigada lo contó! Salió rápido, sin correr y sin exponerse al humo.",
+                fracaso: "El humo llenó el piso antes de que saliera. Cada segundo cuenta: deje las cosas, use la escalera y avance agachado.",
+                dice: "Suena la alarma. Usted está en el cuarto piso. ¡Salga!"
               },
               {
                 tipo: "ordenar",
@@ -646,6 +823,50 @@ const fuego: CursoInteractivo = {
                   "El regreso a las instalaciones solo lo autoriza el coordinador de la emergencia o los organismos de socorro.",
                 ],
                 clave: "Número único de emergencias en Colombia: 123.",
+              },
+              {
+                tipo: "buscar",
+                titulo: "Ronda del brigadista",
+                instruccion: "Antes de la reunión de brigada le piden inspeccionar esta oficina. Toque los 5 riesgos de incendio o de evacuación que encuentre.",
+                escena: "oficina",
+                objetivos: [
+                  {
+                    x: 100,
+                    y: 318,
+                    r: 42,
+                    nombre: "Cable dañado en la cafetera",
+                    explicacion: "Un cable pelado puede hacer cortocircuito y encender lo que tiene cerca. Se desconecta y se reporta para cambio."
+                  },
+                  {
+                    x: 300,
+                    y: 388,
+                    r: 52,
+                    nombre: "Multitomas conectadas en cadena",
+                    explicacion: "Conectar una multitoma a otra sobrecarga el circuito y recalienta los cables. Cada equipo necesita un tomacorriente adecuado."
+                  },
+                  {
+                    x: 525,
+                    y: 372,
+                    r: 50,
+                    nombre: "Calentador pegado a papel y cartón",
+                    explicacion: "El calor del calentador puede encender el papel. Debe tener al menos un metro libre alrededor."
+                  },
+                  {
+                    x: 622,
+                    y: 232,
+                    r: 46,
+                    nombre: "Extintor tapado por cajas",
+                    explicacion: "En una emergencia no hay tiempo de mover cajas. El extintor debe estar visible, señalizado y despejado."
+                  },
+                  {
+                    x: 730,
+                    y: 292,
+                    r: 56,
+                    nombre: "Salida de emergencia bloqueada",
+                    explicacion: "Una salida obstruida puede atrapar a las personas. Rutas y puertas de evacuación siempre despejadas."
+                  }
+                ],
+                dice: "Los incendios se previenen antes de apagarse. Usted es mis ojos: encuentre lo que está mal."
               },
               {
                 tipo: "clasificar",
@@ -844,7 +1065,7 @@ const fuego: CursoInteractivo = {
 /*  CURSO 2 · DETÉN EL SANGRADO                                              */
 /* ======================================================================== */
 
-const ANDRES = { nombre: "Andrés Rincón", rol: "Paramédico" };
+const ANDRES = { nombre: "Andrés Rincón", rol: "Paramédico", avatar: "paramedico" as const };
 
 const sangrado: CursoInteractivo = {
   code: "KG-PA-004",
@@ -857,7 +1078,7 @@ const sangrado: CursoInteractivo = {
   targetAudience: "Brigadistas, COPASST, líderes de área y cualquier trabajador que quiera responder ante una emergencia.",
   requirements: "No requiere conocimientos previos. Las técnicas manuales se complementan con práctica presencial.",
   methodology:
-    "100% virtual con lecciones interactivas: casos reales, decisiones con consecuencias, contrarreloj y evaluación final.",
+    "100% virtual y en formato de videojuego: mundos y niveles con vidas, XP y estrellas, cacería de riesgos, misiones de rescate con la vida del paciente en juego y desafío final.",
   level: "basico",
   durationHours: 4,
   categoria: "primeros-auxilios",
@@ -966,19 +1187,48 @@ const sangrado: CursoInteractivo = {
                 dice: "Lo primero no es la herida. Lo primero es que usted no sea la siguiente víctima.",
               },
               {
-                tipo: "decision",
-                titulo: "La escena",
-                situacion: "Un operario sangra en el piso junto a una máquina que sigue encendida. Hay aceite regado alrededor.",
-                pregunta: "¿Qué hace primero?",
-                opciones: [
+                tipo: "buscar",
+                titulo: "¿Qué lo puede herir a usted?",
+                instruccion: "Un compañero está herido junto a la máquina. Antes de acercarse, toque los 5 peligros que podrían convertirlo a usted en la segunda víctima.",
+                escena: "taller",
+                objetivos: [
                   {
-                    texto: "Apagar o pedir que apaguen la máquina, y fijarse dónde pisa",
-                    correcta: true,
-                    retro: "Correcto. Si la máquina sigue funcionando o usted se resbala, habrá dos heridos. Asegure la escena en segundos y luego atienda.",
+                    x: 390,
+                    y: 215,
+                    r: 55,
+                    nombre: "Máquina todavía encendida",
+                    explicacion: "Apáguela con el pulsador de parada, o pida que la apaguen, antes de acercarse."
                   },
-                  { texto: "Correr a atenderlo de inmediato", retro: "La prisa sin mirar es como se lesionan los auxiliadores. Tómese dos segundos para ver los riesgos." },
-                  { texto: "Esperar lejos a que llegue la ambulancia", retro: "Una hemorragia grave no espera. Asegure la escena y actúe." },
+                  {
+                    x: 230,
+                    y: 395,
+                    r: 58,
+                    nombre: "Aceite derramado en el paso",
+                    explicacion: "Un resbalón lo deja fuera de combate. Rodee el charco o cúbralo con aserrín o cartón."
+                  },
+                  {
+                    x: 118,
+                    y: 418,
+                    r: 42,
+                    nombre: "Extensión eléctrica pelada",
+                    explicacion: "Un cable dañado cerca del aceite puede electrocutarlo. Desconéctelo desde la toma."
+                  },
+                  {
+                    x: 505,
+                    y: 412,
+                    r: 46,
+                    nombre: "Láminas cortantes en el piso",
+                    explicacion: "Pueden cortarlo al arrodillarse. Retírelas con cuidado o arrodíllese en otro lado."
+                  },
+                  {
+                    x: 640,
+                    y: 140,
+                    r: 52,
+                    nombre: "Carga suspendida sobre el herido",
+                    explicacion: "Nunca se trabaja bajo una carga colgada. Que la bajen o la aseguren antes de atender."
+                  }
                 ],
+                dice: "Mire bien antes de correr. Toque cada peligro que vea."
               },
               {
                 tipo: "explicacion",
@@ -1218,6 +1468,143 @@ const sangrado: CursoInteractivo = {
                 ],
               },
               {
+                tipo: "mision",
+                titulo: "Rescate en la planta",
+                intro: "Un operario se cortó el antebrazo con una lámina. La sangre sale roja brillante y a chorros. La ambulancia tarda y usted es quien está más cerca: cada segundo sin control, la vida del paciente baja.",
+                medidor: {
+                  etiqueta: "Vida del paciente",
+                  tipo: "vida"
+                },
+                velocidad: 1.6,
+                penalizacion: 20,
+                pasos: [
+                  {
+                    situacion: "La máquina sigue encendida y hay virutas en el piso.",
+                    pregunta: "¿Qué hace primero?",
+                    opciones: [
+                      {
+                        texto: "Pido que apaguen la máquina y miro dónde piso",
+                        correcta: true,
+                        retro: "Dos segundos para asegurar la escena evitan una segunda víctima."
+                      },
+                      {
+                        texto: "Me lanzo a presionar la herida",
+                        retro: "Si la máquina lo alcanza o se resbala, habrá dos heridos."
+                      },
+                      {
+                        texto: "Espero lejos a que llegue la ambulancia",
+                        retro: "Una hemorragia así no espera: puede ser mortal en minutos."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "El botiquín está a dos pasos.",
+                    pregunta: "¿Cómo se protege?",
+                    opciones: [
+                      {
+                        texto: "Me pongo guantes o uso una bolsa como barrera",
+                        correcta: true,
+                        retro: "Correcto: la sangre puede transmitir infecciones."
+                      },
+                      {
+                        texto: "Atiendo con las manos desnudas: no hay tiempo",
+                        retro: "Sí hay tiempo para una barrera; si no hay guantes, sirve una bolsa o una tela."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Un compañero mira sin saber qué hacer.",
+                    pregunta: "¿Qué le pide?",
+                    opciones: [
+                      {
+                        texto: "Que llame al 123, dé la dirección exacta y vuelva a contarme",
+                        correcta: true,
+                        retro: "Así sabe que la ayuda viene en camino."
+                      },
+                      {
+                        texto: "Que busque un carro para llevarlo",
+                        retro: "Trasladarlo sin controlar el sangrado aumenta la pérdida de sangre."
+                      },
+                      {
+                        texto: "Que llame a la familia",
+                        retro: "Primero la ayuda médica. A la familia se le avisa después."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Tiene gasa en la mano.",
+                    pregunta: "¿Qué hace?",
+                    opciones: [
+                      {
+                        texto: "Presiono directo sobre la herida, con fuerza, con las dos manos",
+                        correcta: true,
+                        retro: "Esa es la herramienta más poderosa para detener un sangrado."
+                      },
+                      {
+                        texto: "Primero lavo la herida",
+                        retro: "En un sangrado grave lo urgente es detenerlo. La limpieza viene después."
+                      },
+                      {
+                        texto: "Pongo la gasa encima con suavidad, sin apretar",
+                        retro: "Sin presión firme, la sangre sigue saliendo."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "La gasa se empapó y la sangre sale por los bordes.",
+                    pregunta: "¿Qué hace?",
+                    opciones: [
+                      {
+                        texto: "Pongo más gasa encima y presiono más fuerte",
+                        correcta: true,
+                        retro: "Retirarla arrancaría el coágulo que se está formando."
+                      },
+                      {
+                        texto: "Quito la gasa empapada y pongo una limpia",
+                        retro: "Al quitarla, el sangrado vuelve con fuerza."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Aun así no para. La herida está en el antebrazo.",
+                    pregunta: "¿Qué hace?",
+                    opciones: [
+                      {
+                        texto: "Pongo el torniquete 5 a 7 cm arriba de la herida y aprieto hasta que pare",
+                        correcta: true,
+                        retro: "Correcto: en un brazo que no para con presión, el torniquete salva vidas."
+                      },
+                      {
+                        texto: "Pongo el torniquete debajo de la herida",
+                        retro: "La sangre llega desde arriba: por debajo no la detiene."
+                      },
+                      {
+                        texto: "Sigo presionando igual y espero",
+                        retro: "Si la presión no basta, cada minuto de espera es sangre que no se recupera."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "El sangrado se detuvo.",
+                    pregunta: "¿Y ahora?",
+                    opciones: [
+                      {
+                        texto: "Anoto la hora del torniquete y acompaño al paciente sin aflojarlo",
+                        correcta: true,
+                        retro: "El equipo médico necesita saber cuánto tiempo lleva puesto."
+                      },
+                      {
+                        texto: "Aflojo el torniquete para que circule la sangre",
+                        retro: "Aflojarlo hace que vuelva el sangrado. Solo lo retira el personal de salud."
+                      }
+                    ]
+                  }
+                ],
+                exito: "¡Sangrado controlado! Llega la ambulancia y el paramédico recibe al paciente con el torniquete y la hora anotada. Usted le salvó la vida.",
+                fracaso: "El paciente perdió demasiada sangre. En una hemorragia grave cada decisión cuesta segundos: seguridad, protección, 123, presión y torniquete si no para.",
+                dice: "Esto es lo que se hace en la calle. Vamos a hacerlo juntos, contra el reloj."
+              },
+              {
                 tipo: "resumen",
                 titulo: "Lo que se lleva de esta lección",
                 puntos: [
@@ -1394,6 +1781,105 @@ const sangrado: CursoInteractivo = {
                     reverso: "Mito. Se deja donde está y se inmoviliza: puede estar conteniendo el sangrado.",
                   },
                 ],
+              },
+              {
+                tipo: "mision",
+                titulo: "Accidente en la línea de corte",
+                intro: "Una compañera se amputó la punta de un dedo con la cizalla. Está pálida y sangra. Usted llega primero y lo que haga en los próximos minutos cuenta.",
+                medidor: {
+                  etiqueta: "Vida de la paciente",
+                  tipo: "vida"
+                },
+                velocidad: 1.5,
+                penalizacion: 20,
+                pasos: [
+                  {
+                    situacion: "La cizalla sigue conectada y encendida.",
+                    pregunta: "¿Qué hace primero?",
+                    opciones: [
+                      {
+                        texto: "Pido que la apaguen y la desconecten antes de acercarme",
+                        correcta: true,
+                        retro: "Bien: primero la escena, después la persona."
+                      },
+                      {
+                        texto: "Saco la punta del dedo de la máquina de inmediato",
+                        retro: "Con la máquina encendida puede herirse usted. La parte amputada viene al final."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Ya es seguro. Tiene guantes y gasa.",
+                    pregunta: "¿Cómo controla el sangrado?",
+                    opciones: [
+                      {
+                        texto: "Presiono con gasa directamente sobre la herida, con fuerza y sin soltar",
+                        correcta: true,
+                        retro: "Correcto: en la punta de un dedo, la presión directa firme casi siempre basta."
+                      },
+                      {
+                        texto: "Le pongo un torniquete en el brazo",
+                        retro: "El torniquete se reserva para hemorragias graves de brazos o piernas que no paran con presión. Aquí basta la presión directa."
+                      },
+                      {
+                        texto: "Intento poner la punta del dedo en su lugar",
+                        retro: "Eso no detiene el sangrado y puede dañar el tejido. Presión directa."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Otro compañero ya llamó al 123. Con la presión, sangra mucho menos.",
+                    pregunta: "¿Qué hace con la parte amputada?",
+                    opciones: [
+                      {
+                        texto: "Pido que la envuelvan en gasa, la metan en una bolsa cerrada y pongan la bolsa sobre hielo",
+                        correcta: true,
+                        retro: "Así se conserva sin que el frío la dañe."
+                      },
+                      {
+                        texto: "La meto directamente en un vaso con hielo",
+                        retro: "El hielo directo congela y daña el tejido. Siempre envuelta y en bolsa."
+                      },
+                      {
+                        texto: "La lavo con alcohol",
+                        retro: "El alcohol daña el tejido. Solo se envuelve limpia y se conserva en frío."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "La compañera está pálida, sudorosa y pide agua con insistencia.",
+                    pregunta: "¿Qué hace?",
+                    opciones: [
+                      {
+                        texto: "La acuesto, la abrigo, le hablo y no le doy de beber",
+                        correcta: true,
+                        retro: "Son señales de shock. Nada por boca: puede necesitar cirugía."
+                      },
+                      {
+                        texto: "Le doy agua con azúcar para que se reponga",
+                        retro: "Beber puede causarle vómito y complicar una cirugía."
+                      }
+                    ]
+                  },
+                  {
+                    situacion: "Llega la ambulancia.",
+                    pregunta: "¿Qué hace al entregarla?",
+                    opciones: [
+                      {
+                        texto: "Entrego la bolsa con la parte amputada y cuento qué pasó y qué hice",
+                        correcta: true,
+                        retro: "Esa información y la parte bien conservada ayudan al equipo médico."
+                      },
+                      {
+                        texto: "Me quedo con la bolsa para llevarla después",
+                        retro: "La parte amputada viaja con la paciente, ahora."
+                      }
+                    ]
+                  }
+                ],
+                exito: "¡Misión cumplida! La compañera llega al hospital con el sangrado controlado y la parte amputada bien conservada.",
+                fracaso: "La paciente perdió demasiada sangre o se perdió tiempo valioso. Recuerde el orden: escena segura, presión directa, 123 y conservar la parte.",
+                dice: "Último reto del curso: una amputación. Tranquilidad y orden."
               },
               {
                 tipo: "resumen",

@@ -5,6 +5,8 @@ import { requireUser } from "@/lib/auth";
 import { ensureEnrollment } from "@/lib/progress";
 import { Breadcrumb, ProgressRing, StatusBadge, ContentPlaceholder } from "@/components/ui";
 import { LessonPlayer } from "./LessonPlayer";
+import { MapaMisiones } from "@/components/leccion/MapaMisiones";
+import { leerLeccionInteractiva } from "@/lib/leccion-interactiva";
 import {
   IconCheck,
   IconPlay,
@@ -13,6 +15,7 @@ import {
   IconLayers,
   IconClock,
   IconLock,
+  IconFire,
 } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -56,11 +59,16 @@ export default async function AulaCursoPage({
   const allLessons = course.modules.flatMap((m) => m.lessons);
   if (allLessons.length === 0) notFound();
 
-  // Lección activa: la de la URL, la última vista o la primera pendiente
-  const activeId =
-    searchParams.leccion && allLessons.some((l) => l.id === searchParams.leccion)
-      ? searchParams.leccion
-      : (allLessons.find((l) => doneMap.get(l.id)?.status !== "completado") ?? allLessons[0]).id;
+  // Modo juego: todas las lecciones son interactivas. Cada módulo es un mundo,
+  // cada lección un nivel, y los niveles se desbloquean en orden.
+  const modoJuego = allLessons.every((l) => l.contentType === "interactivo");
+  const hecha = (id: string) => doneMap.get(id)?.status === "completado";
+  const desbloqueada = (i: number) => !modoJuego || i === 0 || hecha(allLessons[i].id) || hecha(allLessons[i - 1].id);
+  const primeraPendiente = allLessons.find((l) => !hecha(l.id)) ?? allLessons[0];
+
+  // Lección activa: la de la URL (si está desbloqueada) o la primera pendiente
+  const pedida = allLessons.findIndex((l) => l.id === searchParams.leccion);
+  const activeId = pedida >= 0 && desbloqueada(pedida) ? allLessons[pedida].id : primeraPendiente.id;
 
   const active = allLessons.find((l) => l.id === activeId)!;
   const activeIndex = allLessons.findIndex((l) => l.id === activeId);
@@ -139,8 +147,66 @@ export default async function AulaCursoPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+      {modoJuego && (
+        <MapaMisiones
+          avatar={leerLeccionInteractiva(allLessons[0].contentBody)?.guia?.avatar}
+          mundos={course.modules.map((m) => ({
+            titulo: m.title,
+            niveles: m.lessons.map((l) => {
+              const i = allLessons.findIndex((x) => x.id === l.id);
+              return {
+                id: l.id,
+                titulo: l.title,
+                href: `/aula/curso/${course.slug}?leccion=${l.id}`,
+                estado: hecha(l.id) ? "completado" : desbloqueada(i) ? "disponible" : "bloqueado",
+                activo: l.id === activeId && !(lessonsDone && pedida < 0),
+              };
+            }),
+          }))}
+          jefe={
+            finalAssessment
+              ? {
+                  href: `/aula/evaluacion/${finalAssessment.id}`,
+                  estado: finalPassed ? "superado" : lessonsDone ? "disponible" : "bloqueado",
+                  detalle: finalPassed
+                    ? "¡Superado!"
+                    : lessonsDone
+                      ? `Intentos ${finalAttempts}/${finalAssessment.maxAttempts}`
+                      : "Supere todos los niveles",
+                }
+              : null
+          }
+          trofeo={{ href: certificate ? `/aula/certificado/${certificate.code}` : null }}
+          avatarEnJefe={lessonsDone && !finalPassed && pedida < 0}
+        />
+      )}
+
+      {lessonsDone && finalAssessment && !finalPassed && modoJuego && (
+        <div className="relative mb-7 overflow-hidden rounded-3xl bg-gradient-to-r from-red-600 to-amber-500 p-7 text-white shadow-kg-lg">
+          <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:28px_28px] opacity-20" />
+          <div className="relative flex flex-wrap items-center gap-5">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-white">
+              <IconFire width={34} height={34} fill="currentColor" />
+            </span>
+            <div className="min-w-[220px] flex-1">
+              <p className="font-display text-xs font-extrabold tracking-[0.25em] text-white/80">DESBLOQUEADO</p>
+              <p className="font-display text-2xl font-extrabold">¡El desafío final lo espera!</p>
+              <p className="mt-1 text-sm text-white/85">
+                Supérelo con {finalAssessment.minScore}/100 o más para ganar su certificado · intentos{" "}
+                {finalAttempts}/{finalAssessment.maxAttempts}
+              </p>
+            </div>
+            <Link href={`/aula/evaluacion/${finalAssessment.id}`} className="rounded-xl bg-white px-6 py-3.5 font-display text-sm font-extrabold text-red-600 transition hover:scale-105">
+              Enfrentar el desafío
+            </Link>
+          </div>
+        </div>
+      )}
+
+
+      <div className={modoJuego ? "mx-auto max-w-5xl" : "grid gap-6 lg:grid-cols-[340px_1fr]"}>
         {/* Indice del curso */}
+        {!modoJuego && (
         <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto">
           <div className="card overflow-hidden">
             <div className="border-b border-navy-50 bg-navy-50/50 px-5 py-4">
@@ -266,6 +332,7 @@ export default async function AulaCursoPage({
             </div>
           </div>
         </aside>
+        )}
 
         {/* Reproductor / contenido */}
         <section>
@@ -288,12 +355,13 @@ export default async function AulaCursoPage({
               total: allLessons.length,
             }}
             completed={doneMap.get(active.id)?.status === "completado"}
+            modoJuego={modoJuego}
             prevHref={prev ? `/aula/curso/${course.slug}?leccion=${prev.id}` : null}
             nextHref={next ? `/aula/curso/${course.slug}?leccion=${next.id}` : null}
           />
 
           {/* Cierre del curso */}
-          {lessonsDone && finalAssessment && !finalPassed && (
+          {lessonsDone && finalAssessment && !finalPassed && !modoJuego && (
             <div className="card mt-6 flex flex-wrap items-center gap-5 border-lime-300 bg-lime-50/60 p-6">
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-500 text-navy-900">
                 <IconClipboard width={22} height={22} />

@@ -27,6 +27,7 @@ export function LessonPlayer({
   completed,
   prevHref,
   nextHref,
+  modoJuego = false,
 }: {
   enrollmentId: string;
   courseSlug: string;
@@ -34,6 +35,8 @@ export function LessonPlayer({
   completed: boolean;
   prevHref: string | null;
   nextHref: string | null;
+  /** Curso en modo juego: la lección se presenta como nivel y el siguiente se desbloquea al superarla. */
+  modoJuego?: boolean;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -96,7 +99,7 @@ export function LessonPlayer({
       {/* Cabecera de la lección */}
       <div className="flex flex-wrap items-center gap-3 border-b border-navy-50 px-6 py-4">
         <span className="badge-blue">
-          Lección {lesson.index} de {lesson.total}
+          {modoJuego ? "Nivel" : "Lección"} {lesson.index} de {lesson.total}
         </span>
         <span className="text-[11px] font-semibold uppercase tracking-wide text-navy-300">
           {lesson.moduleTitle}
@@ -112,7 +115,7 @@ export function LessonPlayer({
       </div>
 
       {/* Contenedor del contenido */}
-      <div className="p-6">
+      <div className={esInteractiva ? "p-2 sm:p-6" : "p-6"}>
         {/* La interactiva trae su propia portada con título y objetivos. */}
         {!esInteractiva && (
           <>
@@ -131,6 +134,7 @@ export function LessonPlayer({
                 guardando={saving}
                 onTerminar={alTerminar}
                 onCompletar={marcar}
+                nivel={modoJuego ? { numero: lesson.index, total: lesson.total, mundo: lesson.moduleTitle } : undefined}
               />
             ) : (
               <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
@@ -172,9 +176,9 @@ export function LessonPlayer({
                 <IconCheck width={16} height={16} strokeWidth={3} /> Lección completada
               </span>
             )}
-            {nextHref && (
+            {nextHref && (!modoJuego || completed) && (
               <Link href={nextHref} className={completed ? "btn-lime" : "btn-outline"}>
-                Siguiente lección <IconArrowRight width={16} height={16} />
+                {modoJuego ? "Siguiente nivel" : "Siguiente lección"} <IconArrowRight width={16} height={16} />
               </Link>
             )}
           </div>

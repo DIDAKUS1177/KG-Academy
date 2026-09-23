@@ -23,6 +23,13 @@ export const ILUSTRACIONES = [
 ] as const;
 export type IlustracionId = (typeof ILUSTRACIONES)[number];
 
+/** Escenas ilustradas para las cacerías de riesgos (plano de 800 x 450). */
+export const ESCENAS = ["oficina", "taller"] as const;
+export type EscenaId = (typeof ESCENAS)[number];
+
+/** Personajes dibujados para el guía de la lección. */
+export const AVATARES = ["brigadista", "paramedico"] as const;
+
 const opcion = z.object({
   texto: z.string().min(1),
   correcta: z.boolean().optional(),
@@ -101,6 +108,52 @@ const bloque = z.discriminatedUnion("tipo", [
       .min(3),
     dice,
   }),
+  /**
+   * Cacería de riesgos: el trabajador toca en la escena los peligros ocultos.
+   * Coordenadas en el plano de la escena (800 x 450).
+   */
+  z.object({
+    tipo: z.literal("buscar"),
+    titulo: z.string(),
+    instruccion: z.string(),
+    escena: z.enum(ESCENAS),
+    objetivos: z
+      .array(
+        z.object({
+          x: z.number().min(0).max(800),
+          y: z.number().min(0).max(450),
+          /** Radio de acierto; 42 por defecto. */
+          r: z.number().min(15).max(120).optional(),
+          nombre: z.string(),
+          explicacion: z.string(),
+        })
+      )
+      .min(2),
+    dice,
+  }),
+  /**
+   * Misión contra el tiempo: un medidor (vida del paciente o tamaño del
+   * fuego) empeora cada segundo y con cada error. Hay que llegar al último
+   * paso antes de que se llene.
+   */
+  z.object({
+    tipo: z.literal("mision"),
+    titulo: z.string(),
+    intro: z.string(),
+    medidor: z.object({
+      etiqueta: z.string(),
+      /** vida: baja de 100 a 0. amenaza: sube de 0 a 100. */
+      tipo: z.enum(["vida", "amenaza"]),
+    }),
+    /** Puntos del medidor que se pierden por segundo. */
+    velocidad: z.number().min(0.5).max(10),
+    /** Puntos que cuesta cada decisión equivocada. */
+    penalizacion: z.number().min(5).max(50),
+    pasos: z.array(z.object({ situacion: z.string(), pregunta: z.string(), opciones: z.array(opcion).min(2) })).min(2),
+    exito: z.string(),
+    fracaso: z.string(),
+    dice,
+  }),
   z.object({
     tipo: z.literal("resumen"),
     titulo: z.string(),
@@ -114,13 +167,20 @@ const bloque = z.discriminatedUnion("tipo", [
 export const leccionInteractivaSchema = z
   .object({
     version: z.literal(1),
-    guia: z.object({ nombre: z.string(), rol: z.string() }).optional(),
+    guia: z.object({ nombre: z.string(), rol: z.string(), avatar: z.enum(AVATARES).optional() }).optional(),
     bloques: z.array(bloque).min(2),
   })
   .superRefine((l, ctx) => {
     l.bloques.forEach((b, i) => {
       if ((b.tipo === "decision" || b.tipo === "contrarreloj") && !b.opciones.some((o) => o.correcta)) {
         ctx.addIssue({ code: "custom", path: ["bloques", i], message: "Debe tener una opción correcta" });
+      }
+      if (b.tipo === "mision") {
+        b.pasos.forEach((p, j) => {
+          if (!p.opciones.some((o) => o.correcta)) {
+            ctx.addIssue({ code: "custom", path: ["bloques", i, "pasos", j], message: "Cada paso debe tener una opción correcta" });
+          }
+        });
       }
       if (b.tipo === "clasificar") {
         const ids = new Set(b.categorias.map((c) => c.id));
@@ -137,7 +197,7 @@ export type LeccionInteractiva = z.infer<typeof leccionInteractivaSchema>;
 export type Bloque = LeccionInteractiva["bloques"][number];
 
 /** Bloques que se califican (dan puntos de práctica). */
-export const BLOQUES_CALIFICABLES = new Set(["decision", "contrarreloj", "ordenar", "clasificar"]);
+export const BLOQUES_CALIFICABLES = new Set(["decision", "contrarreloj", "ordenar", "clasificar", "buscar", "mision"]);
 
 /** Lee y valida el contenido. Devuelve null si no es válido. */
 export function leerLeccionInteractiva(json: string | null | undefined): LeccionInteractiva | null {

@@ -111,10 +111,29 @@ como una secuencia de pantallas (`src/lib/leccion-interactiva.ts` define y valid
 | `contrarreloj` | Decide lo mismo, con segundos contados |
 | `ordenar` | Pone los pasos de un procedimiento en orden |
 | `clasificar` | Asigna cada elemento a su categoría |
+| `buscar` | Cacería de riesgos: toca los peligros escondidos en una escena ilustrada (oficina o taller) |
+| `mision` | Misión contra el reloj: un medidor (vida del paciente o tamaño del fuego) empeora cada segundo y con cada error |
 
-Las de práctica hay que resolverlas para avanzar y dan puntos (10 al primer intento, 6 al
-segundo, 2 después). La lección solo se puede completar al llegar al final. El avance de la
-práctica se recuerda en el navegador; una lección completada se abre en modo repaso.
+### Modo juego
+
+Un curso cuyas lecciones son **todas** interactivas se presenta como videojuego:
+
+- **Mapa de misiones**: cada módulo es un mundo y cada lección un nivel. Los niveles se
+  desbloquean en orden (también si se intenta saltar por URL). Al final esperan el desafío
+  final (la evaluación) y el trofeo (el certificado).
+- **3 vidas por nivel.** Cada decisión equivocada cuesta una vida (al clasificar, solo el primer
+  error de la pantalla; en la cacería, los toques fallidos solo restan XP). Sin vidas, el nivel
+  se reinicia.
+- **XP y rachas**: 10 XP al primer intento, 6 al segundo, 2 después; pantallas seguidas sin
+  error dan XP extra.
+- **Estrellas** (1 a 3 según la precisión) al completar cada nivel, visibles en el mapa.
+- **Efectos de sonido** sintetizados en el navegador, con botón para silenciar.
+- **Desafío final**: la evaluación arranca con su propia pantalla, el reloj corre desde que se
+  acepta y el resultado se muestra con trofeo y estrellas. Las respuestas siguen revelándose
+  solo al final.
+
+Las estrellas y el avance dentro de un nivel se guardan en el navegador; lo que cuenta para
+aprobar (lecciones completadas, nota de la evaluación) se guarda en la base.
 
 A diferencia de un Genially, el contenido queda en la base: se versiona, se audita y se mide.
 

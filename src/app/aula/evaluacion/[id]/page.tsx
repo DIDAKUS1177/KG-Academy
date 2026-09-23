@@ -55,6 +55,13 @@ export default async function EvaluacionPage({
       })
     : null;
 
+  // Curso en modo juego (todas sus lecciones interactivas): desafío final.
+  const tipos = await prisma.lesson.findMany({
+    where: { module: { courseId: assessment.courseId } },
+    select: { contentType: true },
+  });
+  const modoJuego = assessment.type === "final" && tipos.length > 0 && tipos.every((l) => l.contentType === "interactivo");
+
   const passed = attempts.some((a) => a.passed);
   const sinIntentos = attempts.length >= assessment.maxAttempts && !passed;
 
@@ -74,6 +81,28 @@ export default async function EvaluacionPage({
       <div className="mx-auto max-w-3xl">
         {crumbs}
         <div className="card overflow-hidden">
+          {modoJuego && (
+            <div className={`relative overflow-hidden p-8 text-center text-white ${shown.passed ? "bg-navy-900" : "bg-gradient-to-br from-red-600 to-amber-500"}`}>
+              <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:30px_30px] opacity-20" />
+              <div className="relative">
+                <p className="font-display text-xs font-extrabold tracking-[0.3em] text-lime-300">
+                  {shown.passed ? "¡DESAFÍO SUPERADO!" : "DESAFÍO NO SUPERADO"}
+                </p>
+                {shown.passed && (
+                  <p className="mt-3 text-5xl leading-none" role="img" aria-label={`${shown.score >= 95 ? 3 : shown.score >= 87 ? 2 : 1} de 3 estrellas`}>
+                    {[1, 2, 3].map((n) => (
+                      <span key={n} className={n <= (shown.score >= 95 ? 3 : shown.score >= 87 ? 2 : 1) ? "text-amber-300" : "text-white/15"}>
+                        ★
+                      </span>
+                    ))}
+                  </p>
+                )}
+                <p className="mt-3 font-display text-2xl font-extrabold">
+                  {shown.passed ? "Ganó su certificado" : `Le faltaron ${Math.max(0, assessment.minScore - Math.round(shown.score))} puntos`}
+                </p>
+              </div>
+            </div>
+          )}
           <div className={`flex flex-wrap items-center gap-6 p-8 ${shown.passed ? "bg-lime-500" : "bg-amber-500"}`}>
             <div className="rounded-2xl bg-white/20 p-3">
               <ProgressRing value={shown.score} size={110} label={`${Math.round(shown.score)}`} sub="de 100" />
@@ -145,7 +174,7 @@ export default async function EvaluacionPage({
             </Link>
             {!shown.passed && attempts.length < assessment.maxAttempts && (
               <Link href={`/aula/evaluacion/${assessment.id}`} className="btn-outline">
-                Intentar de nuevo ({attempts.length}/{assessment.maxAttempts})
+                {modoJuego ? "Reintentar el desafío" : "Intentar de nuevo"} ({attempts.length}/{assessment.maxAttempts})
               </Link>
             )}
             {shown.passed && assessment.type === "final" && (
@@ -261,6 +290,8 @@ export default async function EvaluacionPage({
           shuffle={assessment.shuffleQuestions}
           shuffleOptions={assessment.shuffleOptions}
           semilla={`${enrollment.id}-${attempts.length + 1}`}
+          modoJuego={modoJuego}
+          minScore={assessment.minScore}
           timeLimitMin={assessment.timeLimitMin}
           questions={assessment.questions.map((aq) => ({
             id: aq.question.id,
