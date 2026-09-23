@@ -250,7 +250,34 @@ Límites: solo funciona mientras el equipo esté encendido y el servidor corrien
 dirección cambia cada vez, y la pantalla de ingreso muestra las credenciales de prueba a
 cualquiera que abra el enlace.
 
-### 7.2 Producción recomendada (Vercel + Neon)
+### 7.2 Producción (Vercel + Neon)
+
+**En vivo desde el 23 de septiembre de 2026:** <https://kg-academy.vercel.app>
+
+| Pieza | Dónde |
+|---|---|
+| Aplicación | Vercel, proyecto `kg-academy` (cuenta `didakus1177`), plan Hobby |
+| Base de datos | Neon, proyecto `kg-academy` (`broad-lake-83564230`), `aws-us-east-1`, PostgreSQL 18 |
+| Variables | `DATABASE_URL` (conexión agrupada con `pgbouncer=true`), `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`; las dos primeras marcadas como secretas |
+
+La base está en la misma región donde Vercel ejecuta las funciones por defecto, para que
+cada consulta viaje lo mínimo. `vercel.json` cambia el esquema a PostgreSQL solo durante la
+compilación en Vercel: el repositorio sigue en SQLite y nadie edita `provider` a mano.
+
+Para volver a publicar después de un cambio:
+
+```bash
+npx vercel deploy --prod
+```
+
+La carga inicial (catálogos y primer superadministrador) se hizo con
+`scripts/sembrar-produccion.ps1`, que toma la conexión de Neon por sí mismo y pide la
+contraseña oculta. Se puede repetir sin riesgo: no borra nada.
+
+`.vercelignore` deja fuera de la subida el `.env` local, la base SQLite de demostración,
+`node_modules`, `.next`, `cursos/` y `docs/`.
+
+#### Montarlo desde cero
 
 Next.js corre nativamente en Vercel y Neon da PostgreSQL administrado; ambos tienen plan
 gratuito suficiente para arrancar. SQLite **no** sirve en producción: Vercel borra el disco
