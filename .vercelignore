@@ -1,0 +1,24 @@
+# Lo que NO se sube a Vercel al publicar desde la terminal.
+# Vercel compila en sus servidores: instala sus propios paquetes y genera su
+# propia carpeta .next, así que las locales solo harían lenta la subida.
+
+# Secretos locales: en Vercel las variables se configuran aparte.
+.env
+.env.*
+!.env.example
+
+# Base SQLite de demostración: producción usa PostgreSQL en Neon.
+prisma/*.db
+prisma/*.db-journal
+
+# Se regeneran allá.
+node_modules
+.next
+*.tsbuildinfo
+
+# Material fuente y documentación: la aplicación no los lee.
+cursos
+docs
+__pycache__
+*.pyc
+*.log

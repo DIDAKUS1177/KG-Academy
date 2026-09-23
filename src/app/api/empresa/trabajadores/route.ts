@@ -3,6 +3,14 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser, audit, hashPassword } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
+import { claveTemporal } from "@/lib/admin-api";
+
+// Cada contraseña se cifra por separado; una nómina grande tarda. 60 s es el
+// máximo del plan gratuito de Vercel y alcanza para el tope de filas de abajo.
+export const maxDuration = 60;
+
+/** Filas por carga masiva. Con más, se divide la nómina en varias cargas. */
+const MAX_FILAS = 200;
 
 const schema = z.object({
   companyId: z.string(),
@@ -31,8 +39,9 @@ export async function POST(req: Request) {
   const rolEstudiante = await prisma.role.findUnique({ where: { code: ROLES.ESTUDIANTE } });
   if (!rolEstudiante) return NextResponse.json({ error: "Roles no inicializados" }, { status: 500 });
 
-  const passwordHash = await hashPassword("KgAcademy2026*");
-
+  // Antes todos los trabajadores nacían con la misma clave fija, que además
+  // estaba publicada en la pantalla de ingreso: cualquiera podía entrar como
+  // cualquier trabajador sabiendo su correo. Ahora cada uno recibe la suya.
   async function crear(t: {
     firstName: string;
     lastName: string;
@@ -67,10 +76,11 @@ export async function POST(req: Request) {
       return { creado: false, vinculado: true };
     }
 
+    const clave = claveTemporal();
     const nuevo = await prisma.user.create({
       data: {
         email,
-        passwordHash,
+        passwordHash: await hashPassword(clave),
         firstName: t.firstName.trim(),
         lastName: t.lastName.trim(),
         documentType: "CC",
@@ -94,12 +104,12 @@ export async function POST(req: Request) {
       data: {
         userId: nuevo.id,
         title: "Bienvenido a KG Academy",
-        message: "Su empresa creó su cuenta. Cambie su contraseña temporal al ingresar.",
+        message: "Su empresa creó su cuenta. Ingrese con la contraseña temporal que le entregaron; el sistema le pedirá cambiarla.",
         linkUrl: "/aula",
         type: "info",
       },
     });
-    return { creado: true };
+    return { creado: true, email, clave };
   }
 
   if (modo === "individual") {
@@ -111,6 +121,7 @@ export async function POST(req: Request) {
     if (!r.creado && !r.vinculado) {
       return NextResponse.json({ error: "Ese trabajador ya está registrado en la empresa" }, { status: 409 });
     }
+    const credenciales = r.creado ? [{ email: r.email!, clave: r.clave! }] : [];
     await audit({
       userId: user.id,
       actorEmail: user.email,
@@ -119,7 +130,12 @@ export async function POST(req: Request) {
       entityId: companyId,
       summary: `Alta de trabajador ${t.email}`,
     });
-    return NextResponse.json({ ok: true, creados: 1 });
+    return NextResponse.json({
+      ok: true,
+      creados: r.creado ? 1 : 0,
+      vinculado: !!r.vinculado,
+      credenciales,
+    });
   }
 
   // ---- Carga masiva ----
@@ -128,8 +144,16 @@ export async function POST(req: Request) {
     .map((l) => l.trim())
     .filter(Boolean);
 
+  if (lineas.length > MAX_FILAS) {
+    return NextResponse.json(
+      { error: `Máximo ${MAX_FILAS} trabajadores por carga. Divida el listado en varias partes.` },
+      { status: 400 }
+    );
+  }
+
   let creados = 0;
   let omitidos = 0;
+  const credenciales: { email: string; clave: string }[] = [];
   for (const linea of lineas) {
     const [firstName, lastName, documentNumber, email, employeeCode] = linea
       .split(/[;,\t]/)
@@ -139,8 +163,10 @@ export async function POST(req: Request) {
       continue;
     }
     const r = await crear({ firstName, lastName, documentNumber, email, employeeCode });
-    if (r.creado) creados++;
-    else omitidos++;
+    if (r.creado) {
+      creados++;
+      credenciales.push({ email: r.email!, clave: r.clave! });
+    } else omitidos++;
   }
 
   await audit({
@@ -152,5 +178,5 @@ export async function POST(req: Request) {
     summary: `Carga masiva: ${creados} creados, ${omitidos} omitidos`,
   });
 
-  return NextResponse.json({ ok: true, creados, omitidos });
+  return NextResponse.json({ ok: true, creados, omitidos, credenciales });
 }

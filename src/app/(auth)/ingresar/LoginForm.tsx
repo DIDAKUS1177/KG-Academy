@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconAlert, IconArrowRight, IconLock } from "@/components/Icons";
 
+/**
+ * Accesos rápidos a las cuentas de la demostración. Solo existen en la base
+ * sembrada con `npm run db:seed`, así que en producción no se muestran: ahí
+ * no hay tales cuentas y la clave, además, quedaría publicada.
+ */
+const MOSTRAR_DEMO = process.env.NODE_ENV !== "production";
+
 const DEMO = [
   { rol: "SuperAdmin KG", email: "admin@kggestionintegral.com" },
   { rol: "Admin empresa", email: "rrhh@constructoraandina.com" },
@@ -49,7 +56,7 @@ export function LoginForm() {
 
         <div className="mb-4">
           <label className="label" htmlFor="email">
-            Correo electronico
+            Correo electrónico
           </label>
           <input
             id="email"
@@ -69,7 +76,7 @@ export function LoginForm() {
               Contraseña
             </label>
             <Link href="/recuperar" className="mb-1.5 text-[11px] font-semibold text-lime-600 hover:underline">
-              Olvide mi contraseña
+              Olvidé mi contraseña
             </Link>
           </div>
           <input
@@ -95,6 +102,7 @@ export function LoginForm() {
       </form>
 
       {/* Accesos de demostración para la revisión local */}
+      {MOSTRAR_DEMO && (
       <div className="mt-5 rounded-2xl border border-dashed border-navy-200 bg-white/70 p-4">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-navy-400">
           Usuarios de prueba (clave: <span className="text-lime-600">KgAcademy2026*</span>)
@@ -116,6 +124,7 @@ export function LoginForm() {
           ))}
         </div>
       </div>
+      )}
     </>
   );
 }

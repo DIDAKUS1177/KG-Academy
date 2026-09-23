@@ -5,6 +5,7 @@ import { formatDateTime } from "@/lib/utils";
 import { ROLE_LABEL } from "@/lib/constants";
 import { Avatar, SectionTitle, StatusBadge } from "@/components/ui";
 import { IconLock, IconBuilding } from "@/components/Icons";
+import { CambiarClave } from "./CambiarClave";
 
 export const metadata: Metadata = { title: "Mi perfil" };
 export const dynamic = "force-dynamic";
@@ -130,6 +131,8 @@ export default async function PerfilPage() {
           ))}
         </dl>
       </div>
+
+      <CambiarClave temporal={user.status === "pendiente_activacion"} />
     </div>
   );
 }

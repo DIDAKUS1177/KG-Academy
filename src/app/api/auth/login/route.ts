@@ -5,7 +5,7 @@ import { audit, createSession, verifyPassword } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
 
 const schema = z.object({
-  email: z.string().email("Correo invalido"),
+  email: z.string().email("Correo inválido"),
   password: z.string().min(1, "Ingrese su contraseña"),
 });
 
@@ -51,5 +51,11 @@ export async function POST(req: Request) {
     summary: "Inicio de sesión",
   });
 
-  return NextResponse.json({ ok: true, redirect: ROLE_HOME[user.role.code] ?? "/aula" });
+  // Con contraseña temporal, lo primero es cambiarla.
+  const redirect =
+    user.status === "pendiente_activacion"
+      ? "/aula/perfil#clave"
+      : ROLE_HOME[user.role.code] ?? "/aula";
+
+  return NextResponse.json({ ok: true, redirect });
 }

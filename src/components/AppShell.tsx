@@ -84,13 +84,19 @@ export function AppShell({
 
       <div className="relative border-t border-white/10 p-4">
         <div className="flex items-center gap-3">
-          <Avatar first={user.firstName} last={user.lastName} size={38} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
-              {user.firstName} {user.lastName}
-            </p>
-            <p className="truncate text-[11px] text-white/50">{user.roleLabel}</p>
-          </div>
+          <Link
+            href="/aula/perfil"
+            title="Mi perfil y contraseña"
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition hover:opacity-80"
+          >
+            <Avatar first={user.firstName} last={user.lastName} size={38} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="truncate text-[11px] text-white/50">{user.roleLabel}</p>
+            </div>
+          </Link>
           <form action="/api/auth/logout" method="post">
             <button className="rounded-lg p-2 text-white/50 transition hover:bg-white/10 hover:text-white" title="Cerrar sesión">
               <IconLogout width={18} height={18} />
