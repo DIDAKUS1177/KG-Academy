@@ -246,7 +246,8 @@ async function main() {
         emailVerified: true,
         acceptedTerms: true,
         acceptedDataAt: new Date(),
-        jobTitle: "Directora General",
+        // El cargo depende de quién quede como primer administrador.
+        jobTitle: process.env.SEED_ADMIN_CARGO?.trim() || null,
       },
     });
     console.log(`Superadministrador creado: ${nuevoAdmin.email}`);
