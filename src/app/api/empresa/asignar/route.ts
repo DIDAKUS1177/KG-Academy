@@ -35,6 +35,12 @@ export async function POST(req: Request) {
 
   const course = await prisma.course.findUnique({ where: { id: courseId } });
   if (!course) return NextResponse.json({ error: "Curso no encontrado" }, { status: 404 });
+  if (course.status !== "publicado") {
+    return NextResponse.json(
+      { error: "Solo se pueden asignar cursos publicados. Este todavía está en preparación." },
+      { status: 409 }
+    );
+  }
 
   const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
 

@@ -5,7 +5,7 @@ import { resolveCompany } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
 import { EmptyState, SectionTitle } from "@/components/ui";
 import { AsignarForm } from "./AsignarForm";
-import { IconBuilding } from "@/components/Icons";
+import { IconBook, IconBuilding } from "@/components/Icons";
 
 export const metadata: Metadata = { title: "Asignar cursos" };
 export const dynamic = "force-dynamic";
@@ -19,7 +19,8 @@ export default async function AsignarPage({ searchParams }: { searchParams: { em
 
   const [courses, members, areas] = await Promise.all([
     prisma.course.findMany({
-      where: { status: { in: ["publicado", "borrador", "revision"] } },
+      // Solo cursos publicados: un borrador no lo puede abrir el trabajador.
+      where: { status: "publicado" },
       orderBy: { title: "asc" },
       select: { id: true, title: true, code: true, durationHours: true, status: true },
     }),
@@ -44,6 +45,13 @@ export default async function AsignarPage({ searchParams }: { searchParams: { em
         description="Seleccione el curso, los trabajadores y la fecha límite. Puede asignar de forma individual o masiva."
       />
 
+      {courses.length === 0 ? (
+        <EmptyState
+          icon={<IconBook width={30} height={30} />}
+          title="Todavía no hay cursos publicados"
+          description="KG está preparando el catálogo. En cuanto publique un curso, aparecerá aquí para asignarlo a sus trabajadores."
+        />
+      ) : (
       <AsignarForm
         companyId={company.id}
         courses={courses}
@@ -59,6 +67,7 @@ export default async function AsignarPage({ searchParams }: { searchParams: { em
         }))}
         existentes={existentes.map((e) => `${e.courseId}:${e.userId}`)}
       />
+      )}
     </div>
   );
 }

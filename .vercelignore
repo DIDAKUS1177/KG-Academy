@@ -17,8 +17,11 @@ node_modules
 *.tsbuildinfo
 
 # Material fuente y documentación: la aplicación no los lee.
-cursos
-docs
+# Con "/" al inicio solo se excluyen las carpetas de la raíz. Sin ella,
+# "cursos" excluía también src/app/aula/cursos, src/app/admin/cursos y
+# src/app/api/admin/cursos, y esas páginas quedaban en 404 en producción.
+/cursos
+/docs
 __pycache__
 *.pyc
 *.log

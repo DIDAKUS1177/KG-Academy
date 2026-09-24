@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { puedeVerCurso } from "@/lib/acceso-cursos";
 import { StatusBadge, ContentPlaceholder } from "@/components/ui";
 import {
   IconClock,
@@ -40,6 +41,11 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
         where: { userId_courseId: { userId: user.id, courseId: course.id } },
       })
     : null;
+
+  // Un curso sin publicar se anuncia, pero todavía no admite inscripciones.
+  // Los revisores de KG sí pueden abrirlo en el aula para validarlo.
+  const publicado = course.status === "publicado";
+  const revisor = !!user && !publicado && puedeVerCurso(user.role.code, course.status);
 
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
   const pendientes = course.modules
@@ -110,7 +116,23 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
               </div>
 
               <div className="space-y-3 p-6">
-                {enrollment ? (
+                {!publicado && !revisor ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                    <p className="font-display text-base font-bold text-amber-900">Próximamente</p>
+                    <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                      KG está terminando este curso. Las inscripciones se abren cuando se publique.
+                    </p>
+                  </div>
+                ) : revisor ? (
+                  <>
+                    <Link href={`/aula/curso/${course.slug}`} className="btn-lime w-full py-3">
+                      <IconEye width={16} height={16} /> Revisar en el aula
+                    </Link>
+                    <p className="text-center text-[11px] leading-relaxed text-navy-400">
+                      Está en borrador: solo el equipo de KG puede abrirlo. Se publica desde Administración → Cursos.
+                    </p>
+                  </>
+                ) : enrollment ? (
                   <Link href={`/aula/curso/${course.slug}`} className="btn-lime w-full py-3">
                     <IconPlay width={16} height={16} /> Continuar el curso
                   </Link>

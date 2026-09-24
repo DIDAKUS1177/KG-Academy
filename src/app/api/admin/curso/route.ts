@@ -62,6 +62,19 @@ export async function POST(req: Request) {
   const before = await prisma.course.findUnique({ where: { id: cuerpo.data.courseId } });
   if (!before) return respuestaError("Curso no encontrado", 404);
 
+  // Si exige evaluación final, publicarlo sin una lista para presentar dejaría a
+  // los trabajadores atascados: terminarían las lecciones y nunca el curso.
+  if (cuerpo.data.status === "publicado" && before.requiresFinalExam) {
+    const final = await prisma.assessment.findFirst({
+      where: { courseId: before.id, type: "final", isPublished: true, questions: { some: {} } },
+    });
+    if (!final) {
+      return respuestaError(
+        "Este curso exige evaluación final y todavía no tiene una publicada con preguntas. Créela en Evaluaciones, cárguele las preguntas y publíquela; después publique el curso."
+      );
+    }
+  }
+
   const course = await prisma.course.update({
     where: { id: cuerpo.data.courseId },
     data: {
