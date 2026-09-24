@@ -7,6 +7,7 @@ import { ROLES } from "@/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { Avatar, Breadcrumb, ProgressBar, ProgressRing, StatCard, StatusBadge } from "@/components/ui";
 import { IconAward, IconBook, IconCheck, IconClock, IconArrowRight } from "@/components/Icons";
+import { RestablecerClave } from "./RestablecerClave";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
       location: true,
       user: {
         include: {
+          role: true,
           enrollments: { include: { course: true }, orderBy: { updatedAt: "desc" } },
           certificates: { orderBy: { issuedAt: "desc" } },
           attempts: { include: { assessment: true }, orderBy: { startedAt: "desc" }, take: 10 },
@@ -70,6 +72,13 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
               <StatusBadge status={member.status} />
             </div>
           </div>
+
+          {/* El supervisor solo consulta; la cuenta la gestiona el administrador. */}
+          {staff.role.code !== ROLES.SUPERVISOR && ["estudiante", "supervisor"].includes(u.role.code) && (
+            <div className="mt-5">
+              <RestablecerClave userId={u.id} nombre={`${u.firstName} ${u.lastName}`} />
+            </div>
+          )}
 
           <dl className="mt-7 grid gap-5 sm:grid-cols-4">
             {[

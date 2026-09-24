@@ -204,11 +204,10 @@ function ContentSlot({ lesson }: { lesson: Lesson }) {
             <span className="font-display text-2xl font-extrabold text-lime-500">KG</span>
           </div>
           <p className="mt-5 font-display text-lg font-bold text-navy-700">
-            Contenido de esta lección en producción
+            Lección en preparación
           </p>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-navy-400">
-            Aquí se mostrará el video, el documento o el recurso interactivo de Genially. Mientras
-            tanto puede recorrer la estructura del curso y presentar las evaluaciones de ejemplo.
+            El material de esta lección estará disponible pronto.
           </p>
           <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-semibold text-navy-500 shadow-sm">
             <IconFile width={13} height={13} /> Duración estimada: {lesson.durationMin} minutos

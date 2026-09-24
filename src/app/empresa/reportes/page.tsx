@@ -127,10 +127,6 @@ export default async function ReportesPage({ searchParams }: { searchParams: { e
         ))}
       </div>
 
-      <p className="mt-8 rounded-2xl border border-dashed border-navy-200 bg-white/60 p-5 text-center text-xs leading-relaxed text-navy-400">
-        La exportación a PDF con la imagen corporativa y el envío programado de reportes por correo
-        quedaron previstos para la Fase 2 del backlog (punto 23 del esqueleto funcional).
-      </p>
     </div>
   );
 }

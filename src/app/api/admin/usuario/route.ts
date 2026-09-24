@@ -173,7 +173,11 @@ export async function PATCH(req: Request) {
     const temporal = claveTemporal();
     await prisma.user.update({
       where: { id: before.id },
-      data: { passwordHash: await hashPassword(temporal) },
+      // Una contraseña temporal obliga a definir una propia al siguiente ingreso.
+      data: {
+        passwordHash: await hashPassword(temporal),
+        ...(before.status === "activo" ? { status: "pendiente_activacion" } : {}),
+      },
     });
     // Se invalidan los enlaces de recuperación pendientes: ya no hacen falta.
     await prisma.passwordResetToken.deleteMany({ where: { userId: before.id } });

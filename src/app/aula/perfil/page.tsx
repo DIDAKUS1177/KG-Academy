@@ -6,6 +6,7 @@ import { ROLE_LABEL } from "@/lib/constants";
 import { Avatar, SectionTitle, StatusBadge } from "@/components/ui";
 import { IconLock, IconBuilding } from "@/components/Icons";
 import { CambiarClave } from "./CambiarClave";
+import { EditarPerfil } from "./EditarPerfil";
 
 export const metadata: Metadata = { title: "Mi perfil" };
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export default async function PerfilPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <SectionTitle eyebrow="Cuenta" title="Mi perfil" description="Datos personales y laborales registrados en KG Academy." />
+      <SectionTitle eyebrow="Cuenta" title="Mi perfil" description="Sus datos, su vinculación laboral y la seguridad de su cuenta." />
 
       <div className="card overflow-hidden">
         <div className="relative h-28 bg-kg-gradient">
@@ -43,41 +44,17 @@ export default async function PerfilPage() {
             </div>
           </div>
 
-          <form className="mt-8 grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className="label">Nombres</label>
-              <input className="input" defaultValue={user.firstName} readOnly />
-            </div>
-            <div>
-              <label className="label">Apellidos</label>
-              <input className="input" defaultValue={user.lastName} readOnly />
-            </div>
-            <div>
-              <label className="label">Tipo de documento</label>
-              <input className="input" defaultValue={user.documentType ?? "—"} readOnly />
-            </div>
-            <div>
-              <label className="label">Número de documento</label>
-              <input className="input" defaultValue={user.documentNumber ?? "—"} readOnly />
-            </div>
-            <div>
-              <label className="label">Teléfono</label>
-              <input className="input" defaultValue={user.phone ?? "—"} readOnly />
-            </div>
-            <div>
-              <label className="label">Ciudad</label>
-              <input className="input" defaultValue={user.city ?? "—"} readOnly />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="label">Cargo</label>
-              <input className="input" defaultValue={user.jobTitle ?? "—"} readOnly />
-            </div>
-          </form>
-
-          <p className="mt-3 text-xs text-navy-300">
-            La edición del perfil se habilita en la Fase 1 del backlog. Los campos exactos quedaron como
-            &quot;Por definir&quot; en el punto 5 del esqueleto funcional.
-          </p>
+          <EditarPerfil
+            datos={{
+              firstName: user.firstName,
+              lastName: user.lastName,
+              documentType: user.documentType,
+              documentNumber: user.documentNumber,
+              phone: user.phone,
+              city: user.city,
+              jobTitle: user.jobTitle,
+            }}
+          />
         </div>
       </div>
 

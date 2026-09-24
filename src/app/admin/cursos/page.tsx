@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cantidad } from "@/lib/utils";
 import { ProgressBar, SectionTitle, StatusBadge, StatCard } from "@/components/ui";
 import { IconBook, IconArrowRight, IconAlert, IconCheck, IconLayers } from "@/components/Icons";
 import { NuevoCurso } from "./NuevoCurso";
@@ -102,8 +102,8 @@ export default async function AdminCursos() {
                   </div>
                   <p className="mt-1 line-clamp-2 max-w-2xl text-sm text-navy-400">{c.subtitle}</p>
                   <p className="mt-2 text-[11px] text-navy-300">
-                    {c.code} &middot; {c.durationHours} h &middot; {c.modules.length} módulos &middot;{" "}
-                    {lecciones} lecciones &middot; {c.assessments.length} evaluaciones
+                    {c.code} &middot; {c.durationHours} h &middot; {cantidad(c.modules.length, "módulo", "módulos")} &middot;{" "}
+                    {cantidad(lecciones, "lección", "lecciones")} &middot; {cantidad(c.assessments.length, "evaluación", "evaluaciones")}
                     {c.instructor && ` · ${`${c.instructor.firstName} ${c.instructor.lastName}`.trim()}`}
                   </p>
                 </div>

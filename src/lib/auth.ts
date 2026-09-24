@@ -7,9 +7,18 @@ import { PERMISSION_MATRIX, ROLE_HOME } from "./constants";
 
 const COOKIE = "kg_session";
 const MAX_AGE_SEC = 60 * 60 * 8; // 8 horas
-const secret = new TextEncoder().encode(
-  process.env.AUTH_SECRET ?? "kg-academy-dev-secret-fallback"
-);
+/**
+ * Clave con la que se firman las sesiones. En desarrollo hay una por defecto;
+ * en producción es obligatoria: sin ella, cualquiera que lea este código
+ * podría fabricar una sesión válida.
+ */
+function claveSesion() {
+  const valor = process.env.AUTH_SECRET;
+  if (!valor && process.env.NODE_ENV === "production") {
+    throw new Error("Falta la variable AUTH_SECRET: no se pueden firmar sesiones en producción.");
+  }
+  return new TextEncoder().encode(valor ?? "kg-academy-dev-secret-fallback");
+}
 
 export type SessionPayload = {
   sub: string;
@@ -33,8 +42,11 @@ export async function createSession(payload: SessionPayload) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setIssuer("kg-academy")
+    // Identificador único: dos ingresos en el mismo segundo daban el mismo
+    // token y la base lo rechazaba (error 500 al iniciar sesión).
+    .setJti(crypto.randomUUID())
     .setExpirationTime(expires)
-    .sign(secret);
+    .sign(claveSesion());
 
   const h = headers();
   await prisma.session.create({
@@ -64,7 +76,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   const raw = cookies().get(COOKIE)?.value;
   if (!raw) return null;
   try {
-    const { payload } = await jwtVerify(raw, secret, { issuer: "kg-academy" });
+    const { payload } = await jwtVerify(raw, claveSesion(), { issuer: "kg-academy" });
     return payload as unknown as SessionPayload;
   } catch {
     return null;

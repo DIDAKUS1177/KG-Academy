@@ -75,3 +75,8 @@ export function toCsv(rows: Record<string, unknown>[]): string {
     ...rows.map((r) => headers.map((h) => escape(r[h])).join(";")),
   ].join("\n");
 }
+
+/** "1 módulo", "3 módulos": número con la palabra en singular o plural. */
+export function cantidad(n: number, singular: string, plural: string) {
+  return `${n} ${n === 1 ? singular : plural}`;
+}

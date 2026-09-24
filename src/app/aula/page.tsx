@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { totalPoints } from "@/lib/progress";
-import { formatDate, daysBetween } from "@/lib/utils";
+import { formatDate, daysBetween, cantidad } from "@/lib/utils";
 import { ProgressRing, ProgressBar, StatCard, StatusBadge, EmptyState, SectionTitle } from "@/components/ui";
 import {
   IconBook,
@@ -45,7 +45,11 @@ export default async function AulaHome() {
       ? enrollments.reduce((s, e) => s + e.progress, 0) / enrollments.length
       : 0;
 
-  const continuar = enProgreso[0] ?? enrollments.find((e) => e.status === "no_iniciado");
+  // Lo primero que se sugiere: seguir lo empezado; si no, lo que asignó la empresa.
+  const asignado = pendingAssignments[0]
+    ? enrollments.find((e) => e.courseId === pendingAssignments[0].courseId)
+    : undefined;
+  const continuar = enProgreso[0] ?? asignado ?? enrollments.find((e) => e.status === "no_iniciado");
 
   return (
     <div className="space-y-8">
@@ -61,13 +65,17 @@ export default async function AulaHome() {
             </h1>
             <p className="mt-2 max-w-lg text-sm text-white/60">
               {enProgreso.length > 0
-                ? `Tiene ${enProgreso.length} curso(s) en progreso. Retome donde quedó.`
-                : "Explore el catálogo y comience su primera capacitación."}
+                ? `Tiene ${cantidad(enProgreso.length, "curso", "cursos")} en progreso. Retome donde quedó.`
+                : pendingAssignments.length > 0
+                  ? `Su empresa le asignó ${cantidad(pendingAssignments.length, "capacitación", "capacitaciones")}.`
+                  : enrollments.length > 0
+                    ? "Todo al día. Puede repasar sus cursos cuando quiera."
+                    : "Explore el catálogo y comience su primera capacitación."}
             </p>
             {continuar && (
               <Link href={`/aula/curso/${continuar.course.slug}`} className="btn-lime mt-6">
                 <IconPlay width={16} height={16} />
-                {continuar.progress > 0 ? "Continuar donde quede" : "Comenzar curso"}
+                {continuar.progress > 0 ? "Continuar donde quedó" : "Comenzar curso"}
               </Link>
             )}
           </div>
@@ -79,8 +87,8 @@ export default async function AulaHome() {
 
       {/* KPIs */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Cursos activos" value={enProgreso.length} icon={<IconBook width={20} height={20} />} />
-        <StatCard label="Cursos completados" value={completados.length} tone="lime" icon={<IconAward width={20} height={20} />} />
+        <StatCard label="En progreso" value={enProgreso.length} icon={<IconBook width={20} height={20} />} />
+        <StatCard label="Completados" value={completados.length} tone="lime" icon={<IconAward width={20} height={20} />} />
         <StatCard label="Certificados" value={certificates} tone="lime" icon={<IconAward width={20} height={20} />} />
         <StatCard
           label="Racha de estudio"
@@ -177,8 +185,8 @@ export default async function AulaHome() {
                   href={`/aula/curso/${e.course.slug}`}
                   className="card card-hover flex flex-wrap items-center gap-5 p-5"
                 >
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-kg-gradient font-display text-xs font-bold text-lime-400">
-                    {e.course.code.split("-").pop()}
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-kg-gradient text-lime-400">
+                    <IconBook width={22} height={22} />
                   </span>
                   <div className="min-w-[220px] flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -186,7 +194,7 @@ export default async function AulaHome() {
                       <StatusBadge status={e.status} />
                     </div>
                     <p className="mt-0.5 text-xs text-navy-400">
-                      {e.course.modules.length} módulos &middot; {totalLessons} lecciones &middot;{" "}
+                      {cantidad(e.course.modules.length, "módulo", "módulos")} &middot; {cantidad(totalLessons, "lección", "lecciones")} &middot;{" "}
                       {e.course.durationHours} h
                     </p>
                     <ProgressBar value={e.progress} className="mt-3" showLabel />
@@ -201,52 +209,6 @@ export default async function AulaHome() {
         )}
       </div>
 
-      {/* Gamificación */}
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="card p-6 lg:col-span-2">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-100 text-lime-700">
-              <IconSpark width={20} height={20} />
-            </span>
-            <div>
-              <p className="font-display text-base font-bold text-navy-700">Su progreso general</p>
-              <p className="text-xs text-navy-400">Avance promedio en todos sus cursos</p>
-            </div>
-            <span className="ml-auto font-display text-3xl font-extrabold text-lime-600">
-              {Math.round(avanceGlobal)}%
-            </span>
-          </div>
-          <ProgressBar value={avanceGlobal} className="mt-5" />
-          <div className="mt-5 grid grid-cols-3 gap-4 border-t border-navy-50 pt-5 text-center">
-            {[
-              ["No iniciados", enrollments.filter((e) => e.status === "no_iniciado").length],
-              ["En progreso", enProgreso.length],
-              ["Completados", completados.length],
-            ].map(([l, v]) => (
-              <div key={String(l)}>
-                <p className="font-display text-2xl font-extrabold text-navy-700">{v}</p>
-                <p className="text-[11px] text-navy-400">{l}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card flex flex-col items-center justify-center p-6 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
-            <IconFire width={26} height={26} />
-          </span>
-          <p className="mt-4 font-display text-4xl font-extrabold text-navy-700">
-            {streak?.currentDays ?? 0}
-          </p>
-          <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">días de racha</p>
-          <p className="mt-2 text-xs text-navy-400">
-            Racha más larga: {streak?.longestDays ?? 0} días
-          </p>
-          <Link href="/aula/logros" className="btn-outline btn-sm mt-5">
-            Ver mis logros
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

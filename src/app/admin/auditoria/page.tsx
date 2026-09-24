@@ -46,7 +46,7 @@ export default async function AuditoriaPage({
       <SectionTitle
         eyebrow="Sistema"
         title="Registro de auditoría"
-        description="Trazabilidad de las acciones relevantes de la plataforma (punto 17 del esqueleto funcional)."
+        description="Quién hizo qué y cuándo: cada acción relevante queda registrada con sus valores anteriores y nuevos."
       />
 
       <form className="card mb-6 flex flex-wrap items-end gap-3 p-4">

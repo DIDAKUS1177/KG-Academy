@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ensureEnrollment } from "@/lib/progress";
 import { puedeVerCurso } from "@/lib/acceso-cursos";
-import { Breadcrumb, ProgressRing, StatusBadge, ContentPlaceholder } from "@/components/ui";
+import { Breadcrumb, ProgressRing, StatusBadge } from "@/components/ui";
 import { LessonPlayer } from "./LessonPlayer";
 import { MapaMisiones } from "@/components/leccion/MapaMisiones";
 import { leerLeccionInteractiva } from "@/lib/leccion-interactiva";
@@ -18,6 +18,7 @@ import {
   IconLock,
   IconFire,
 } from "@/components/Icons";
+import { cantidad } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -133,10 +134,10 @@ export default async function AulaCursoPage({
             </h1>
             <div className="mt-4 flex flex-wrap gap-5 text-xs text-white/60">
               <span className="inline-flex items-center gap-1.5">
-                <IconLayers width={14} height={14} className="text-lime-400" /> {course.modules.length} módulos
+                <IconLayers width={14} height={14} className="text-lime-400" /> {cantidad(course.modules.length, "módulo", "módulos")}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <IconPlay width={14} height={14} className="text-lime-400" /> {completedCount}/{allLessons.length} lecciones
+                <IconPlay width={14} height={14} className="text-lime-400" /> {completedCount}/{cantidad(allLessons.length, "lección", "lecciones")}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <IconClock width={14} height={14} className="text-lime-400" /> {course.durationHours} horas
@@ -214,7 +215,7 @@ export default async function AulaCursoPage({
             <div className="border-b border-navy-50 bg-navy-50/50 px-5 py-4">
               <p className="font-display text-sm font-bold text-navy-700">Contenido del curso</p>
               <p className="mt-0.5 text-[11px] text-navy-400">
-                {completedCount} de {allLessons.length} lecciones completadas
+                {completedCount} de {allLessons.length} completadas
               </p>
             </div>
 
@@ -402,16 +403,6 @@ export default async function AulaCursoPage({
             </div>
           )}
 
-          {/* Nota para KG */}
-          {allLessons.filter((l) => l.contentType === "pendiente").length > 0 && (
-            <div className="mt-6">
-              <ContentPlaceholder
-                compact
-                title="Espacio reservado para el material del curso"
-                description="Cada lección tiene su contenedor listo. Desde Administración > Cursos > Constructor se define el tipo (video, PDF, texto, enlace o Genially) y se pega la URL del recurso."
-              />
-            </div>
-          )}
         </section>
       </div>
     </div>

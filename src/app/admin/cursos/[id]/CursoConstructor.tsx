@@ -6,6 +6,7 @@ import Link from "next/link";
 import { IconClipboard, IconFile, IconLayers, IconX } from "@/components/Icons";
 import { ASSESSMENT_TYPE_LABEL, STATUS_LABEL } from "@/lib/constants";
 import { Aviso, Campo, Ventana, llamar, leerFormulario, type Mensaje } from "@/components/admin/Formulario";
+import { cantidad } from "@/lib/utils";
 
 type Lesson = {
   id: string;
@@ -186,7 +187,7 @@ export function CursoConstructor({
                 <p className="truncate font-display text-sm font-bold text-navy-700">{m.title}</p>
                 <p className="truncate text-[11px] text-navy-400">{m.description}</p>
               </div>
-              <span className="badge-slate shrink-0">{m.lessons.length} lecciones</span>
+              <span className="badge-slate shrink-0">{cantidad(m.lessons.length, "lección", "lecciones")}</span>
               <div className="flex shrink-0 items-center gap-1">
                 <BotonIcono titulo="Subir" disabled={ocupado || mi === 0} onClick={() => mover("modulo", m.id, "arriba")}>↑</BotonIcono>
                 <BotonIcono titulo="Bajar" disabled={ocupado || mi === modules.length - 1} onClick={() => mover("modulo", m.id, "abajo")}>↓</BotonIcono>

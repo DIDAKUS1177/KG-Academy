@@ -21,7 +21,9 @@ prisma/*.db-journal
 # material fuente de los cursos (exports de Genially, 20+ MB cada uno).
 # El contenido se sirve embebido por URL publica; estos exports son solo
 # respaldo local y no deben versionarse.
-cursos/
+# Con "/" al inicio: solo la carpeta de la raíz. Sin ella se excluían también
+# src/app/admin/cursos/NuevoCurso.tsx y src/app/api/admin/cursos/.
+/cursos/
 
 # python (generadores de documentos)
 __pycache__/

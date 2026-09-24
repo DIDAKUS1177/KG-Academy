@@ -159,8 +159,7 @@ export default async function AdminEvaluaciones() {
         </table>
         <p className="border-t border-navy-50 px-6 py-4 text-[11px] leading-relaxed text-navy-400">
           Las preguntas se administran desde cada evaluación (botón <strong>Preguntas</strong>): una a una o
-          con carga masiva desde Excel. Los bancos marcados como de ejemplo deben reemplazarse por el banco
-          oficial de KG antes de certificar.
+          con carga masiva desde Excel.
         </p>
       </div>
     </div>

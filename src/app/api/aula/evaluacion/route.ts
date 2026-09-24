@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser, audit } from "@/lib/auth";
 import { recalcEnrollment, addPoints } from "@/lib/progress";
 import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { exigeLecciones, leccionesPendientes } from "@/lib/evaluacion-final";
 
 const schema = z.object({
   assessmentId: z.string(),
@@ -44,6 +45,16 @@ export async function POST(req: Request) {
   });
   if (previos >= assessment.maxAttempts && aprobadoAntes === 0) {
     return NextResponse.json({ error: "Agoto los intentos permitidos" }, { status: 403 });
+  }
+
+  if (exigeLecciones(assessment.type, assessment.course)) {
+    const faltan = await leccionesPendientes(enrollment.id, assessment.courseId);
+    if (faltan > 0) {
+      return NextResponse.json(
+        { error: `Complete las lecciones del curso antes de la evaluación final (le faltan ${faltan}).` },
+        { status: 409 }
+      );
+    }
   }
 
   // ---- Calificación ----

@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { puedeVerCurso } from "@/lib/acceso-cursos";
-import { StatusBadge, ContentPlaceholder } from "@/components/ui";
 import {
   IconClock,
   IconLayers,
@@ -15,6 +14,7 @@ import {
   IconClipboard,
   IconEye,
 } from "@/components/Icons";
+import { cantidad } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +66,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                 {course.category.name}
               </span>
               <span className="font-mono text-[11px] text-white/50">{course.code}</span>
-              <StatusBadge status={course.status} />
+              {!publicado && <span className="badge-amber">Próximamente</span>}
             </div>
 
             <h1 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
@@ -79,10 +79,10 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                 <IconClock width={16} height={16} className="text-lime-400" /> {course.durationHours} horas
               </span>
               <span className="inline-flex items-center gap-2">
-                <IconLayers width={16} height={16} className="text-lime-400" /> {course.modules.length} módulos
+                <IconLayers width={16} height={16} className="text-lime-400" /> {cantidad(course.modules.length, "módulo", "módulos")}
               </span>
               <span className="inline-flex items-center gap-2">
-                <IconPlay width={16} height={16} className="text-lime-400" /> {totalLessons} lecciones
+                <IconPlay width={16} height={16} className="text-lime-400" /> {cantidad(totalLessons, "lección", "lecciones")}
               </span>
               <span className="inline-flex items-center gap-2">
                 <IconAward width={16} height={16} className="text-lime-400" /> Certificado verificable
@@ -187,13 +187,13 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
             <h2 className="h-display text-2xl">Contenido programático</h2>
             <span className="kg-rule mt-3 block" />
             <p className="mt-4 text-sm text-navy-400">
-              {course.modules.length} módulos &middot; {totalLessons} lecciones
+              {cantidad(course.modules.length, "módulo", "módulos")} &middot; {cantidad(totalLessons, "lección", "lecciones")}
               {pendientes > 0 && (
                 <>
                   {" "}
                   &middot;{" "}
                   <span className="font-semibold text-amber-600">
-                    {pendientes} lecciones con contenido en producción
+                    {cantidad(pendientes, "lección", "lecciones")} en preparación
                   </span>
                 </>
               )}
@@ -209,7 +209,7 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
                     <span className="min-w-0 flex-1">
                       <span className="block font-display text-[15px] font-bold text-navy-700">{m.title}</span>
                       <span className="mt-0.5 block text-xs text-navy-400">
-                        {m.lessons.length} lecciones &middot; {m.description}
+                        {cantidad(m.lessons.length, "lección", "lecciones")} &middot; {m.description}
                       </span>
                     </span>
                     <span className="shrink-0 text-navy-300 transition-transform group-open:rotate-180">▾</span>
@@ -254,12 +254,6 @@ export default async function CursoPublicoPage({ params }: { params: { slug: str
             </div>
           </div>
 
-          {pendientes > 0 && (
-            <ContentPlaceholder
-              title="Material audiovisual en producción"
-              description="La estructura del curso, las evaluaciones y el certificado ya están operativos. Cuando KG Gestión Integral tenga listos los videos, PDF o recursos de Genially, se cargan desde Administración > Cursos > Constructor, sin intervención del desarrollador."
-            />
-          )}
         </div>
 
         {/* Ficha lateral */}

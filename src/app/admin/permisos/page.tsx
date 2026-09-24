@@ -45,7 +45,7 @@ export default async function PermisosPage() {
       <SectionTitle
         eyebrow="Sistema"
         title="Matriz de roles y permisos"
-        description="Punto 4 del esqueleto funcional. Los permisos se validan tanto en la interfaz como en el backend."
+        description="Qué puede hacer cada rol. Los permisos se validan en la interfaz y en el servidor."
       />
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -111,9 +111,7 @@ export default async function PermisosPage() {
           </tbody>
         </table>
         <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-          {permisos.length} permisos definidos sobre {porModulo.size} módulos. La edición de la matriz
-          desde la interfaz corresponde a la Fase 1; las tablas <code>permissions</code> y{" "}
-          <code>role_permissions</code> ya la soportan.
+          {permisos.length} permisos definidos sobre {porModulo.size} áreas de la plataforma.
         </p>
       </div>
     </div>

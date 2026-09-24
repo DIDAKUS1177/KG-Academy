@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, cantidad } from "@/lib/utils";
 import { IconClock, IconLayers, IconArrowRight, IconGraduation, IconCheck } from "./Icons";
-import { ProgressBar, StatusBadge } from "./ui";
+import { ProgressBar } from "./ui";
 
 export type CourseCardData = {
   slug: string;
@@ -70,12 +70,12 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-navy-400">
           <span className="inline-flex items-center gap-1.5">
-            <IconLayers width={14} height={14} /> {course.modulesCount} módulos
+            <IconLayers width={14} height={14} /> {cantidad(course.modulesCount, "módulo", "módulos")}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <IconClock width={14} height={14} /> {course.lessonsCount} lecciones
+            <IconClock width={14} height={14} /> {cantidad(course.lessonsCount, "lección", "lecciones")}
           </span>
-          {course.status && course.status !== "publicado" && <StatusBadge status={course.status} />}
+          {course.status && course.status !== "publicado" && <span className="badge-amber">Próximamente</span>}
         </div>
 
         {typeof course.progress === "number" && (

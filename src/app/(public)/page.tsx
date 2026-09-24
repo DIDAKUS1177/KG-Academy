@@ -45,21 +45,17 @@ const PASOS = [
 ];
 
 export default async function LandingPage() {
-  const courses = await prisma.course.findMany({
+  // Primero los cursos disponibles; si son menos de tres, se completan con los
+  // que vienen en camino.
+  const todos = await prisma.course.findMany({
     where: { status: { in: ["publicado", "revision", "borrador"] } },
     include: {
       category: true,
       modules: { include: { lessons: true } },
     },
-    orderBy: { createdAt: "asc" },
-    take: 3,
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "asc" }],
   });
-
-  const [totalCourses, totalUsers, totalCerts] = await Promise.all([
-    prisma.course.count(),
-    prisma.user.count(),
-    prisma.certificate.count(),
-  ]);
+  const courses = [...todos.filter((c) => c.status === "publicado"), ...todos.filter((c) => c.status !== "publicado")].slice(0, 3);
 
   return (
     <>
@@ -102,19 +98,6 @@ export default async function LandingPage() {
                 <IconBuilding width={18} height={18} /> Soy una empresa
               </Link>
             </div>
-
-            <dl className="mt-12 grid max-w-lg grid-cols-3 gap-4">
-              {[
-                { k: totalCourses, l: "Cursos en plataforma" },
-                { k: totalUsers, l: "Usuarios registrados" },
-                { k: totalCerts, l: "Certificados emitidos" },
-              ].map((s) => (
-                <div key={s.l} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                  <dt className="font-display text-3xl font-extrabold text-lime-400">{s.k}</dt>
-                  <dd className="mt-1 text-[11px] leading-tight text-white/50">{s.l}</dd>
-                </div>
-              ))}
-            </dl>
           </div>
 
           {/* Tarjeta con el logotipo oficial */}
@@ -133,14 +116,6 @@ export default async function LandingPage() {
                   <p className="text-[11px] font-bold uppercase tracking-wide text-navy-400">Certificado</p>
                   <p className="font-display text-sm font-extrabold text-navy-700">Verificable con QR</p>
                 </div>
-              </div>
-            </div>
-
-            <div className="absolute -right-4 top-8 hidden rounded-2xl border border-white/15 bg-navy-800/90 p-4 shadow-kg-lg backdrop-blur lg:block">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-lime-400">Avance del grupo</p>
-              <p className="font-display text-2xl font-extrabold text-white">86%</p>
-              <div className="mt-2 h-1.5 w-32 overflow-hidden rounded-full bg-white/15">
-                <div className="h-full w-[86%] rounded-full bg-kg-lime" />
               </div>
             </div>
           </div>
@@ -169,18 +144,13 @@ export default async function LandingPage() {
       {/* ============================= CURSOS ============================= */}
       <section id="cursos" className="mx-auto max-w-7xl px-4 py-24 lg:px-8">
         <div className="mb-10 text-center">
-          <p className="eyebrow">Primera etapa</p>
+          <p className="eyebrow">Catálogo</p>
           <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-navy-700 sm:text-4xl">
-            Los tres primeros cursos
+            Cursos
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-navy-400">
-            La estructura pedagógica, las evaluaciones y los certificados ya están listos. El contenido
-            audiovisual de cada lección se carga desde el panel administrativo cuando KG lo tenga
-            producido.
-          </p>
-          <p className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full bg-lime-100 px-4 py-2 text-xs font-bold text-lime-800">
-            <IconCheck width={14} height={14} strokeWidth={3.5} />
-            Todo el catálogo está incluido en el acceso a la plataforma
+            Práctica guiada, evaluación final y certificado verificable. Todo el catálogo está incluido en el
+            plan de su empresa.
           </p>
           <span className="mx-auto mt-5 block h-1 w-16 rounded-full bg-kg-lime" />
         </div>
@@ -382,7 +352,7 @@ export default async function LandingPage() {
             <div>
               <p className="eyebrow">Hablemos</p>
               <h3 className="mt-2 font-display text-xl font-extrabold text-navy-700">
-                Prefiere que le expliquemos?
+                ¿Prefiere que le expliquemos?
               </h3>
               <p className="mt-2 max-w-lg text-sm leading-relaxed text-navy-400">
                 Escríbanos por WhatsApp o por correo y le mostramos la plataforma, resolvemos sus

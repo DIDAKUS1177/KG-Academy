@@ -67,7 +67,7 @@ export function SiteFooter() {
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-lime-400">Contacto</p>
             <EnlacesContacto tone="dark" />
             <p className="mt-4 text-xs leading-relaxed text-white/40">
-              Escríbanos y le contamos como activar KG Academy en su empresa.
+              Escríbanos y le contamos cómo activar KG Academy en su empresa.
             </p>
           </div>
         </div>

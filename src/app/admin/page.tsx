@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { ROLES, ROLE_LABEL } from "@/lib/constants";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, cantidad } from "@/lib/utils";
 import { SectionTitle, StatCard, StatusBadge, ProgressBar, Avatar } from "@/components/ui";
 import { CreditoDesarrollo } from "@/components/Contacto";
 import {
@@ -95,9 +95,9 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Usuarios" value={users} hint={`${companies} empresas`} icon={<IconUsers width={20} height={20} />} />
-        <StatCard label="Cursos" value={courses} hint={`${publicados} publicados`} icon={<IconBook width={20} height={20} />} />
-        <StatCard label="Matrículas" value={enrollments.length} hint={`${completados} completadas`} tone="amber" icon={<IconChart width={20} height={20} />} />
+        <StatCard label="Usuarios" value={users} hint={cantidad(companies, "empresa", "empresas")} icon={<IconUsers width={20} height={20} />} />
+        <StatCard label="Cursos" value={courses} hint={`${publicados} ${publicados === 1 ? "publicado" : "publicados"}`} icon={<IconBook width={20} height={20} />} />
+        <StatCard label="Matrículas" value={enrollments.length} hint={`${completados} ${completados === 1 ? "completada" : "completadas"}`} tone="amber" icon={<IconChart width={20} height={20} />} />
         <StatCard label="Certificados" value={certificates} tone="lime" icon={<IconAward width={20} height={20} />} />
       </div>
 

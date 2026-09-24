@@ -37,6 +37,18 @@ npm run dev
 
 Abrir <http://localhost:3000>.
 
+Para comprobar que todo funciona, con el servidor corriendo, en otra terminal:
+
+```bash
+npm run verificar
+```
+
+Recorre la plataforma completa con cada rol de la demostración (59 comprobaciones de páginas y
+permisos) y ejecuta 22 acciones de punta a punta: la empresa crea un trabajador y le asigna un
+curso, el trabajador cambia su contraseña temporal, estudia, aprueba y se certifica, KG revoca el
+certificado, reportes, restablecimiento de contraseñas, registro propio. Al terminar borra lo que
+creó. Conviene correrlo antes de cada despliegue; solo funciona contra `localhost`.
+
 - `npm run setup` = `prisma generate` + `prisma db push` + `tsx prisma/seed.ts`
 - Para volver al estado inicial de datos en cualquier momento: `npm run db:reset`
 - Para inspeccionar la base de datos con interfaz visual: `npm run db:studio`
@@ -67,17 +79,22 @@ En la pantalla de ingreso hay accesos rápidos que rellenan estas credenciales.
 
 ---
 
-## 3. Los tres primeros cursos
+## 3. Cursos
 
-**Solo se publican los módulos que KG ya produjo**, y se agregan los siguientes a medida que
-los entregue. KG-PA-001 tiene terminados los módulos 1, 2 y 3: cada uno se sirve con su
-presentación interactiva de Genially, embebida por URL pública.
+| Código | Curso | Formato | Producción |
+|---|---|---|---|
+| KG-EM-001 | Fuego bajo control: extintores y evacuación | Modo juego, 6 niveles + desafío final | **Publicado** |
+| KG-PA-004 | Detén el sangrado: control de hemorragias | Modo juego, 6 niveles + desafío final | **Publicado** |
+| KG-PA-001 | Curso Básico de Primeros Auxilios | Genially, 3 módulos | Borrador: falta su evaluación final |
+| KG-PA-002 | Primeros Auxilios Pediátricos | 1 módulo | Borrador: falta contenido y evaluación |
+| KG-PA-003 | Primeros Auxilios Psicológicos | 1 módulo | Borrador: falta contenido y evaluación |
 
-| Código | Curso | Módulos | Lecciones | Horas | Estado | Lanzamiento |
-|---|---|---|---|---|---|---|
-| KG-PA-001 | Curso Básico de Primeros Auxilios | 3 | 3 | 40 | Publicado | 22 de agosto de 2026 |
-| KG-PA-002 | Primeros Auxilios Pediátricos | 1 | 1 | 60 | Borrador | Por definir |
-| KG-PA-003 | Primeros Auxilios Psicológicos | 1 | 1 | 12 | Borrador | Por definir |
+En la base de **demostración** local KG-PA-001 aparece publicado con un banco de preguntas de
+ejemplo, para poder probar todo el ciclo.
+
+**Solo se publica lo que está completo.** El panel no deja publicar un curso que exige
+evaluación final si no tiene una publicada con preguntas: el trabajador terminaría las
+lecciones y nunca el curso.
 
 La estructura de los tres vive en `prisma/catalogo-cursos.ts`, compartida por la semilla de
 demostración y por el script que los crea en producción (ver 7.2).
@@ -292,7 +309,7 @@ las presenta al cliente.
 | Notificaciones y gamificación | `notification_templates`, `notifications`, `badges`, `user_badges`, `points_ledger`, `streaks` |
 | Sistema | `audit_logs`, `system_settings` |
 
-### Motor de progreso (punto 8 del esqueleto)
+### Motor de progreso
 
 Un curso se marca **completado** cuando:
 
@@ -304,6 +321,22 @@ La regla de cálculo es configurable por curso en `courses.progressRule`:
 
 Al cumplirse, el sistema emite el certificado automáticamente con código único, QR y datos
 congelados, y sincroniza el estado de la asignación empresarial.
+
+La evaluación final se abre solo cuando el estudiante completó las lecciones obligatorias
+publicadas (`src/lib/evaluacion-final.ts`): antes no se puede presentar ni gastar intentos.
+
+### Contraseñas y acceso
+
+- Toda cuenta con contraseña temporal (creada por KG, por la empresa, por el script de cuentas
+  de prueba o restablecida) queda en `pendiente_activacion` y solo puede usar `/cambiar-clave`
+  hasta definir una propia.
+- **Recuperación:** la plataforma no envía correos todavía. El administrador de la empresa
+  restablece la contraseña de sus trabajadores desde la ficha del trabajador; KG la de cualquier
+  cuenta desde `/admin/usuarios`. `/recuperar` explica esa ruta y enlaza al WhatsApp de KG.
+- El usuario edita su teléfono, ciudad y cargo en `/aula/perfil`. Nombre y documento, que salen
+  en los certificados, los corrigen KG o la empresa.
+- Cada sesión lleva un identificador único (`jti`), y en producción `AUTH_SECRET` es obligatoria:
+  sin ella la aplicación no firma sesiones.
 
 ---
 
@@ -373,6 +406,10 @@ Los dos cursos interactivos (modo juego) se cargan en producción con
 Mientras un curso esté en borrador solo lo abren superadministradores, administradores e
 instructores de KG (`src/lib/acceso-cursos.ts`): así KG lo revisa en producción sin que un
 trabajador pueda tomarlo ni certificarse. Se publica desde el panel cuando esté validado.
+
+**Ojo con `.gitignore` y `.vercelignore`:** las carpetas se anotan ancladas a la raíz (`/cursos`,
+`/docs`). Una regla sin la barra excluye cualquier carpeta con ese nombre: así se perdieron en su
+momento `src/app/*/cursos`, que quedaron en 404 en producción y fuera de GitHub.
 
 `.vercelignore` deja fuera de la subida el `.env` local, la base SQLite de demostración,
 `node_modules`, `.next`, `cursos/` y `docs/`.
@@ -451,10 +488,12 @@ Los siguientes puntos quedaron marcados como **POR DEFINIR** en el esqueleto fun
 tanto **no se asumieron**; el modelo de datos ya los soporta:
 
 - Pasarela de pagos y facturación (tablas `orders`, `order_items`, `coupons` listas).
-- Proveedor SMTP para el envío real de correos (tabla `notification_templates` lista).
+- Proveedor SMTP para el envío real de correos (tabla `notification_templates` lista). Mientras
+  tanto, las contraseñas se restablecen desde los paneles de KG y de la empresa.
 - Banco oficial de preguntas de cada curso (el de la base de demostración es de ejemplo; se
   carga desde `/admin/evaluaciones`).
-- Validación técnica de KG para los dos cursos interactivos de demostración.
+- Validación técnica de KG para los dos cursos de modo juego (ya publicados en producción).
+- Evaluación final de KG-PA-001 y contenido de KG-PA-002 y KG-PA-003.
 - Matriz fina de permisos por rol más allá de la propuesta implementada.
 - Proveedor de alojamiento de video y política de retención.
 

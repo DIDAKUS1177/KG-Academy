@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { resolveCompany, companyKpis } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cantidad } from "@/lib/utils";
 import {
   StatCard,
   SectionTitle,
@@ -176,7 +176,7 @@ export default async function EmpresaDashboard({ searchParams }: { searchParams:
                   </span>
                 </div>
                 <ProgressBar value={a.avance / a.total} />
-                <p className="mt-1 text-[11px] text-navy-400">{a.total} trabajadores</p>
+                <p className="mt-1 text-[11px] text-navy-400">{cantidad(a.total, "trabajador", "trabajadores")}</p>
               </div>
             ))}
           </div>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { exigeLecciones, leccionesPendientes } from "@/lib/evaluacion-final";
 import { formatDateTime } from "@/lib/utils";
 import { Breadcrumb, ProgressRing, StatusBadge } from "@/components/ui";
 import { QuizForm } from "./QuizForm";
@@ -62,6 +63,10 @@ export default async function EvaluacionPage({
     select: { contentType: true },
   });
   const modoJuego = assessment.type === "final" && tipos.length > 0 && tipos.every((l) => l.contentType === "interactivo");
+
+  const faltanLecciones = exigeLecciones(assessment.type, assessment.course)
+    ? await leccionesPendientes(enrollment.id, assessment.courseId)
+    : 0;
 
   const passed = attempts.some((a) => a.passed);
   const sinIntentos = attempts.length >= assessment.maxAttempts && !passed;
@@ -237,7 +242,7 @@ export default async function EvaluacionPage({
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
               <span>
-                Agoto los {assessment.maxAttempts} intentos permitidos. Comuníquese con el administrador
+                Agotó los {assessment.maxAttempts} intentos permitidos. Comuníquese con el administrador
                 de KG Academy para habilitar un nuevo intento.
               </span>
             </div>
@@ -285,7 +290,24 @@ export default async function EvaluacionPage({
         </div>
       )}
 
-      {!passed && !sinIntentos && assessment.questions.length > 0 && (
+      {!passed && !sinIntentos && faltanLecciones > 0 && (
+        <div className="card flex flex-wrap items-center gap-4 p-6">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy-50 text-navy-500">
+            <IconClipboard width={20} height={20} />
+          </span>
+          <div className="min-w-[200px] flex-1">
+            <p className="font-display text-base font-bold text-navy-700">Primero termine las lecciones</p>
+            <p className="text-sm text-navy-400">
+              La evaluación final se habilita al completar el curso. Le {faltanLecciones === 1 ? "falta 1 lección" : `faltan ${faltanLecciones} lecciones`}.
+            </p>
+          </div>
+          <Link href={`/aula/curso/${assessment.course.slug}`} className="btn-lime">
+            Ir al curso
+          </Link>
+        </div>
+      )}
+
+      {!passed && !sinIntentos && faltanLecciones === 0 && assessment.questions.length > 0 && (
         <QuizForm
           assessmentId={assessment.id}
           shuffle={assessment.shuffleQuestions}
