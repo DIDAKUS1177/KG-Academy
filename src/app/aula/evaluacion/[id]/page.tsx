@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { puedeVerCurso } from "@/lib/acceso-cursos";
 import { formatDateTime } from "@/lib/utils";
 import { Breadcrumb, ProgressRing, StatusBadge } from "@/components/ui";
 import { QuizForm } from "./QuizForm";
@@ -29,7 +30,7 @@ export default async function EvaluacionPage({
     },
   });
   // Una evaluación en borrador no se puede presentar.
-  if (!assessment || !assessment.isPublished) notFound();
+  if (!assessment || !assessment.isPublished || !puedeVerCurso(user.role.code, assessment.course.status)) notFound();
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: assessment.courseId } },

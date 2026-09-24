@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { trackLesson } from "@/lib/progress";
+import { puedeVerCurso } from "@/lib/acceso-cursos";
 
 const schema = z.object({
   enrollmentId: z.string(),
@@ -19,8 +20,11 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Datos invalidos" }, { status: 400 });
 
   // El usuario solo puede registrar avance sobre SU propia matrícula
-  const enrollment = await prisma.enrollment.findUnique({ where: { id: parsed.data.enrollmentId } });
-  if (!enrollment || enrollment.userId !== user.id) {
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: parsed.data.enrollmentId },
+    include: { course: { select: { status: true } } },
+  });
+  if (!enrollment || enrollment.userId !== user.id || !puedeVerCurso(user.role.code, enrollment.course.status)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

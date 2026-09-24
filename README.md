@@ -358,6 +358,12 @@ Los cursos del catálogo se crean en producción con `scripts/cursos-produccion.
 agrega los que falten, **en borrador** y sin evaluaciones, y nunca modifica uno existente. Luego
 KG crea la evaluación final desde el panel, carga sus preguntas y publica.
 
+Los dos cursos interactivos (modo juego) se cargan en producción con
+`scripts/cursos-interactivos-produccion.ps1`, **en borrador** y con su evaluación final.
+Mientras un curso esté en borrador solo lo abren superadministradores, administradores e
+instructores de KG (`src/lib/acceso-cursos.ts`): así KG lo revisa en producción sin que un
+trabajador pueda tomarlo ni certificarse. Se publica desde el panel cuando esté validado.
+
 `.vercelignore` deja fuera de la subida el `.env` local, la base SQLite de demostración,
 `node_modules`, `.next`, `cursos/` y `docs/`.
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser, audit } from "@/lib/auth";
 import { recalcEnrollment, addPoints } from "@/lib/progress";
+import { puedeVerCurso } from "@/lib/acceso-cursos";
 
 const schema = z.object({
   assessmentId: z.string(),
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
       questions: { include: { question: { include: { options: true } } } },
     },
   });
-  if (!assessment || !assessment.isPublished) {
+  if (!assessment || !assessment.isPublished || !puedeVerCurso(user.role.code, assessment.course.status)) {
     return NextResponse.json({ error: "Evaluación no encontrada" }, { status: 404 });
   }
 

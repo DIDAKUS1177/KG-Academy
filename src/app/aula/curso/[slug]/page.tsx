@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ensureEnrollment } from "@/lib/progress";
+import { puedeVerCurso } from "@/lib/acceso-cursos";
 import { Breadcrumb, ProgressRing, StatusBadge, ContentPlaceholder } from "@/components/ui";
 import { LessonPlayer } from "./LessonPlayer";
 import { MapaMisiones } from "@/components/leccion/MapaMisiones";
@@ -42,7 +43,8 @@ export default async function AulaCursoPage({
       assessments: { where: { isPublished: true }, orderBy: { order: "asc" } },
     },
   });
-  if (!course) notFound();
+  // Un borrador solo lo abren los revisores de KG.
+  if (!course || !puedeVerCurso(user.role.code, course.status)) notFound();
 
   let enrollment = await ensureEnrollment(user.id, course.id, "gratuito");
 

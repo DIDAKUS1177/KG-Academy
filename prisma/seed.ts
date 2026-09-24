@@ -14,6 +14,7 @@ import bcrypt from "bcryptjs";
 import QRCode from "qrcode";
 import { CURSOS, type LeccionSemilla } from "./catalogo-cursos";
 import { CURSOS_INTERACTIVOS } from "./cursos-interactivos";
+import { crearCursoInteractivo } from "./crear-curso-interactivo";
 
 const prisma = new PrismaClient();
 const PASS = "KgAcademy2026*";
@@ -611,111 +612,11 @@ async function main() {
   console.log("Creando los cursos interactivos de demostración...");
   const cursosInteractivos = [];
   for (const c of CURSOS_INTERACTIVOS) {
-    const course = await prisma.course.create({
-      data: {
-        code: c.code,
-        slug: c.slug,
-        title: c.title,
-        subtitle: c.subtitle,
-        description: `${c.objective}
-
-Prototipo interactivo: contenido pendiente de validación técnica por KG.`,
-        objective: c.objective,
-        targetAudience: c.targetAudience,
-        requirements: c.requirements,
-        methodology: c.methodology,
-        level: c.level,
-        modality: "virtual",
-        durationHours: c.durationHours,
-        categoryId: categorias[c.categoria] ?? catPA.id,
-        instructorId: instructorBomberos.id,
-        status: "publicado",
-        accessType: "plan_empresarial",
-        price: 0,
-        progressRule: "obligatorios",
-        minPassingScore: c.examen.minScore,
-        maxAttempts: c.examen.maxAttempts,
-        requiresFinalExam: true,
-        requiresAllLessons: true,
-        certificateEnabled: true,
-        certificateValidityMonths: 24,
-        publishedAt: new Date(),
-      },
+    const course = await crearCursoInteractivo(prisma, c, {
+      categoryId: categorias[c.categoria] ?? catPA.id,
+      instructorId: instructorBomberos.id,
+      status: "publicado",
     });
-
-    const pesoModulo = 100 / c.modules.length;
-    for (const [mi, m] of c.modules.entries()) {
-      const mod = await prisma.module.create({
-        data: {
-          courseId: course.id,
-          title: m.title,
-          description: m.description,
-          order: mi + 1,
-          weight: pesoModulo,
-          isRequired: true,
-          isPublished: true,
-        },
-      });
-      for (const [li, l] of m.lessons.entries()) {
-        await prisma.lesson.create({
-          data: {
-            moduleId: mod.id,
-            title: l.title,
-            description: l.description,
-            order: li + 1,
-            contentType: "interactivo",
-            contentBody: JSON.stringify(l.contenido),
-            durationMin: l.durationMin,
-            isRequired: true,
-            isPreview: mi === 0 && li === 0,
-            weight: pesoModulo / m.lessons.length,
-            completionRule: "manual",
-            isPublished: true,
-          },
-        });
-      }
-    }
-
-    const bank = await prisma.questionBank.create({
-      data: {
-        name: `Banco de preguntas - ${c.title}`,
-        description: "Banco del prototipo interactivo. Pendiente de validación técnica por KG.",
-        courseId: course.id,
-        topic: c.categoria,
-      },
-    });
-    const finalEval = await prisma.assessment.create({
-      data: {
-        courseId: course.id,
-        title: c.examen.title,
-        description: c.examen.description,
-        type: "final",
-        minScore: c.examen.minScore,
-        maxAttempts: c.examen.maxAttempts,
-        timeLimitMin: c.examen.timeLimitMin,
-        isRequired: true,
-        isPublished: true,
-        order: 99,
-        showFeedback: true,
-        showCorrectAnswers: true,
-      },
-    });
-    for (const [i, q] of c.examen.preguntas.entries()) {
-      const pregunta = await prisma.question.create({
-        data: {
-          bankId: bank.id,
-          type: q.type ?? "unica",
-          statement: q.statement,
-          explanation: q.explanation,
-          difficulty: "media",
-          points: 1,
-          options: { create: q.options.map((o, j) => ({ text: o.text, isCorrect: o.ok, order: j + 1 })) },
-        },
-      });
-      await prisma.assessmentQuestion.create({
-        data: { assessmentId: finalEval.id, questionId: pregunta.id, order: i + 1, points: 1 },
-      });
-    }
     cursosInteractivos.push(course);
   }
 
