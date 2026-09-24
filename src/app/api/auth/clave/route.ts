@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, hashPassword, requireUser, verifyPassword } from "@/lib/auth";
 import { leerCuerpo, respuestaError, respuestaOk } from "@/lib/admin-api";
+import { ROLE_HOME } from "@/lib/constants";
 
 /**
  * Cambio de contraseña por el propio usuario, desde su perfil.
@@ -20,7 +21,8 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const user = await requireUser();
+  // Es la única acción permitida a una cuenta con contraseña temporal.
+  const user = await requireUser({ permitirPendiente: true });
 
   const cuerpo = await leerCuerpo(req, schema);
   if (cuerpo.error) return cuerpo.error;
@@ -68,5 +70,5 @@ export async function POST(req: Request) {
     summary: activar ? "Cambio de contraseña temporal; cuenta activada" : "Cambio de contraseña",
   });
 
-  return respuestaOk({ activada: activar });
+  return respuestaOk({ activada: activar, destino: ROLE_HOME[user.role.code] ?? "/aula" });
 }

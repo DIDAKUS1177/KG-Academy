@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   // Con contraseña temporal, lo primero es cambiarla.
   const redirect =
     user.status === "pendiente_activacion"
-      ? "/aula/perfil#clave"
+      ? "/cambiar-clave"
       : ROLE_HOME[user.role.code] ?? "/aula";
 
   return NextResponse.json({ ok: true, redirect });

@@ -81,10 +81,18 @@ export async function getCurrentUser() {
   });
 }
 
-/** Exige sesión; si no hay, redirige a login. */
-export async function requireUser() {
+/**
+ * Exige sesión; si no hay, redirige a login.
+ *
+ * Una cuenta con contraseña temporal ("pendiente_activacion") no puede usar
+ * nada de la plataforma hasta cambiarla: toda página y toda acción la devuelve
+ * a /cambiar-clave. Solo esa página y la ruta que guarda la nueva contraseña
+ * la dejan pasar (permitirPendiente).
+ */
+export async function requireUser(opciones: { permitirPendiente?: boolean } = {}) {
   const user = await getCurrentUser();
   if (!user || user.status === "bloqueado") redirect("/ingresar");
+  if (user.status === "pendiente_activacion" && !opciones.permitirPendiente) redirect("/cambiar-clave");
   return user;
 }
 

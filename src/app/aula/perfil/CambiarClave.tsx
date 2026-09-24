@@ -6,7 +6,7 @@ import { IconLock } from "@/components/Icons";
 import { Aviso, Campo, llamar, type Mensaje } from "@/components/admin/Formulario";
 
 /** Formulario de cambio de contraseña del propio usuario. */
-export function CambiarClave({ temporal }: { temporal: boolean }) {
+export function CambiarClave({ temporal, obligatorio = false }: { temporal: boolean; obligatorio?: boolean }) {
   const router = useRouter();
   const [msg, setMsg] = useState<Mensaje>(null);
   const [cargando, setCargando] = useState(false);
@@ -20,13 +20,19 @@ export function CambiarClave({ temporal }: { temporal: boolean }) {
       return setMsg({ ok: false, text: "La contraseña nueva y su confirmación no coinciden" });
     }
     setCargando(true);
-    const { ok, data } = await llamar<{ activada?: boolean }>("/api/auth/clave", "POST", {
+    const { ok, data } = await llamar<{ activada?: boolean; destino?: string }>("/api/auth/clave", "POST", {
       actual: d.actual,
       nueva: d.nueva,
     });
     setCargando(false);
     if (!ok) return setMsg({ ok: false, text: data.error ?? "No se pudo cambiar la contraseña" });
     form.reset();
+    // Primer ingreso: con la cuenta ya activa, sigue a su panel.
+    if (obligatorio && data.activada) {
+      router.replace(data.destino ?? "/aula");
+      router.refresh();
+      return;
+    }
     setMsg({
       ok: true,
       text: data.activada
@@ -37,8 +43,8 @@ export function CambiarClave({ temporal }: { temporal: boolean }) {
   }
 
   return (
-    <div id="clave" className="card mt-6 scroll-mt-24 p-7">
-      <div className="flex items-center gap-3">
+    <div id="clave" className={obligatorio ? "" : "card mt-6 scroll-mt-24 p-7"}>
+      <div className={obligatorio ? "hidden" : "flex items-center gap-3"}>
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-50 text-navy-600">
           <IconLock width={20} height={20} />
         </span>
@@ -55,8 +61,8 @@ export function CambiarClave({ temporal }: { temporal: boolean }) {
         </div>
       )}
 
-      <form onSubmit={enviar} className="mt-5 grid gap-4 sm:grid-cols-3">
-        <div className="sm:col-span-3">
+      <form onSubmit={enviar} className={`mt-5 grid gap-4 ${obligatorio ? "" : "sm:grid-cols-3"}`}>
+        <div className={obligatorio ? "" : "sm:col-span-3"}>
           <Aviso msg={msg} />
         </div>
         <Campo label={temporal ? "Contraseña temporal" : "Contraseña actual"}>
@@ -68,8 +74,8 @@ export function CambiarClave({ temporal }: { temporal: boolean }) {
         <Campo label="Confirmar contraseña nueva">
           <input name="confirmar" type="password" required minLength={8} autoComplete="new-password" className="input" />
         </Campo>
-        <div className="sm:col-span-3">
-          <button className="btn-lime" disabled={cargando}>
+        <div className={obligatorio ? "" : "sm:col-span-3"}>
+          <button className={`btn-lime ${obligatorio ? "w-full py-3" : ""}`} disabled={cargando}>
             {cargando ? "Guardando..." : "Cambiar contraseña"}
           </button>
         </div>

@@ -358,6 +358,16 @@ Los cursos del catálogo se crean en producción con `scripts/cursos-produccion.
 agrega los que falten, **en borrador** y sin evaluaciones, y nunca modifica uno existente. Luego
 KG crea la evaluación final desde el panel, carga sus preguntas y publica.
 
+**Cuentas de prueba:** `scripts/usuarios-prueba-produccion.ps1` crea `admin.prueba@`,
+`empresa.prueba@` y `estudiante.prueba@kgacademy.test` (administrador KG, administrador de
+"Empresa de Prueba KG" y estudiante) con una contraseña temporal común que se escribe oculta al
+correrlo. No se repiten si ya existen.
+
+**Contraseña temporal = cambio obligatorio.** Toda cuenta en `pendiente_activacion` (las de
+prueba, las creadas por KG con clave generada y los trabajadores cargados por la empresa) queda
+encerrada en `/cambiar-clave`: `requireUser` la devuelve ahí desde cualquier página o acción
+hasta que defina una contraseña propia.
+
 Los dos cursos interactivos (modo juego) se cargan en producción con
 `scripts/cursos-interactivos-produccion.ps1`, **en borrador** y con su evaluación final.
 Mientras un curso esté en borrador solo lo abren superadministradores, administradores e
