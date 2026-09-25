@@ -75,7 +75,9 @@ export const CURSOS = [
     methodology:
       "100% virtual asincrónico. Cada módulo se desarrolla en una presentación interactiva de Genially, con evaluación diagnóstica, evaluaciones por módulo y evaluación final.",
     level: "basico",
-    durationHours: 40,
+    // 3 módulos publicados (60 + 60 + 90 min) y la evaluación final. Al publicar
+    // los módulos 4 a 7 del temario hay que subir la intensidad.
+    durationHours: 4,
     price: 149000,
     status: "publicado",
     accessType: "pago",

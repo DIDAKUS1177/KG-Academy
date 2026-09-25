@@ -89,7 +89,9 @@ async function main() {
     for (const m of malos) console.log(`    ${m}`);
   }
 
+  // El ciclo completo con un curso de juego y con uno de Genially.
   fallos += await acciones(cursoJuego.id);
+  fallos += await acciones(curso.id);
   await limpiar();
 
   await prisma.$disconnect();
@@ -128,7 +130,7 @@ async function entrarCon(correo: string, clave: string) {
   return { cookie: (r.headers.get("set-cookie") ?? "").split(";")[0], redirect: data.redirect, status: r.status, error: data.error };
 }
 
-type Paso = { nombre: string; ok: boolean; detalle?: string };
+type Paso = { nombre: string; ok: boolean; detalle?: string; curso?: string };
 const lotesCreados: string[] = [];
 
 async function acciones(cursoId: string) {
@@ -137,6 +139,7 @@ async function acciones(cursoId: string) {
   const paso = (nombre: string, ok: boolean, detalle?: string) => pasos.push({ nombre, ok, detalle: ok ? undefined : detalle });
 
   const curso = await prisma.course.findUniqueOrThrow({ where: { id: cursoId } });
+  pasos.push({ nombre: `Curso: ${curso.title}`, ok: true, curso: curso.code });
   const rrhh = await prisma.user.findUniqueOrThrow({ where: { email: "rrhh@constructoraandina.com" } });
   const companyId = rrhh.companyId!;
   const empresa = await entrar("rrhh@constructoraandina.com");
@@ -198,6 +201,7 @@ async function acciones(cursoId: string) {
   paso("Aprueba la evaluación final", examen.status === 200 && examen.data.passed === true, `${examen.status} ${examen.texto.slice(0, 120)}`);
   const cert = await prisma.certificate.findUnique({ where: { enrollmentId: enrollment.id } });
   paso("Al completar lecciones y examen recibe certificado", !!cert);
+  if (cert) paso("El certificado lleva las horas del curso", cert.hours === curso.durationHours, `${cert.hours} vs ${curso.durationHours}`);
   if (cert) {
     const v = await llamar("GET", `/verificar/${cert.code}`);
     paso("El certificado se verifica públicamente", v.status === 200 && v.texto.includes("Recorrido"), `${v.status}`);
@@ -291,7 +295,7 @@ async function limpiar() {
 
 function reportar(pasos: Paso[]) {
   const malos = pasos.filter((p) => !p.ok);
-  console.log(`${malos.length ? "✗" : "✓"} Acciones de punta a punta: ${pasos.length - malos.length}/${pasos.length}`);
+  console.log(`${malos.length ? "✗" : "✓"} Acciones de punta a punta (${pasos[0]?.curso ?? ""}): ${pasos.length - malos.length}/${pasos.length}`);
   for (const p of pasos) console.log(`    ${p.ok ? "✓" : "✗"} ${p.nombre}${p.detalle ? ` — ${p.detalle}` : ""}`);
   return malos.length;
 }
