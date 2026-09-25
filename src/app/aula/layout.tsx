@@ -1,7 +1,7 @@
 import { AppShell, type NavGroup } from "@/components/AppShell";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLE_LABEL } from "@/lib/constants";
+import { ROLE_HOME, ROLE_LABEL, ROLES } from "@/lib/constants";
 import {
   IconHome,
   IconBook,
@@ -9,13 +9,27 @@ import {
   IconUsers,
   IconBell,
   IconSpark,
+  IconSettings,
 } from "@/components/Icons";
 
 export default async function AulaLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   const unread = await prisma.notification.count({ where: { userId: user.id, isRead: false } });
 
+  // Quien administra (KG o una empresa) también puede estudiar: desde el aula
+  // vuelve a su panel con un clic.
+  const panel =
+    user.role.code === ROLES.ESTUDIANTE
+      ? null
+      : {
+          href: ROLE_HOME[user.role.code] ?? "/aula",
+          label: [ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR].includes(user.role.code as never) ? "Panel empresarial" : "Administración",
+        };
+
   const groups: NavGroup[] = [
+    ...(panel
+      ? [{ title: "Gestión", items: [{ href: panel.href, label: panel.label, icon: <IconSettings width={18} height={18} /> }] }]
+      : []),
     {
       title: "Mi aprendizaje",
       items: [

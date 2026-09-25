@@ -15,6 +15,8 @@ import QRCode from "qrcode";
 import { CURSOS, type LeccionSemilla } from "./catalogo-cursos";
 import { CURSOS_INTERACTIVOS } from "./cursos-interactivos";
 import { crearCursoInteractivo } from "./crear-curso-interactivo";
+import { EVALUACIONES_FINALES } from "./evaluaciones";
+import { crearEvaluacionFinal } from "./crear-evaluacion";
 
 const prisma = new PrismaClient();
 const PASS = "KgAcademy2026*";
@@ -535,6 +537,14 @@ async function main() {
     }
 
     /* --------------------- Banco de preguntas y evaluaciones ------------------- */
+    // Si el curso ya tiene su evaluación final oficial, se usa esa.
+    const oficial = EVALUACIONES_FINALES[c.code];
+    if (oficial) {
+      const finalEval = await crearEvaluacionFinal(prisma, course, oficial);
+      cursosCreados.push({ course, finalEval });
+      continue;
+    }
+
     const bank = await prisma.questionBank.create({
       data: {
         name: `Banco de preguntas - ${c.title}`,

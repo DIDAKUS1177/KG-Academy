@@ -85,7 +85,7 @@ En la pantalla de ingreso hay accesos rápidos que rellenan estas credenciales.
 |---|---|---|---|
 | KG-EM-001 | Fuego bajo control: extintores y evacuación | Modo juego, 6 niveles + desafío final | **Publicado** |
 | KG-PA-004 | Detén el sangrado: control de hemorragias | Modo juego, 6 niveles + desafío final | **Publicado** |
-| KG-PA-001 | Curso Básico de Primeros Auxilios | Genially, 3 módulos | Borrador: falta su evaluación final |
+| KG-PA-001 | Curso Básico de Primeros Auxilios | Genially, 3 módulos + evaluación final de 16 preguntas | Ver 7.2 |
 | KG-PA-002 | Primeros Auxilios Pediátricos | 1 módulo | Borrador: falta contenido y evaluación |
 | KG-PA-003 | Primeros Auxilios Psicológicos | 1 módulo | Borrador: falta contenido y evaluación |
 
@@ -400,6 +400,14 @@ correrlo. No se repiten si ya existen.
 prueba, las creadas por KG con clave generada y los trabajadores cargados por la empresa) queda
 encerrada en `/cambiar-clave`: `requireUser` la devuelve ahí desde cualquier página o acción
 hasta que defina una contraseña propia.
+
+**Evaluaciones finales:** las preguntas viven en `prisma/evaluaciones.ts` (hoy la de KG-PA-001) y
+se cargan con `scripts/evaluaciones-produccion.ps1` en los cursos que no tengan una; con
+`-Publicar KG-PA-001` además publica el curso. Después KG las ajusta desde el panel.
+
+**Aula para todos los roles:** el aula muestra "Cursos disponibles" (abrir uno matricula), el
+equipo de KG ve ahí también los borradores para revisarlos, y tiene "Aula virtual" en su menú y
+"Ver como estudiante" en cada curso del panel.
 
 Los dos cursos interactivos (modo juego) se cargan en producción con
 `scripts/cursos-interactivos-produccion.ps1`, **en borrador** y con su evaluación final.

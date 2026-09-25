@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { totalPoints } from "@/lib/progress";
 import { formatDate, daysBetween, cantidad } from "@/lib/utils";
+import { CursosDisponibles } from "./CursosDisponibles";
 import { ProgressRing, ProgressBar, StatCard, StatusBadge, EmptyState, SectionTitle } from "@/components/ui";
 import {
   IconBook,
@@ -168,12 +169,7 @@ export default async function AulaHome() {
           <EmptyState
             icon={<IconBook width={30} height={30} />}
             title="Aún no tiene cursos"
-            description="Explore el catálogo de KG Academy e inscríbase en su primer curso."
-            action={
-              <Link href="/catalogo" className="btn-lime">
-                Ver catálogo
-              </Link>
-            }
+            description="Elija uno de los cursos disponibles aquí abajo para empezar."
           />
         ) : (
           <div className="space-y-3">
@@ -209,6 +205,8 @@ export default async function AulaHome() {
         )}
       </div>
 
+
+      <CursosDisponibles userId={user.id} rol={user.role.code} />
     </div>
   );
 }

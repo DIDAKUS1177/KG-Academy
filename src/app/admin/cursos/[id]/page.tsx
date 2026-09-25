@@ -58,9 +58,14 @@ export default async function ConstructorPage({ params }: { params: { id: string
             {course.code} &middot; {course.category.name} &middot; {course.durationHours} horas
           </p>
         </div>
-        <Link href={`/curso/${course.slug}`} target="_blank" className="btn-outline btn-sm">
-          <IconEye width={14} height={14} /> Vista pública
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/aula/curso/${course.slug}`} className="btn-lime btn-sm">
+            <IconEye width={14} height={14} /> Ver como estudiante
+          </Link>
+          <Link href={`/curso/${course.slug}`} target="_blank" className="btn-outline btn-sm">
+            Vista pública
+          </Link>
+        </div>
       </div>
 
       <CursoConstructor

@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { CourseCard } from "@/components/CourseCard";
 import { EmptyState, SectionTitle, StatusBadge } from "@/components/ui";
 import { IconBook } from "@/components/Icons";
+import { CursosDisponibles } from "../CursosDisponibles";
 
 export const metadata: Metadata = { title: "Mis cursos" };
 export const dynamic = "force-dynamic";
@@ -73,13 +74,8 @@ export default async function MisCursosPage({ searchParams }: { searchParams: { 
       {enrollments.length === 0 ? (
         <EmptyState
           icon={<IconBook width={30} height={30} />}
-          title="No hay cursos en esta categoría"
-          description="Cambie el filtro o inscríbase en un nuevo curso desde el catálogo."
-          action={
-            <Link href="/catalogo" className="btn-lime">
-              Ver catálogo
-            </Link>
-          }
+          title={estado === "todos" ? "Todavía no ha empezado ningún curso" : "No hay cursos en este estado"}
+          description={estado === "todos" ? "Elija uno de los cursos disponibles aquí abajo." : "Cambie el filtro para ver sus otros cursos."}
         />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -115,6 +111,10 @@ export default async function MisCursosPage({ searchParams }: { searchParams: { 
           ))}
         </div>
       )}
+
+      <div className="mt-12">
+        <CursosDisponibles userId={user.id} rol={user.role.code} />
+      </div>
     </div>
   );
 }

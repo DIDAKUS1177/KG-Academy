@@ -252,6 +252,23 @@ async function acciones(cursoId: string) {
   });
   paso("Registro propio de estudiante", reg.status === 200, `${reg.status} ${reg.texto.slice(0, 120)}`);
 
+  // 9. Sin inscribirse en nada, el aula le muestra qué puede empezar; los
+  //    borradores solo los ve el equipo de KG, que además los abre como estudiante.
+  const b2c = (await entrarCon(`registro.${sufijo}@demo.test`, `Registro-${sufijo}-Clave`)).cookie;
+  const publicado = await prisma.course.findFirstOrThrow({ where: { status: "publicado" } });
+  const enBorrador = await prisma.course.findFirst({ where: { status: "borrador", code: { not: { startsWith: "KG-RC-" } } } });
+  const vistaB2c = await llamar("GET", "/aula/cursos", b2c);
+  paso("Un estudiante nuevo ve los cursos disponibles", vistaB2c.status === 200 && vistaB2c.texto.includes("Cursos disponibles") && vistaB2c.texto.includes(publicado.title), `${vistaB2c.status}`);
+  if (enBorrador) {
+    paso("Un estudiante no ve los borradores", !vistaB2c.texto.includes(enBorrador.title));
+    const vistaAdmin = await llamar("GET", "/aula/cursos", admin);
+    paso("KG ve los borradores en el aula para revisarlos", vistaAdmin.texto.includes(enBorrador.title) && vistaAdmin.texto.includes("Borrador · solo KG"));
+    const abrir = await llamar("GET", `/aula/curso/${enBorrador.slug}`, admin);
+    paso("KG abre un borrador como estudiante", abrir.status === 200, `${abrir.status}`);
+  }
+  const menu = await llamar("GET", "/admin", admin);
+  paso("El panel de KG tiene acceso al aula", menu.texto.includes('href="/aula/cursos"'));
+
   return reportar(pasos);
 }
 

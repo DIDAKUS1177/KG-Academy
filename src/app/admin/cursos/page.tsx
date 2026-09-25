@@ -131,7 +131,11 @@ export default async function AdminCursos() {
                   <Link href={`/admin/cursos/${c.id}`} className="btn-lime btn-sm">
                     Constructor <IconArrowRight width={13} height={13} />
                   </Link>
-                  <Link href={`/curso/${c.slug}`} target="_blank" className="btn-outline btn-sm">
+                  {/* Abre el curso tal como lo toma un estudiante, aunque esté en borrador. */}
+                  <Link href={`/aula/curso/${c.slug}`} className="btn-outline btn-sm">
+                    Ver como estudiante
+                  </Link>
+                  <Link href={`/curso/${c.slug}`} target="_blank" className="text-center text-[11px] font-semibold text-navy-400 hover:text-navy-600">
                     Vista pública
                   </Link>
                 </div>
