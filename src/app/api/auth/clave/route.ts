@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { audit, hashPassword, requireUser, verifyPassword } from "@/lib/auth";
 import { leerCuerpo, respuestaError, respuestaOk } from "@/lib/admin-api";
 import { ROLE_HOME } from "@/lib/constants";
+import { problemaClaveNueva } from "@/lib/claves";
 
 /**
  * Cambio de contraseña por el propio usuario, desde su perfil.
@@ -11,9 +12,6 @@ import { ROLE_HOME } from "@/lib/constants";
  * por la empresa nace en "pendiente_activacion" con una clave generada, y al
  * cambiarla aquí queda activa. Sin esta ruta, la temporal duraba para siempre.
  */
-
-/** Contraseña de la demostración: nunca se acepta como definitiva. */
-const CLAVE_DEMO = "KgAcademy2026*";
 
 const schema = z.object({
   actual: z.string().min(1, "Escriba su contraseña actual"),
@@ -32,22 +30,8 @@ export async function POST(req: Request) {
     return respuestaError("La contraseña actual no es correcta", 401);
   }
 
-  // La longitud mínima la define el superadministrador en Configuración.
-  const ajuste = await prisma.systemSetting.findUnique({ where: { key: "seguridad.min_password" } });
-  const minimo = Math.max(8, Number(ajuste?.value) || 8);
-
-  if (nueva.length < minimo) {
-    return respuestaError(`La contraseña nueva debe tener al menos ${minimo} caracteres`);
-  }
-  if (nueva === actual) {
-    return respuestaError("La contraseña nueva debe ser distinta de la actual");
-  }
-  if (nueva === CLAVE_DEMO) {
-    return respuestaError("Esa contraseña es pública en la demostración; elija otra");
-  }
-  if (/^(\d)\1+$|^0?123456789|^12345678/.test(nueva)) {
-    return respuestaError("Esa contraseña es demasiado fácil de adivinar; elija otra");
-  }
+  const problema = await problemaClaveNueva(nueva, actual);
+  if (problema) return respuestaError(problema);
 
   const activar = user.status === "pendiente_activacion";
 

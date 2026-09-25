@@ -36,3 +36,6 @@ Thumbs.db
 
 .vercel
 .env*
+
+# buzón de correos de desarrollo (src/lib/correo.ts)
+.correos-dev/

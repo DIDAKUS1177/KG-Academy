@@ -330,9 +330,14 @@ publicadas (`src/lib/evaluacion-final.ts`): antes no se puede presentar ni gasta
 - Toda cuenta con contraseña temporal (creada por KG, por la empresa, por el script de cuentas
   de prueba o restablecida) queda en `pendiente_activacion` y solo puede usar `/cambiar-clave`
   hasta definir una propia.
-- **Recuperación:** la plataforma no envía correos todavía. El administrador de la empresa
-  restablece la contraseña de sus trabajadores desde la ficha del trabajador; KG la de cualquier
-  cuenta desde `/admin/usuarios`. `/recuperar` explica esa ruta y enlaza al WhatsApp de KG.
+- **Recuperación por código:** en `/recuperar` la persona recibe en su correo un código de 6
+  dígitos (vence en 15 minutos, un solo uso, 5 intentos, máximo 3 códigos cada 15 minutos; se
+  guarda cifrado y la respuesta no revela si el correo existe) y define una contraseña nueva.
+  Necesita un proveedor SMTP en las variables `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+  y `CORREO_REMITENTE` (ver `.env.example`); sin él, en desarrollo los correos se guardan en
+  `.correos-dev/` y en producción la página muestra solo las vías manuales.
+- **Recuperación manual:** el administrador de la empresa restablece la contraseña de sus
+  trabajadores desde su ficha; KG la de cualquier cuenta desde `/admin/usuarios`.
 - El usuario edita su teléfono, ciudad y cargo en `/aula/perfil`. Nombre y documento, que salen
   en los certificados, los corrigen KG o la empresa.
 - Cada sesión lleva un identificador único (`jti`), y en producción `AUTH_SECRET` es obligatoria:
@@ -496,8 +501,9 @@ Los siguientes puntos quedaron marcados como **POR DEFINIR** en el esqueleto fun
 tanto **no se asumieron**; el modelo de datos ya los soporta:
 
 - Pasarela de pagos y facturación (tablas `orders`, `order_items`, `coupons` listas).
-- Proveedor SMTP para el envío real de correos (tabla `notification_templates` lista). Mientras
-  tanto, las contraseñas se restablecen desde los paneles de KG y de la empresa.
+- Proveedor SMTP en producción: el código de recuperación ya está hecho y espera las variables
+  `SMTP_*`. Las notificaciones de asignación por correo aún no se envían.
+- Migrar a Next.js 15/16: la línea 14 (14.2.35) ya no recibe todos los parches de seguridad.
 - Banco oficial de preguntas de cada curso (el de la base de demostración es de ejemplo; se
   carga desde `/admin/evaluaciones`).
 - Validación técnica de KG para los dos cursos de modo juego (ya publicados en producción).

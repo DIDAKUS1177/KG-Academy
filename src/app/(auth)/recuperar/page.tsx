@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACTO } from "@/lib/constants";
+import { correoConfigurado } from "@/lib/correo";
 import { IconBuilding, IconWhatsApp } from "@/components/Icons";
+import { RecuperarForm } from "./RecuperarForm";
 
 export const metadata: Metadata = { title: "Recuperar contraseña" };
+export const dynamic = "force-dynamic";
 
 const MENSAJE = encodeURIComponent("Hola, necesito restablecer mi contraseña de KG Academy. Mi correo de acceso es: ");
 
 /**
- * Recuperación de contraseña. La plataforma todavía no envía correos, así
- * que el restablecimiento lo hace una persona: el administrador de la
- * empresa (para sus trabajadores) o KG (para todos). En ambos casos se genera
- * una contraseña temporal que obliga a definir una nueva al entrar.
+ * Recuperación de contraseña. Con proveedor de correo configurado, se envía
+ * un código al correo registrado. Siempre quedan, además, las vías manuales:
+ * el administrador de la empresa o KG generan una contraseña temporal.
  */
 export default function RecuperarPage() {
+  const porCorreo = correoConfigurado();
+
   return (
     <div>
       <p className="eyebrow">Acceso</p>
@@ -21,10 +25,21 @@ export default function RecuperarPage() {
         Recuperar contraseña
       </h1>
       <p className="mt-2 text-sm text-navy-400">
-        Le entregarán una contraseña temporal; al ingresar con ella, la plataforma le pedirá definir una nueva.
+        {porCorreo
+          ? "Le enviaremos un código a su correo para que defina una contraseña nueva."
+          : "Le entregarán una contraseña temporal; al ingresar con ella, la plataforma le pedirá definir una nueva."}
       </p>
 
+      {porCorreo && (
+        <div className="mt-8">
+          <RecuperarForm />
+        </div>
+      )}
+
       <div className="mt-8 space-y-4">
+        {porCorreo && (
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-navy-400">¿No tiene acceso a ese correo?</p>
+        )}
         <div className="card flex gap-4 p-6">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-600">
             <IconBuilding width={20} height={20} />
@@ -47,12 +62,7 @@ export default function RecuperarPage() {
             <p className="mt-1 text-sm leading-relaxed text-navy-500">
               Escríbale a KG Gestión Integral con el correo con el que ingresa.
             </p>
-            <a
-              href={`${CONTACTO.whatsapp}?text=${MENSAJE}`}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-lime mt-4"
-            >
+            <a href={`${CONTACTO.whatsapp}?text=${MENSAJE}`} target="_blank" rel="noreferrer" className="btn-lime mt-4">
               <IconWhatsApp width={16} height={16} /> Escribir por WhatsApp
             </a>
           </div>

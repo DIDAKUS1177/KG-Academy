@@ -13,6 +13,8 @@
  * script a producción.
  */
 import { PrismaClient } from "@prisma/client";
+import { readdir, readFile, rm } from "node:fs/promises";
+import path from "node:path";
 
 const BASE = process.env.RECORRIDO_URL ?? "http://localhost:3000";
 const CLAVE_DEMO = "KgAcademy2026*";
@@ -256,9 +258,34 @@ async function acciones(cursoId: string) {
   });
   paso("Registro propio de estudiante", reg.status === 200, `${reg.status} ${reg.texto.slice(0, 120)}`);
 
+  // 8b. Recuperación de contraseña con código enviado al correo.
+  const correoReg = `registro.${sufijo}@demo.test`;
+  let claveReg = `Registro-${sufijo}-Clave`;
+  const pedir = () => llamar("POST", "/api/auth/recuperar", undefined, { email: correoReg });
+  const p1 = await pedir();
+  const codigo = await ultimoCodigo(correoReg);
+  paso("Recuperación: llega un código de 6 dígitos al correo", p1.status === 200 && !!codigo, `${p1.status} correos=${await contarCorreos(correoReg)} buzón=${BUZON}`);
+  const inexistente = await llamar("POST", "/api/auth/recuperar", undefined, { email: `nadie.${sufijo}@demo.test` });
+  paso("Recuperación: no revela si el correo existe", inexistente.status === 200 && inexistente.data.mensaje === p1.data.mensaje, `${inexistente.status}`);
+  if (codigo) {
+    const malo = await llamar("POST", "/api/auth/recuperar/confirmar", undefined, { email: correoReg, codigo: codigo === "000000" ? "111111" : "000000", nueva: `Otra-${sufijo}-Clave` });
+    paso("Recuperación: un código errado se rechaza y descuenta intentos", malo.status === 400 && /quedan/i.test(String(malo.data.error)), `${malo.status} ${malo.data.error}`);
+    const nueva = `Recuperada-${sufijo}-Clave`;
+    const bien = await llamar("POST", "/api/auth/recuperar/confirmar", undefined, { email: correoReg, codigo, nueva });
+    const entra = await entrarCon(correoReg, nueva);
+    paso("Recuperación: con el código define la contraseña nueva y entra", bien.status === 200 && entra.status === 200 && !!entra.cookie, `${bien.status} ${bien.data.error ?? ""} / login ${entra.status}`);
+    if (entra.status === 200) claveReg = nueva;
+    const reuso = await llamar("POST", "/api/auth/recuperar/confirmar", undefined, { email: correoReg, codigo, nueva: `Tercera-${sufijo}-Clave` });
+    paso("Recuperación: el código no sirve dos veces", reuso.status === 400, `${reuso.status}`);
+    for (let i = 0; i < 3; i++) await pedir();
+    const antes = await contarCorreos(correoReg);
+    await pedir();
+    paso("Recuperación: limita cuántos códigos se piden seguidos", (await contarCorreos(correoReg)) === antes, `${antes}`);
+  }
+
   // 9. Sin inscribirse en nada, el aula le muestra qué puede empezar; los
   //    borradores solo los ve el equipo de KG, que además los abre como estudiante.
-  const b2c = (await entrarCon(`registro.${sufijo}@demo.test`, `Registro-${sufijo}-Clave`)).cookie;
+  const b2c = (await entrarCon(correoReg, claveReg)).cookie;
   const publicado = await prisma.course.findFirstOrThrow({ where: { status: "publicado" } });
   const enBorrador = await prisma.course.findFirst({ where: { status: "borrador", code: { not: { startsWith: "KG-RC-" } } } });
   const vistaB2c = await llamar("GET", "/aula/cursos", b2c);
@@ -276,6 +303,28 @@ async function acciones(cursoId: string) {
   return reportar(pasos);
 }
 
+/* ---- Buzón de correos de desarrollo (src/lib/correo.ts escribe ahí) ---- */
+const BUZON = path.join(process.cwd(), ".correos-dev");
+async function correosPara(correo: string) {
+  const archivos = await readdir(BUZON).catch(() => [] as string[]);
+  return archivos.filter((a) => a.endsWith(`-${correo}.json`)).sort();
+}
+async function contarCorreos(correo: string) {
+  return (await correosPara(correo)).length;
+}
+async function ultimoCodigo(correo: string) {
+  // La carpeta del proyecto está en OneDrive: el archivo puede tardar un
+  // instante en aparecer para otro proceso.
+  let lista = await correosPara(correo);
+  for (let i = 0; i < 15 && !lista.length; i++) {
+    await new Promise((r) => setTimeout(r, 200));
+    lista = await correosPara(correo);
+  }
+  if (!lista.length) return null;
+  const c = JSON.parse(await readFile(path.join(BUZON, lista[lista.length - 1]), "utf8")) as { asunto: string };
+  return c.asunto.match(/\b(\d{6})\b/)?.[1] ?? null;
+}
+
 /** Borra lo que creó el recorrido, para que la demostración quede como estaba. */
 async function limpiar() {
   const usuarios = await prisma.user.findMany({ where: { email: { endsWith: "@demo.test" } }, select: { id: true } });
@@ -291,6 +340,9 @@ async function limpiar() {
     prisma.assignmentBatch.deleteMany({ where: { id: { in: lotesCreados } } }),
     prisma.course.deleteMany({ where: { id: { in: idsCursos } } }),
   ]);
+  for (const a of await readdir(BUZON).catch(() => [] as string[])) {
+    if (a.includes("@demo.test")) await rm(path.join(BUZON, a), { force: true });
+  }
 }
 
 function reportar(pasos: Paso[]) {
