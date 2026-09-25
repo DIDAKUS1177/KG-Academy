@@ -72,7 +72,7 @@ const fuego: CursoInteractivo = {
   methodology:
     "100% virtual y en formato de videojuego: mundos y niveles con vidas, XP y estrellas, cacería de riesgos en escenas ilustradas, misiones contra el reloj, decisiones con consecuencias y desafío final.",
   level: "basico",
-  durationHours: 4,
+  durationHours: 2,
   categoria: "emergencias",
   modules: [
     {
@@ -1080,7 +1080,7 @@ const sangrado: CursoInteractivo = {
   methodology:
     "100% virtual y en formato de videojuego: mundos y niveles con vidas, XP y estrellas, cacería de riesgos, misiones de rescate con la vida del paciente en juego y desafío final.",
   level: "basico",
-  durationHours: 4,
+  durationHours: 2,
   categoria: "primeros-auxilios",
   modules: [
     {

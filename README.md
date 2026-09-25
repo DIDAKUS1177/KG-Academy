@@ -109,10 +109,10 @@ con 3 módulos, 6 lecciones y evaluación final de 12 preguntas (nota mínima 80
 | KG-EM-001 | Fuego bajo control: extintores y evacuación | Lucía Torres, líder de brigada |
 | KG-PA-004 | Detén el sangrado: control de hemorragias | Andrés Rincón, paramédico |
 
-Laura (empresa) y el estudiante B2C quedan matriculados para probarlos. Son **prototipos**:
-su contenido sigue recomendaciones generales pero lo debe validar un profesional de KG antes de
-certificar a nadie, y las 4 horas de cada uno son una estimación. Por eso no se cargan en
-producción. El contenido está en `prisma/cursos-interactivos.ts`.
+Laura (empresa) y el estudiante B2C quedan matriculados para probarlos. Cada uno certifica
+**2 horas**: unos 80 minutos de niveles más el desafío final de 20. Están publicados en
+producción; su contenido sigue recomendaciones generales y lo debe validar un profesional de KG.
+El contenido está en `prisma/cursos-interactivos.ts`.
 
 ### Lecciones interactivas nativas
 
