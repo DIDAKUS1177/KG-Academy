@@ -17,7 +17,7 @@ Construida sobre el documento *Esqueleto de Especificaciones Funcionales KG Acad
 
 ## 1. Puesta en marcha local (4 comandos)
 
-Requisitos: **Node.js 20.9 o superior**.
+Requisitos: **Node.js 24**.
 
 ```bash
 cp .env.example .env
