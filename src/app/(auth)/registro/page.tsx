@@ -12,8 +12,8 @@ export default function RegistroPage() {
         Crear cuenta
       </h1>
       <p className="mt-2 text-sm text-navy-400">
-        Regístrese para acceder a los cursos. Si su empresa ya está en KG Academy, indique el NIT y
-        quedará vinculado automaticamente.
+        Regístrese para acceder a los cursos. Si trabaja en una empresa cliente de KG Academy, pídale a
+        su empresa el acceso: ella lo vincula y le asigna sus cursos.
       </p>
 
       <div className="mt-8">

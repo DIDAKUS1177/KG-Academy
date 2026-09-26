@@ -180,6 +180,8 @@ async function acciones(cursoId: string) {
   const reingreso = await entrarCon(correo, nuevaClave);
   const sesion = reingreso.cookie;
   paso("Entra con la contraseña nueva", !!sesion && reingreso.status === 200, `${reingreso.status} ${reingreso.error ?? ""}`);
+  const vieja = await llamar("GET", "/aula", primero.cookie);
+  paso("Cambiar la contraseña anula las sesiones anteriores", vieja.status >= 300 && vieja.destino.includes("/ingresar"), `${vieja.status} ${vieja.destino}`);
   const misCursos = await llamar("GET", "/aula/cursos", sesion);
   paso("Ve el curso asignado en Mis cursos", misCursos.status === 200 && misCursos.texto.includes(curso.title), `${misCursos.status} ${misCursos.destino} cookie=${sesion ? "sí" : "no"}`);
 
@@ -199,8 +201,35 @@ async function acciones(cursoId: string) {
     leccionesOk &&= r.status === 200;
   }
   paso(`Completa las ${lecciones.length} lecciones`, leccionesOk);
+
+  // Lección de otro curso y tiempo inflado.
+  const otra = await prisma.lesson.findFirstOrThrow({ where: { module: { courseId: { not: curso.id } }, isPublished: true } });
+  const ajena = await llamar("POST", "/api/aula/leccion", sesion, { enrollmentId: enrollment.id, lessonId: otra.id, completed: true });
+  paso("No registra lecciones de otro curso", ajena.status === 404, `${ajena.status}`);
+  const antesT = await prisma.lessonProgress.findFirstOrThrow({ where: { enrollmentId: enrollment.id, lessonId: lecciones[0].id } });
+  await llamar("POST", "/api/aula/leccion", sesion, { enrollmentId: enrollment.id, lessonId: lecciones[0].id, addSeconds: 999999 });
+  const despuesT = await prisma.lessonProgress.findFirstOrThrow({ where: { enrollmentId: enrollment.id, lessonId: lecciones[0].id } });
+  paso("El tiempo de estudio no se puede inflar", despuesT.timeSpentSec - antesT.timeSpentSec <= 7200, `${despuesT.timeSpentSec - antesT.timeSpentSec} s`);
+
+  // Tiempo límite controlado por el servidor.
+  const sinAbrir = await llamar("POST", "/api/aula/evaluacion", sesion, { assessmentId: final.id, answers: respuestas });
+  paso("No se entrega una evaluación con tiempo límite sin abrirla", !final.timeLimitMin || sinAbrir.status === 409, `${sinAbrir.status}`);
+  const abierto = await llamar("POST", "/api/aula/evaluacion/iniciar", sesion, { assessmentId: final.id });
+  if (final.timeLimitMin && typeof abierto.data.attemptId === "string") {
+    await prisma.assessmentAttempt.update({ where: { id: abierto.data.attemptId }, data: { startedAt: new Date(Date.now() - (final.timeLimitMin + 10) * 60_000) } });
+    const tarde = await llamar("POST", "/api/aula/evaluacion", sesion, { assessmentId: final.id, answers: respuestas });
+    const gastados = await prisma.assessmentAttempt.count({ where: { enrollmentId: enrollment.id, status: "finalizado" } });
+    paso("Una entrega fuera de tiempo no se califica ni gasta intento", tarde.status === 409 && gastados === 0, `${tarde.status} intentos=${gastados}`);
+  }
+  const reabierto = await llamar("POST", "/api/aula/evaluacion/iniciar", sesion, { assessmentId: final.id });
+  paso("Abre el intento de la evaluación final", reabierto.status === 200, `${reabierto.status} ${reabierto.data.error ?? ""}`);
   const examen = await llamar("POST", "/api/aula/evaluacion", sesion, { assessmentId: final.id, answers: respuestas });
   paso("Aprueba la evaluación final", examen.status === 200 && examen.data.passed === true, `${examen.status} ${examen.texto.slice(0, 120)}`);
+  const puntosAntes = await prisma.pointsLedger.count({ where: { userId: trabajador.id } });
+  const otraVez = await llamar("POST", "/api/aula/evaluacion/iniciar", sesion, { assessmentId: final.id });
+  const reenvio = await llamar("POST", "/api/aula/evaluacion", sesion, { assessmentId: final.id, answers: respuestas });
+  const puntosDespues = await prisma.pointsLedger.count({ where: { userId: trabajador.id } });
+  paso("Después de aprobar no se puede volver a presentar ni sumar puntos", otraVez.status === 409 && reenvio.status === 409 && puntosAntes === puntosDespues, `${otraVez.status} ${reenvio.status}`);
   const cert = await prisma.certificate.findUnique({ where: { enrollmentId: enrollment.id } });
   paso("Al completar lecciones y examen recibe certificado", !!cert);
   if (cert) paso("El certificado lleva las horas del curso", cert.hours === curso.durationHours, `${cert.hours} vs ${curso.durationHours}`);
@@ -257,6 +286,27 @@ async function acciones(cursoId: string) {
     acceptedTerms: true,
   });
   paso("Registro propio de estudiante", reg.status === 200, `${reg.status} ${reg.texto.slice(0, 120)}`);
+  const empresaDemo = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
+  const conNit = await llamar("POST", "/api/auth/register", undefined, {
+    firstName: "Intruso",
+    lastName: "Recorrido",
+    email: `intruso.${sufijo}@demo.test`,
+    password: `Intruso-${sufijo}-Clave`,
+    companyNit: empresaDemo.nit,
+    acceptedTerms: true,
+  });
+  const intruso = await prisma.user.findUnique({ where: { email: `intruso.${sufijo}@demo.test` } });
+  paso("Registrarse con el NIT de una empresa no lo vincula a ella", conNit.status === 200 && intruso?.companyId === null, `${conNit.status} ${intruso?.companyId}`);
+  const debil = await llamar("POST", "/api/auth/register", undefined, { firstName: "Debil", lastName: "Recorrido", email: `debil.${sufijo}@demo.test`, password: "12345678", acceptedTerms: true });
+  paso("El registro rechaza contraseñas débiles", debil.status === 400, `${debil.status}`);
+  if (intruso) {
+    const ajenoAsig = await llamar("POST", "/api/empresa/asignar", empresa, { companyId, courseId: curso.id, userIds: [intruso.id] });
+    paso("La empresa no puede asignar cursos a personas de fuera", ajenoAsig.status === 403, `${ajenoAsig.status}`);
+  }
+  const kgAdmin = await prisma.user.findUniqueOrThrow({ where: { email: "admin@kggestionintegral.com" } });
+  const robo = await llamar("POST", "/api/empresa/trabajadores", empresa, { companyId, modo: "individual", trabajador: { firstName: "Otra", lastName: "Persona", documentNumber: "", email: kgAdmin.email } });
+  const kgAdminDespues = await prisma.user.findUniqueOrThrow({ where: { id: kgAdmin.id } });
+  paso("La empresa no puede apropiarse de una cuenta ajena", robo.status === 409 && kgAdminDespues.companyId === kgAdmin.companyId, `${robo.status}`);
 
   // 8b. Recuperación de contraseña con código enviado al correo.
   const correoReg = `registro.${sufijo}@demo.test`;
@@ -299,6 +349,16 @@ async function acciones(cursoId: string) {
   }
   const menu = await llamar("GET", "/admin", admin);
   paso("El panel de KG tiene acceso al aula", menu.texto.includes('href="/aula/cursos"'));
+
+  // 10. Cerrar sesión la anula de verdad, y se frena la fuerza bruta.
+  const s2 = (await entrarCon(correoReg, claveReg)).cookie;
+  await llamar("POST", "/api/auth/logout", s2);
+  const trasSalir = await llamar("GET", "/aula", s2);
+  paso("Cerrar sesión anula la sesión aunque se conserve la cookie", trasSalir.status >= 300 && trasSalir.destino.includes("/ingresar"), `${trasSalir.status} ${trasSalir.destino}`);
+  const victima = `usuario.${sufijo}@demo.test`;
+  for (let i = 0; i < 8; i++) await entrarCon(victima, `mala-${i}-${sufijo}`);
+  const bloqueo = await entrarCon(victima, `mala-final-${sufijo}`);
+  paso("Tras varios intentos fallidos se bloquea el ingreso", bloqueo.status === 429, `${bloqueo.status} ${bloqueo.error ?? ""}`);
 
   return reportar(pasos);
 }

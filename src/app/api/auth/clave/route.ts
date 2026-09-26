@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, hashPassword, requireUser, verifyPassword } from "@/lib/auth";
+import { audit, createSession, hashPassword, requireUser, revocarSesiones, verifyPassword } from "@/lib/auth";
 import { leerCuerpo, respuestaError, respuestaOk } from "@/lib/admin-api";
 import { ROLE_HOME } from "@/lib/constants";
 import { problemaClaveNueva } from "@/lib/claves";
@@ -44,6 +44,16 @@ export async function POST(req: Request) {
   });
   // Los enlaces de recuperación que quedaran pendientes ya no deben servir.
   await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+  // Cualquier otra sesión abierta con la contraseña anterior deja de servir;
+  // este equipo sigue dentro con una sesión nueva.
+  await revocarSesiones(user.id);
+  await createSession({
+    sub: user.id,
+    email: user.email,
+    role: user.role.code,
+    companyId: user.companyId,
+    name: `${user.firstName} ${user.lastName}`,
+  });
 
   await audit({
     userId: user.id,

@@ -42,7 +42,21 @@ export async function POST(req: Request) {
     );
   }
 
+  // Solo se asigna a trabajadores activos de ESTA empresa: con un identificador
+  // ajeno se podía matricular a personas de otra empresa y verlas en los reportes.
+  const miembros = await prisma.companyMember.findMany({
+    where: { companyId, userId: { in: userIds }, status: "activo" },
+    select: { userId: true },
+  });
+  const permitidos = new Set(miembros.map((m) => m.userId));
+  if (userIds.some((id) => !permitidos.has(id))) {
+    return NextResponse.json({ error: "Solo puede asignar cursos a trabajadores activos de su empresa" }, { status: 403 });
+  }
+
   const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
+  if (dueDate && Number.isNaN(dueDate.getTime())) {
+    return NextResponse.json({ error: "La fecha límite no es válida" }, { status: 400 });
+  }
 
   const batch = await prisma.assignmentBatch.create({
     data: {

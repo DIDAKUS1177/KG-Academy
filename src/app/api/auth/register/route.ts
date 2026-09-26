@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, createSession, hashPassword } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
+import { problemaClaveNueva } from "@/lib/claves";
 
 const schema = z.object({
   firstName: z.string().min(2, "Ingrese su nombre"),
@@ -35,10 +36,12 @@ export async function POST(req: Request) {
   const role = await prisma.role.findUnique({ where: { code: ROLES.ESTUDIANTE } });
   if (!role) return NextResponse.json({ error: "Roles no inicializados. Ejecute npm run db:seed" }, { status: 500 });
 
-  // Si informa un NIT existente, se vincula automaticamente a esa empresa.
-  const company = d.companyNit
-    ? await prisma.company.findUnique({ where: { nit: d.companyNit.trim() } })
-    : null;
+  const problema = await problemaClaveNueva(d.password);
+  if (problema) return NextResponse.json({ error: problema }, { status: 400 });
+
+  // Nadie se vincula a una empresa por su cuenta: el NIT es un dato público y
+  // cualquiera podría meterse en la nómina de otra empresa. Es la empresa la
+  // que agrega a sus trabajadores desde su panel.
 
   const user = await prisma.user.create({
     data: {
@@ -50,16 +53,12 @@ export async function POST(req: Request) {
       documentNumber: d.documentNumber?.trim() || null,
       phone: d.phone?.trim() || null,
       roleId: role.id,
-      companyId: company?.id ?? null,
+      companyId: null,
       status: "activo",
       acceptedTerms: true,
       acceptedDataAt: new Date(),
     },
   });
-
-  if (company) {
-    await prisma.companyMember.create({ data: { companyId: company.id, userId: user.id } });
-  }
 
   await prisma.notification.create({
     data: {

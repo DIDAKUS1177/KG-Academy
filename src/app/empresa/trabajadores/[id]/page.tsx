@@ -27,7 +27,7 @@ export default async function DetalleTrabajador({ params }: { params: { id: stri
           role: true,
           enrollments: { include: { course: true }, orderBy: { updatedAt: "desc" } },
           certificates: { orderBy: { issuedAt: "desc" } },
-          attempts: { include: { assessment: true }, orderBy: { startedAt: "desc" }, take: 10 },
+          attempts: { where: { status: "finalizado" }, include: { assessment: true }, orderBy: { startedAt: "desc" }, take: 10 },
           assignments: { include: { course: true } },
         },
       },

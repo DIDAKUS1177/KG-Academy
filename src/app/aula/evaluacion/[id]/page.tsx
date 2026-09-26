@@ -39,7 +39,8 @@ export default async function EvaluacionPage({
   if (!enrollment) notFound();
 
   const attempts = await prisma.assessmentAttempt.findMany({
-    where: { assessmentId: assessment.id, enrollmentId: enrollment.id },
+    // Solo los entregados: un intento abierto no cuenta como gastado.
+    where: { assessmentId: assessment.id, enrollmentId: enrollment.id, status: "finalizado" },
     orderBy: { startedAt: "desc" },
   });
 

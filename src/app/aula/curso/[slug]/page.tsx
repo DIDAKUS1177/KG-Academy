@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ensureEnrollment } from "@/lib/progress";
 import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { htmlSeguro } from "@/lib/html-seguro";
 import { Breadcrumb, ProgressRing, StatusBadge } from "@/components/ui";
 import { LessonPlayer } from "./LessonPlayer";
 import { MapaMisiones } from "@/components/leccion/MapaMisiones";
@@ -52,7 +53,7 @@ export default async function AulaCursoPage({
   const [progressRows, attempts, certificate] = await Promise.all([
     prisma.lessonProgress.findMany({ where: { enrollmentId: enrollment.id } }),
     prisma.assessmentAttempt.findMany({
-      where: { enrollmentId: enrollment.id },
+      where: { enrollmentId: enrollment.id, status: "finalizado" },
       orderBy: { startedAt: "desc" },
     }),
     prisma.certificate.findUnique({ where: { enrollmentId: enrollment.id } }),
@@ -351,7 +352,9 @@ export default async function AulaCursoPage({
               description: active.description,
               contentType: active.contentType,
               contentUrl: active.contentUrl,
-              contentBody: active.contentBody,
+              // El HTML de una lección de texto se limpia antes de llegar al navegador.
+              contentBody:
+                active.contentType === "texto" && active.contentBody ? htmlSeguro(active.contentBody) : active.contentBody,
               durationMin: active.durationMin,
               moduleTitle: activeModule.title,
               index: activeIndex + 1,

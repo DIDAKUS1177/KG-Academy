@@ -53,15 +53,32 @@ export async function POST(req: Request) {
     locationId?: string;
   }) {
     const email = t.email.trim().toLowerCase();
+
+    // Área, cargo y sede tienen que ser de esta misma empresa.
+    const [area, cargo, sede] = await Promise.all([
+      t.areaId ? prisma.area.findFirst({ where: { id: t.areaId, companyId } }) : null,
+      t.positionId ? prisma.position.findFirst({ where: { id: t.positionId, companyId } }) : null,
+      t.locationId ? prisma.companyLocation.findFirst({ where: { id: t.locationId, companyId } }) : null,
+    ]);
+    if ((t.areaId && !area) || (t.positionId && !cargo) || (t.locationId && !sede)) {
+      return { creado: false, conflicto: "El área, el cargo o la sede no pertenecen a la empresa" };
+    }
+
     const yaExiste = await prisma.user.findFirst({
       where: { OR: [{ email }, ...(t.documentNumber ? [{ documentNumber: t.documentNumber }] : [])] },
+      include: { role: true },
     });
     if (yaExiste) {
-      // Si existe pero no pertenece a la empresa, se vincula
       const vinculo = await prisma.companyMember.findUnique({
         where: { companyId_userId: { companyId, userId: yaExiste.id } },
       });
       if (vinculo) return { creado: false };
+      // Solo se vincula a un estudiante independiente. Una cuenta de otra
+      // empresa o del equipo de KG no se puede "traer": se la quitaría a quien
+      // corresponde.
+      if (yaExiste.role.code !== ROLES.ESTUDIANTE || yaExiste.companyId) {
+        return { creado: false, conflicto: "Ese correo o documento ya pertenece a otra cuenta. Si es el mismo trabajador, pídale a KG que lo traslade." };
+      }
       await prisma.companyMember.create({
         data: {
           companyId,
@@ -118,6 +135,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
     const r = await crear(t as never);
+    if ("conflicto" in r && r.conflicto) {
+      return NextResponse.json({ error: r.conflicto }, { status: 409 });
+    }
     if (!r.creado && !r.vinculado) {
       return NextResponse.json({ error: "Ese trabajador ya está registrado en la empresa" }, { status: 409 });
     }

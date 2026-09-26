@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, hashPassword } from "@/lib/auth";
+import { audit, hashPassword, revocarSesiones } from "@/lib/auth";
 import { ROLES, USER_STATUS } from "@/lib/constants";
 import {
   ROLES_KG,
@@ -181,6 +181,7 @@ export async function PATCH(req: Request) {
     });
     // Se invalidan los enlaces de recuperación pendientes: ya no hacen falta.
     await prisma.passwordResetToken.deleteMany({ where: { userId: before.id } });
+    await revocarSesiones(before.id);
     await prisma.notification.create({
       data: {
         userId: before.id,
@@ -259,6 +260,9 @@ export async function PATCH(req: Request) {
     },
     include: { role: true },
   });
+
+  // Bloquear o desactivar una cuenta la saca de inmediato de cualquier equipo.
+  if (d.status === "bloqueado" || d.status === "inactivo") await revocarSesiones(before.id);
 
   // Si cambió de empresa, la membresía sigue a la empresa principal.
   if (companyId !== undefined && companyId !== before.companyId) {

@@ -15,7 +15,7 @@ export default async function AdminEvaluaciones() {
 
   const [assessments, banks, attempts, sinFinal] = await Promise.all([
     prisma.assessment.findMany({
-      include: { course: true, questions: true, attempts: true },
+      include: { course: true, questions: true, attempts: { where: { status: "finalizado" } } },
       orderBy: [{ courseId: "asc" }, { order: "asc" }],
     }),
     prisma.questionBank.findMany({ include: { questions: true, course: true } }),

@@ -48,9 +48,32 @@ export function QuizForm({
   const [revisando, setRevisando] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // En modo juego el reloj arranca al aceptar el desafío, no al abrir la página.
-  const [iniciado, setIniciado] = useState(!modoJuego);
-  const [left, setLeft] = useState(timeLimitMin ? timeLimitMin * 60 : null);
+  // El intento lo abre el servidor, que es quien lleva el tiempo límite. En modo
+  // juego se abre al aceptar el desafío; si no, al cargar la página.
+  const [iniciado, setIniciado] = useState(false);
+  const [abriendo, setAbriendo] = useState(false);
+  const [left, setLeft] = useState<number | null>(null);
+
+  async function iniciar() {
+    if (abriendo) return;
+    setAbriendo(true);
+    setError(null);
+    const res = await fetch("/api/aula/evaluacion/iniciar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assessmentId }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { error?: string; segundosRestantes?: number | null };
+    setAbriendo(false);
+    if (!res.ok) return setError(data.error ?? "No fue posible empezar la evaluación");
+    setLeft(typeof data.segundosRestantes === "number" ? Math.max(0, data.segundosRestantes) : null);
+    setIniciado(true);
+  }
+
+  useEffect(() => {
+    if (!modoJuego) void iniciar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const list = useMemo(() => {
     const qs = shuffle ? barajar(questions, `${semilla}-preguntas`) : questions;
@@ -108,6 +131,23 @@ export function QuizForm({
     router.refresh();
   }
 
+  if (!iniciado && !modoJuego) {
+    return (
+      <div className="card p-8 text-center text-sm text-navy-500">
+        {error ? (
+          <>
+            <p className="font-semibold text-red-600">{error}</p>
+            <button type="button" onClick={iniciar} className="btn-outline btn-sm mt-4">
+              Intentar de nuevo
+            </button>
+          </>
+        ) : (
+          "Preparando la evaluación..."
+        )}
+      </div>
+    );
+  }
+
   if (!iniciado) {
     return (
       <div className="relative overflow-hidden rounded-3xl bg-navy-900 p-8 text-center text-white shadow-kg-lg sm:p-12">
@@ -134,8 +174,9 @@ export function QuizForm({
               </div>
             ))}
           </div>
-          <button type="button" onClick={() => setIniciado(true)} className="btn-lime mt-8 px-10 py-4 text-base">
-            ¡Aceptar el desafío! <IconArrowRight width={18} height={18} />
+          {error && <p className="mx-auto mt-6 max-w-md rounded-xl bg-red-500/20 px-4 py-2 text-sm text-red-100">{error}</p>}
+          <button type="button" onClick={iniciar} disabled={abriendo} className="btn-lime mt-8 px-10 py-4 text-base">
+            {abriendo ? "Preparando..." : "¡Aceptar el desafío!"} <IconArrowRight width={18} height={18} />
           </button>
         </div>
       </div>

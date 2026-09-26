@@ -21,7 +21,6 @@ export function RegisterForm() {
       documentType: String(fd.get("documentType") ?? ""),
       documentNumber: String(fd.get("documentNumber") ?? ""),
       phone: String(fd.get("phone") ?? ""),
-      companyNit: String(fd.get("companyNit") ?? ""),
       password: String(fd.get("password") ?? ""),
       acceptedTerms: fd.get("acceptedTerms") === "on",
     };
@@ -86,10 +85,6 @@ export function RegisterForm() {
         <div>
           <label className="label">Teléfono</label>
           <input name="phone" className="input" placeholder="300 000 0000" />
-        </div>
-        <div>
-          <label className="label">NIT de su empresa (opcional)</label>
-          <input name="companyNit" className="input" placeholder="901234567-1" />
         </div>
       </div>
 

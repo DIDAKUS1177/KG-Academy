@@ -23,7 +23,7 @@ export default async function EvaluacionPage({ params }: { params: { id: string 
           },
         },
       },
-      _count: { select: { attempts: true } },
+      _count: { select: { attempts: { where: { status: "finalizado" } } } },
     },
   });
   if (!a) notFound();

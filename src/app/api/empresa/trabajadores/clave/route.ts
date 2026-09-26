@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, hashPassword } from "@/lib/auth";
+import { audit, hashPassword, revocarSesiones } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { claveTemporal, exigirRol, leerCuerpo, respuestaError, respuestaOk } from "@/lib/admin-api";
 
@@ -46,6 +46,7 @@ export async function POST(req: Request) {
     data: { passwordHash: await hashPassword(temporal), status: "pendiente_activacion" },
   });
   await prisma.passwordResetToken.deleteMany({ where: { userId: objetivo.id } });
+  await revocarSesiones(objetivo.id);
   await prisma.notification.create({
     data: {
       userId: objetivo.id,

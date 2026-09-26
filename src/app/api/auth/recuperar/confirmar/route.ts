@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { audit, hashPassword } from "@/lib/auth";
+import { audit, hashPassword, revocarSesiones } from "@/lib/auth";
 import { leerCuerpo, respuestaError, respuestaOk } from "@/lib/admin-api";
 import { problemaClaveNueva } from "@/lib/claves";
 import { comprobarCodigo } from "@/lib/recuperacion";
@@ -52,6 +52,8 @@ export async function POST(req: Request) {
       },
     }),
   ]);
+  // Si alguien tenía una sesión abierta con la contraseña anterior, la pierde.
+  await revocarSesiones(user.id);
   await audit({
     userId: user.id,
     actorEmail: user.email,

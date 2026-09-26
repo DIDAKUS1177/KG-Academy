@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
@@ -52,7 +53,7 @@ export async function createSession(payload: SessionPayload) {
   await prisma.session.create({
     data: {
       userId: payload.sub,
-      token: token.slice(-64),
+      token: huellaToken(token),
       expiresAt: expires,
       ipAddress: h.get("x-forwarded-for") ?? "local",
       userAgent: h.get("user-agent") ?? undefined,
@@ -68,30 +69,54 @@ export async function createSession(payload: SessionPayload) {
   });
 }
 
+/** Huella con la que cada sesión queda registrada en la base. */
+const huellaToken = (token: string) => token.slice(-64);
+
+/** Cierra la sesión actual: se borra la cookie y también el registro en la base. */
 export async function destroySession() {
+  const raw = cookies().get(COOKIE)?.value;
+  if (raw) await prisma.session.deleteMany({ where: { token: huellaToken(raw) } });
   cookies().delete(COOKIE);
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+/**
+ * Anula todas las sesiones abiertas de una persona (por ejemplo, al cambiar o
+ * restablecer su contraseña): en cualquier otro equipo tendrá que volver a
+ * entrar.
+ */
+export async function revocarSesiones(userId: string) {
+  await prisma.session.deleteMany({ where: { userId } });
+}
+
+/**
+ * Sesión del pedido. Además de la firma, se exige que la sesión siga
+ * registrada en la base: así cerrar sesión o cambiar la contraseña la anulan
+ * de verdad, aunque alguien haya copiado la cookie. React `cache` evita
+ * repetir la consulta dentro del mismo pedido.
+ */
+export const getSession = cache(async (): Promise<SessionPayload | null> => {
   const raw = cookies().get(COOKIE)?.value;
   if (!raw) return null;
   try {
     const { payload } = await jwtVerify(raw, claveSesion(), { issuer: "kg-academy" });
-    return payload as unknown as SessionPayload;
+    const s = payload as unknown as SessionPayload;
+    const registrada = await prisma.session.findUnique({ where: { token: huellaToken(raw) } });
+    if (!registrada || registrada.userId !== s.sub || registrada.expiresAt < new Date()) return null;
+    return s;
   } catch {
     return null;
   }
-}
+});
 
 /** Usuario completo de la sesión (con rol y empresa). */
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const s = await getSession();
   if (!s) return null;
   return prisma.user.findUnique({
     where: { id: s.sub },
     include: { role: true, company: true },
   });
-}
+});
 
 /**
  * Exige sesión; si no hay, redirige a login.
@@ -103,7 +128,7 @@ export async function getCurrentUser() {
  */
 export async function requireUser(opciones: { permitirPendiente?: boolean } = {}) {
   const user = await getCurrentUser();
-  if (!user || user.status === "bloqueado") redirect("/ingresar");
+  if (!user || user.status === "bloqueado" || user.status === "inactivo") redirect("/ingresar");
   if (user.status === "pendiente_activacion" && !opciones.permitirPendiente) redirect("/cambiar-clave");
   return user;
 }
