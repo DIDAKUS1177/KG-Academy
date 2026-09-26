@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * KG ACADEMY - Semilla de PRODUCCIÓN
  *

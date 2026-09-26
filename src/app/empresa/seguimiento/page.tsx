@@ -11,11 +11,10 @@ import { IconDownload, IconSearch, IconCheck, IconClock, IconAlert, IconClipboar
 export const metadata: Metadata = { title: "Seguimiento" };
 export const dynamic = "force-dynamic";
 
-export default async function SeguimientoPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; curso?: string; estado?: string; area?: string; empresa?: string };
+export default async function SeguimientoPage(props: {
+  searchParams: Promise<{ q?: string; curso?: string; estado?: string; area?: string; empresa?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const user = await requireRole(ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const company = await resolveCompany(user, searchParams.empresa);
   if (!company) return <EmptyState title="Sin empresa asociada" />;

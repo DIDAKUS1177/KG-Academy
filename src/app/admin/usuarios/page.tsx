@@ -11,11 +11,10 @@ import { TablaUsuarios } from "./TablaUsuarios";
 export const metadata: Metadata = { title: "Usuarios y roles" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsuarios({
-  searchParams,
-}: {
-  searchParams: { q?: string; rol?: string; estado?: string };
+export default async function AdminUsuarios(props: {
+  searchParams: Promise<{ q?: string; rol?: string; estado?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const q = searchParams.q?.trim();
 

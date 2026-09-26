@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * KG ACADEMY - Cuentas de prueba en producción
  *

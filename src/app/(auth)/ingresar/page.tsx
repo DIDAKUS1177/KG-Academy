@@ -4,7 +4,8 @@ import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "Iniciar sesión" };
 
-export default function IngresarPage({ searchParams }: { searchParams: { clave?: string } }) {
+export default async function IngresarPage(props: { searchParams: Promise<{ clave?: string }> }) {
+  const searchParams = await props.searchParams;
   return (
     <div>
       <p className="eyebrow">Bienvenido de nuevo</p>

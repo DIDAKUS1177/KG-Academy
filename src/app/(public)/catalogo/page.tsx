@@ -7,11 +7,10 @@ import { IconBook, IconSearch } from "@/components/Icons";
 export const metadata: Metadata = { title: "Catálogo de cursos" };
 export const dynamic = "force-dynamic";
 
-export default async function CatalogoPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; categoria?: string };
+export default async function CatalogoPage(props: {
+  searchParams: Promise<{ q?: string; categoria?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const q = searchParams.q?.trim();
   const categoria = searchParams.categoria;
 

@@ -52,13 +52,17 @@ export function MapaMisiones({
         e[n.id] = 0;
       }
     }
+    // Las estrellas viven en el navegador: se leen después de montar para no
+    // descuadrar el HTML que llega del servidor.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEstrellas(e);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [niveles.map((n) => n.id).join()]);
 
   const hechos = niveles.filter((n) => n.estado === "completado").length;
   const totalEstrellas = niveles.reduce((s, n) => s + (n.estado === "completado" ? Math.max(1, estrellas[n.id] ?? 0) : 0), 0);
-  let numero = 0;
+  // Número de nivel corrido a través de los mundos (1, 2, 3...).
+  const primerNumero = mundos.map((_, mi) => mundos.slice(0, mi).reduce((s, m) => s + m.niveles.length, 0) + 1);
 
   return (
     <section aria-label="Mapa de misiones" className="relative mb-7 overflow-hidden rounded-3xl bg-navy-900 p-5 text-white sm:p-7">
@@ -98,10 +102,9 @@ export function MapaMisiones({
             </p>
             <div className="relative mt-4 flex items-start justify-around gap-2">
               <div className="pointer-events-none absolute left-[18%] right-[18%] top-8 border-t-[3px] border-dashed border-white/20" />
-              {m.niveles.map((n) => {
-                numero += 1;
-                return <Nodo key={n.id} n={n} numero={numero} estrellas={estrellas[n.id] ?? 0} avatar={avatar} />;
-              })}
+              {m.niveles.map((n, ni) => (
+                <Nodo key={n.id} n={n} numero={primerNumero[mi] + ni} estrellas={estrellas[n.id] ?? 0} avatar={avatar} />
+              ))}
             </div>
           </div>
         ))}

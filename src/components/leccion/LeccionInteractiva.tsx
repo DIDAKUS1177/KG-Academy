@@ -20,7 +20,7 @@
  * repaso, con todas las pantallas libres y sin vidas en juego.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Bloque, LeccionInteractiva as Leccion } from "@/lib/leccion-interactiva";
 import { BLOQUES_CALIFICABLES } from "@/lib/leccion-interactiva";
 import { barajar, semilla } from "@/lib/barajar";
@@ -84,9 +84,13 @@ export function LeccionInteractiva({
 
   // Espejo del estado para decidir sonidos y rachas fuera de los setState.
   const ref = useRef({ estado, vidas, racha, indice });
-  ref.current = { estado, vidas, racha, indice };
+  useLayoutEffect(() => {
+    ref.current = { estado, vidas, racha, indice };
+  });
 
-  // Recupera el avance guardado (solo en el navegador).
+  // Recupera el avance guardado (solo en el navegador, después de montar, para
+  // que el HTML coincida con el que llega del servidor).
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
       const g = JSON.parse(localStorage.getItem(clave) ?? "null") as Guardado | null;
@@ -102,6 +106,7 @@ export function LeccionInteractiva({
     setSonido(sonidoActivo());
     setCargado(true);
   }, [clave, bloques.length]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!cargado) return;
@@ -759,6 +764,8 @@ function Contrarreloj({ b, clave, resuelto, fallos, vidas, completada, onFallo, 
   useEffect(() => {
     if (fase !== "corriendo" || resuelto || congelado) return;
     if (restante <= 0) {
+      // El reloj llegó a cero: se cierra la ronda (con su sonido y la vida perdida).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFase("agotado");
       sfx.alarma();
       onFallo();
@@ -1017,7 +1024,9 @@ function Buscar({ b, resuelto, fallos, onFallo, onAcierto }: { b: De<"buscar"> }
   const [hallados, setHallados] = useState<Set<number>>(resuelto ? todos : new Set());
   // Dos toques seguidos, antes de que React vuelva a dibujar, deben sumar los dos.
   const halladosRef = useRef(hallados);
-  halladosRef.current = hallados;
+  useLayoutEffect(() => {
+    halladosRef.current = hallados;
+  });
   const [ultimo, setUltimo] = useState<number | null>(null);
   const [fallas, setFallas] = useState<{ x: number; y: number; id: number }[]>([]);
   const [pista, setPista] = useState<number | null>(null);
@@ -1189,6 +1198,8 @@ function Mision({ b, clave, resuelto, fallos, vidas, completada, onFallo, onAcie
   useEffect(() => {
     if (fase !== "jugando") return;
     if (peligro >= 100) {
+      // El medidor se llenó: se pierde la misión (con su sonido).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFase("fracaso");
       sfx.derrota();
     } else if (peligro >= 70 && !alarmada.current) {

@@ -11,13 +11,12 @@ import { IconCheck, IconX, IconClipboard, IconAward, IconAlert, IconArrowRight }
 
 export const dynamic = "force-dynamic";
 
-export default async function EvaluacionPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { intento?: string };
+export default async function EvaluacionPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ intento?: string }>;
 }) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const user = await requireUser();
 
   const assessment = await prisma.assessment.findUnique({

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * RECORRIDO DE VERIFICACIÓN (solo base de demostración local)
  *

@@ -27,7 +27,8 @@ import {
 export const metadata: Metadata = { title: "Panel empresarial" };
 export const dynamic = "force-dynamic";
 
-export default async function EmpresaDashboard({ searchParams }: { searchParams: { empresa?: string } }) {
+export default async function EmpresaDashboard(props: { searchParams: Promise<{ empresa?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await requireRole(ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const company = await resolveCompany(user, searchParams.empresa);
 

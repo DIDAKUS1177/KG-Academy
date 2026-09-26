@@ -18,12 +18,14 @@ import { cantidad } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const c = await prisma.course.findUnique({ where: { slug: params.slug } });
   return { title: c?.title ?? "Curso" };
 }
 
-export default async function CursoPublicoPage({ params }: { params: { slug: string } }) {
+export default async function CursoPublicoPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const course = await prisma.course.findUnique({
     where: { slug: params.slug },
     include: {

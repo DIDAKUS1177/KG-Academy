@@ -9,7 +9,8 @@ import { IconEye } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
-export default async function ConstructorPage({ params }: { params: { id: string } }) {
+export default async function ConstructorPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
 
   const [course, categorias, instructores] = await Promise.all([

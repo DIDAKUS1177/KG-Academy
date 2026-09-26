@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * KG ACADEMY - Semilla de la base de datos
  * Crea: roles, permisos, configuración, plantilla de certificado, categorías,

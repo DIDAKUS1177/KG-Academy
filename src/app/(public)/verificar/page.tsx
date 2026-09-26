@@ -4,7 +4,8 @@ import { IconQr, IconShield } from "@/components/Icons";
 
 export const metadata: Metadata = { title: "Verificar certificado" };
 
-export default function VerificarPage({ searchParams }: { searchParams: { codigo?: string } }) {
+export default async function VerificarPage(props: { searchParams: Promise<{ codigo?: string }> }) {
+  const searchParams = await props.searchParams;
   const codigo = searchParams.codigo?.trim();
   if (codigo) redirect(`/verificar/${encodeURIComponent(codigo.toUpperCase())}`);
 

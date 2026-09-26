@@ -22,11 +22,10 @@ const ACCION_TONO: Record<string, string> = {
   exportar: "badge-slate",
 };
 
-export default async function AuditoriaPage({
-  searchParams,
-}: {
-  searchParams: { entidad?: string; accion?: string };
+export default async function AuditoriaPage(props: {
+  searchParams: Promise<{ entidad?: string; accion?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
 
   const logs = await prisma.auditLog.findMany({

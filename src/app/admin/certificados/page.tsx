@@ -11,7 +11,8 @@ import { AccionesCertificado } from "./AccionesCertificado";
 export const metadata: Metadata = { title: "Certificados" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminCertificados({ searchParams }: { searchParams: { q?: string } }) {
+export default async function AdminCertificados(props: { searchParams: Promise<{ q?: string }> }) {
+  const searchParams = await props.searchParams;
   await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const q = searchParams.q?.trim();
 

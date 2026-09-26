@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
@@ -11,7 +12,7 @@ import { EditarParametro } from "./EditarParametro";
 export const metadata: Metadata = { title: "Configuración" };
 export const dynamic = "force-dynamic";
 
-const GRUPO_ICON: Record<string, JSX.Element> = {
+const GRUPO_ICON: Record<string, ReactElement> = {
   marca: <IconSettings width={18} height={18} />,
   certificados: <IconAward width={18} height={18} />,
   seguridad: <IconShield width={18} height={18} />,

@@ -10,7 +10,8 @@ import { IconBook, IconBuilding } from "@/components/Icons";
 export const metadata: Metadata = { title: "Asignar cursos" };
 export const dynamic = "force-dynamic";
 
-export default async function AsignarPage({ searchParams }: { searchParams: { empresa?: string } }) {
+export default async function AsignarPage(props: { searchParams: Promise<{ empresa?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await requireRole(ROLES.ADMIN_EMPRESA, ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const company = await resolveCompany(user, searchParams.empresa);
   if (!company) {

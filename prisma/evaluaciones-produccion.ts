@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * KG ACADEMY - Evaluaciones finales en producción
  *

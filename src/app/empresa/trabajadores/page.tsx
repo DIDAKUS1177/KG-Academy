@@ -12,11 +12,10 @@ import { IconUsers, IconSearch, IconDownload, IconArrowRight } from "@/component
 export const metadata: Metadata = { title: "Trabajadores" };
 export const dynamic = "force-dynamic";
 
-export default async function TrabajadoresPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; area?: string; empresa?: string };
+export default async function TrabajadoresPage(props: {
+  searchParams: Promise<{ q?: string; area?: string; empresa?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const user = await requireRole(ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const company = await resolveCompany(user, searchParams.empresa);
   if (!company) return <EmptyState title="Sin empresa asociada" />;

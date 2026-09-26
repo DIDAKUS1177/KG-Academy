@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +10,7 @@ import { IconBell, IconCheck, IconAlert, IconSpark } from "@/components/Icons";
 export const metadata: Metadata = { title: "Notificaciones" };
 export const dynamic = "force-dynamic";
 
-const ICON: Record<string, JSX.Element> = {
+const ICON: Record<string, ReactElement> = {
   exito: <IconCheck width={18} height={18} strokeWidth={3} />,
   alerta: <IconAlert width={18} height={18} />,
   error: <IconAlert width={18} height={18} />,

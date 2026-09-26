@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * KG ACADEMY - Cursos interactivos (modo juego) en producción
  *

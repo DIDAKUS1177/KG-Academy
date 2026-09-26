@@ -9,7 +9,8 @@ import { IconDownload, IconFile, IconUsers, IconAward, IconChart, IconCheck } fr
 export const metadata: Metadata = { title: "Reportes" };
 export const dynamic = "force-dynamic";
 
-export default async function ReportesPage({ searchParams }: { searchParams: { empresa?: string } }) {
+export default async function ReportesPage(props: { searchParams: Promise<{ empresa?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await requireRole(ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const company = await resolveCompany(user, searchParams.empresa);
   if (!company) return <EmptyState title="Sin empresa asociada" />;

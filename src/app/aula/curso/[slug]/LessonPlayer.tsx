@@ -52,9 +52,9 @@ export function LessonPlayer({
   const [practicaLista, setPracticaLista] = useState(false);
   const alTerminar = useCallback(() => setPracticaLista(true), []);
 
-  // Cronometro de permanencia en la lección (trazabilidad de tiempo)
+  // Cronometro de permanencia en la lección (trazabilidad de tiempo). Arranca
+  // en cero porque el componente se monta de nuevo en cada lección (key).
   useEffect(() => {
-    setSeconds(0);
     const t = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, [lesson.id]);

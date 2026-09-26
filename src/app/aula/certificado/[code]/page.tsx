@@ -11,7 +11,8 @@ import { IconArrowRight } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
-export default async function CertificadoPage({ params }: { params: { code: string } }) {
+export default async function CertificadoPage(props: { params: Promise<{ code: string }> }) {
+  const params = await props.params;
   const user = await requireUser();
   const cert = await prisma.certificate.findUnique({
     where: { code: decodeURIComponent(params.code).toUpperCase() },

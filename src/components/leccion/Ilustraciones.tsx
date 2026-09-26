@@ -5,6 +5,7 @@
  * cualquier pantalla y el texto que llevan sigue siendo texto (legible por
  * lectores de pantalla y traducible). Cada una lleva <title> y <desc>.
  */
+import type { ReactElement } from "react";
 import type { IlustracionId } from "@/lib/leccion-interactiva";
 
 const NAVY = "#0A2D4D";
@@ -38,14 +39,17 @@ function TrianguloFuego() {
   );
 }
 
-function ExtintorHaab() {
-  const Paso = ({ n, x, y, texto }: { n: number; x: number; y: number; texto: string }) => (
+function Paso({ n, x, y, texto }: { n: number; x: number; y: number; texto: string }) {
+  return (
     <g>
       <circle cx={x} cy={y} r="15" fill={LIMA} />
       <text x={x} y={y + 5} textAnchor="middle" fill={NAVY} fontSize="15" style={TEXTO}>{n}</text>
       <text x={x + 22} y={y + 5} fill={NAVY} fontSize="14" style={TEXTO}>{texto}</text>
     </g>
   );
+}
+
+function ExtintorHaab() {
   return (
     <svg viewBox="0 0 460 300" role="img" aria-labelledby="t-ext d-ext" className="h-auto w-full">
       <title id="t-ext">Técnica HAAB con el extintor</title>
@@ -187,7 +191,7 @@ function Torniquete() {
   );
 }
 
-const MAPA: Record<IlustracionId, () => JSX.Element> = {
+const MAPA: Record<IlustracionId, () => ReactElement> = {
   "triangulo-fuego": TrianguloFuego,
   "extintor-haab": ExtintorHaab,
   "ruta-evacuacion": RutaEvacuacion,

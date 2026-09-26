@@ -71,6 +71,8 @@ export function QuizForm({
   }
 
   useEffect(() => {
+    // Abrir el intento en el servidor es la sincronización con un sistema externo.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!modoJuego) void iniciar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

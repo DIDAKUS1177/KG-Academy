@@ -7,11 +7,13 @@ import { IconCheck, IconAlert, IconAward, IconX } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: { codigo: string } }) {
+export async function generateMetadata(props: { params: Promise<{ codigo: string }> }) {
+  const params = await props.params;
   return { title: `Certificado ${params.codigo}` };
 }
 
-export default async function VerificarCodigoPage({ params }: { params: { codigo: string } }) {
+export default async function VerificarCodigoPage(props: { params: Promise<{ codigo: string }> }) {
+  const params = await props.params;
   const code = decodeURIComponent(params.codigo).toUpperCase();
   const cert = await prisma.certificate.findUnique({
     where: { code },

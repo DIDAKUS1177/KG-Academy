@@ -18,7 +18,8 @@ const TABS = [
   { key: "completado", label: "Completados" },
 ];
 
-export default async function MisCursosPage({ searchParams }: { searchParams: { estado?: string } }) {
+export default async function MisCursosPage(props: { searchParams: Promise<{ estado?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await requireUser();
   const estado = searchParams.estado ?? "todos";
 

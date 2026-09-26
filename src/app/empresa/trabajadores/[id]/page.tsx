@@ -11,7 +11,8 @@ import { RestablecerClave } from "./RestablecerClave";
 
 export const dynamic = "force-dynamic";
 
-export default async function DetalleTrabajador({ params }: { params: { id: string } }) {
+export default async function DetalleTrabajador(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const staff = await requireRole(ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const company = await resolveCompany(staff);
   if (!company) notFound();

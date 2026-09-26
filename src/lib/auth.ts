@@ -49,7 +49,7 @@ export async function createSession(payload: SessionPayload) {
     .setExpirationTime(expires)
     .sign(claveSesion());
 
-  const h = headers();
+  const h = await headers();
   await prisma.session.create({
     data: {
       userId: payload.sub,
@@ -60,7 +60,7 @@ export async function createSession(payload: SessionPayload) {
     },
   });
 
-  cookies().set(COOKIE, token, {
+  (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -74,9 +74,10 @@ const huellaToken = (token: string) => token.slice(-64);
 
 /** Cierra la sesión actual: se borra la cookie y también el registro en la base. */
 export async function destroySession() {
-  const raw = cookies().get(COOKIE)?.value;
+  const jar = await cookies();
+  const raw = jar.get(COOKIE)?.value;
   if (raw) await prisma.session.deleteMany({ where: { token: huellaToken(raw) } });
-  cookies().delete(COOKIE);
+  jar.delete(COOKIE);
 }
 
 /**
@@ -95,7 +96,7 @@ export async function revocarSesiones(userId: string) {
  * repetir la consulta dentro del mismo pedido.
  */
 export const getSession = cache(async (): Promise<SessionPayload | null> => {
-  const raw = cookies().get(COOKIE)?.value;
+  const raw = (await cookies()).get(COOKIE)?.value;
   if (!raw) return null;
   try {
     const { payload } = await jwtVerify(raw, claveSesion(), { issuer: "kg-academy" });

@@ -8,7 +8,8 @@ import { EditorEvaluacion } from "./EditorEvaluacion";
 
 export const dynamic = "force-dynamic";
 
-export default async function EvaluacionPage({ params }: { params: { id: string } }) {
+export default async function EvaluacionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
 
   const a = await prisma.assessment.findUnique({
