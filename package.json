@@ -5,6 +5,9 @@
   "description": "KG Academy - Plataforma educativa LMS B2C/B2B de KG Gestion Integral S.A.S.",
   "author": "Diego Alejandro Hernandez Blanco",
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "prisma generate && next build",

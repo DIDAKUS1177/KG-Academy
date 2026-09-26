@@ -17,7 +17,7 @@ Construida sobre el documento *Esqueleto de Especificaciones Funcionales KG Acad
 
 ## 1. Puesta en marcha local (4 comandos)
 
-Requisitos: **Node.js 20 o superior**.
+Requisitos: **Node.js 20.9 o superior**.
 
 ```bash
 cp .env.example .env
@@ -264,7 +264,7 @@ estudiar nada y salir certificado.
 ```
 Navegador
    │
-   ├── Server Components (React 18)      →  interfaz renderizada en servidor
+   ├── Server Components (React 19)      →  interfaz renderizada en servidor
    └── Route Handlers  /api/*            →  API REST validada con Zod
                 │
                 ├── src/lib/progress.ts      motor de progreso y trazabilidad
@@ -277,9 +277,9 @@ Navegador
 
 | Componente | Tecnología |
 |---|---|
-| Lenguaje | TypeScript 5.6 |
-| Framework | Next.js 14 (App Router) |
-| Interfaz | React 18 + Tailwind CSS 3 |
+| Lenguaje | TypeScript 5.9 |
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Interfaz | React 19 + Tailwind CSS 3 |
 | ORM | Prisma 5 |
 | Base de datos | SQLite en local · PostgreSQL en producción |
 | Sesión | JWT HS256 (`jose`) en cookie HttpOnly, 8 horas |
