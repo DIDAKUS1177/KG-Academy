@@ -105,6 +105,18 @@ export function GestionUsuarios({
     if (data.claveTemporal) setClave({ clave: data.claveTemporal, para: editar.email });
   }
 
+  async function eliminar() {
+    if (!editar) return;
+    if (!confirm(`¿Eliminar la cuenta de ${editar.email}? Esta acción no se puede deshacer.`)) return;
+    setCargando(true);
+    setMsg(null);
+    const { ok, data } = await llamar("/api/admin/usuario", "DELETE", { userId: editar.id });
+    setCargando(false);
+    if (!ok) return setMsg({ ok: false, text: data.error ?? "No se pudo eliminar" });
+    onCerrarEdicion();
+    router.refresh();
+  }
+
   const esMismo = editar?.id === actorId;
 
   return (
@@ -215,9 +227,21 @@ export function GestionUsuarios({
             <Campo label="Ciudad"><input name="city" defaultValue={editar.city ?? ""} className="input" /></Campo>
 
             <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 border-t border-navy-50 pt-4">
-              <button type="button" onClick={restablecer} disabled={cargando} className="btn-outline btn-sm">
-                <IconLock width={14} height={14} /> Restablecer contraseña
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={restablecer} disabled={cargando} className="btn-outline btn-sm">
+                  <IconLock width={14} height={14} /> Restablecer contraseña
+                </button>
+                {!esMismo && (
+                  <button
+                    type="button"
+                    onClick={eliminar}
+                    disabled={cargando}
+                    className="btn btn-sm bg-transparent text-red-600 hover:bg-red-50"
+                  >
+                    Eliminar cuenta
+                  </button>
+                )}
+              </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => { onCerrarEdicion(); setMsg(null); setClave(null); }} className="btn-ghost">Cerrar</button>
                 <button className="btn-lime" disabled={cargando}>{cargando ? "Guardando..." : "Guardar cambios"}</button>

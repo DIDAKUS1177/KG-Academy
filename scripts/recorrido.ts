@@ -265,7 +265,20 @@ async function acciones(cursoId: string) {
     const r = await llamar("PATCH", "/api/admin/usuario", admin, { userId: u.data.userId, accion: "restablecer_clave" });
     const tras = await prisma.user.findUniqueOrThrow({ where: { id: u.data.userId } });
     paso("KG restablece una contraseña y la cuenta queda obligada a cambiarla", r.status === 200 && tras.status === "pendiente_activacion", `${r.status} ${tras.status}`);
+    // Ya entró una vez (sesión y auditoría) y tiene un curso matriculado sin empezar.
+    const nuevaTemporal = r.data.claveTemporal as string | undefined;
+    if (nuevaTemporal) await entrarCon(`usuario.${sufijo}@demo.test`, nuevaTemporal);
+    await prisma.enrollment.create({ data: { userId: u.data.userId, courseId: cursoId } });
+    const borrar = await llamar("DELETE", "/api/admin/usuario", admin, { userId: u.data.userId });
+    const sigue = await prisma.user.findUnique({ where: { id: u.data.userId } });
+    const huellas = await prisma.auditLog.count({ where: { entity: "users", entityId: u.data.userId, action: "eliminar" } });
+    paso("KG elimina una cuenta sin historial (queda en la auditoría)", borrar.status === 200 && !sigue && huellas === 1, `${borrar.status} ${borrar.texto.slice(0, 80)}`);
   }
+  const conHistorial = await llamar("DELETE", "/api/admin/usuario", admin, { userId: trabajador.id });
+  paso("No se elimina una cuenta con evaluaciones o certificados", conHistorial.status === 409, `${conHistorial.status}`);
+  const yo = await prisma.user.findUniqueOrThrow({ where: { email: "admin@kggestionintegral.com" } });
+  const propia = await llamar("DELETE", "/api/admin/usuario", admin, { userId: yo.id });
+  paso("KG no puede eliminar su propia cuenta", propia.status === 400, `${propia.status}`);
 
   // 7. No se publica un curso que exige evaluación final sin tenerla.
   const cat = await prisma.category.findFirstOrThrow();

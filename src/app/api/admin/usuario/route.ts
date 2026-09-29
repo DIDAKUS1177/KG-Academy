@@ -17,9 +17,10 @@ import {
  *
  *   POST  crea un usuario con cualquier rol y, si aplica, lo vincula a una empresa.
  *   PATCH edita datos, rol, empresa o estado; o restablece la contraseña.
+ *   DELETE borra una cuenta sin historial (creada por error o de prueba).
  *
- * No hay DELETE a propósito: un usuario con matrículas, intentos o certificados
- * es evidencia ante la ARL y no se borra, se inactiva o se bloquea.
+ * Un usuario con intentos de evaluación, certificados o avance en lecciones es
+ * evidencia ante la ARL: no se borra, se inactiva o se bloquea.
  */
 
 const CODIGOS_ROL = Object.values(ROLES) as [string, ...string[]];
@@ -55,6 +56,8 @@ const editarSchema = z.object({
   city: z.string().nullable().optional(),
   status: z.enum(USER_STATUS).optional(),
 });
+
+const borrarSchema = z.object({ userId: z.string().min(1) });
 
 /** Solo un superadministrador puede crear o tocar a otro superadministrador. */
 function puedeTocarSuperadmin(actorRole: string) {
@@ -300,6 +303,56 @@ export async function PATCH(req: Request) {
       companyId: after.companyId,
       status: after.status,
     },
+  });
+
+  return respuestaOk();
+}
+
+export async function DELETE(req: Request) {
+  const auth = await exigirRol(ROLES_KG);
+  if (auth.error) return auth.error;
+  const actor = auth.user;
+
+  const cuerpo = await leerCuerpo(req, borrarSchema);
+  if (cuerpo.error) return cuerpo.error;
+
+  const user = await prisma.user.findUnique({
+    where: { id: cuerpo.data.userId },
+    include: {
+      role: true,
+      _count: {
+        select: {
+          attempts: true, certificates: true, lessonProgress: true, orders: true, revokedCerts: true, coursesTaught: true,
+        },
+      },
+    },
+  });
+  if (!user) return respuestaError("Usuario no encontrado", 404);
+  if (user.id === actor.id) return respuestaError("No puede eliminar su propia cuenta");
+  if (user.role.code === ROLES.SUPERADMIN && !puedeTocarSuperadmin(actor.role.code)) {
+    return respuestaError("Solo un superadministrador puede eliminar a otro superadministrador", 403);
+  }
+
+  const c = user._count;
+  if (c.coursesTaught > 0) return respuestaError("Esta cuenta es instructora de cursos: reasígnelos antes de eliminarla", 409);
+  if (c.attempts + c.certificates + c.lessonProgress + c.orders + c.revokedCerts > 0) {
+    return respuestaError(
+      "Esta cuenta ya tiene avance, evaluaciones o certificados y es evidencia ante la ARL. Cámbiela a inactiva o bloqueada.",
+      409
+    );
+  }
+
+  // Sesiones, matrículas sin avance, membresías y notificaciones se van con ella.
+  await prisma.user.delete({ where: { id: user.id } });
+
+  await audit({
+    userId: actor.id,
+    actorEmail: actor.email,
+    action: "eliminar",
+    entity: "users",
+    entityId: user.id,
+    summary: `Cuenta ${user.email} eliminada`,
+    before: { email: user.email, roleCode: user.role.code, companyId: user.companyId, status: user.status },
   });
 
   return respuestaOk();

@@ -102,8 +102,9 @@ export function TablaUsuarios({
           </tbody>
         </table>
         <p className="border-t border-navy-50 px-4 py-3 text-[11px] text-navy-400">
-          {filas.length} usuario(s). Las cuentas no se eliminan: un usuario con matrículas o
-          certificados es evidencia ante la ARL. Para retirarlo, cámbielo a inactivo o bloqueado.
+          {filas.length} usuario(s). Solo se eliminan cuentas sin historial (creadas por error o
+          de prueba). Quien ya tiene avance, evaluaciones o certificados es evidencia ante la ARL:
+          para retirarlo, cámbielo a inactivo o bloqueado.
         </p>
       </div>
     </>
