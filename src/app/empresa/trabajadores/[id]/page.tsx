@@ -7,7 +7,9 @@ import { ROLES } from "@/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { Avatar, Breadcrumb, ProgressBar, ProgressRing, StatCard, StatusBadge } from "@/components/ui";
 import { IconAward, IconBook, IconCheck, IconClock, IconArrowRight } from "@/components/Icons";
+import { motivoParaConservar } from "@/lib/cuentas";
 import { RestablecerClave } from "./RestablecerClave";
+import { EliminarTrabajador } from "./EliminarTrabajador";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,13 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
     ? u.enrollments.reduce((s, e) => s + e.progress, 0) / u.enrollments.length
     : 0;
   const completados = u.enrollments.filter((e) => e.status === "completado").length;
+  const gestiona = staff.role.code !== ROLES.SUPERVISOR;
+  // La empresa solo elimina trabajadores suyos que no dejaron historial.
+  const eliminable =
+    gestiona &&
+    u.role.code === ROLES.ESTUDIANTE &&
+    u.companyId === company.id &&
+    !(await motivoParaConservar(u.id));
 
   return (
     <div>
@@ -75,9 +84,12 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
           </div>
 
           {/* El supervisor solo consulta; la cuenta la gestiona el administrador. */}
-          {staff.role.code !== ROLES.SUPERVISOR && ["estudiante", "supervisor"].includes(u.role.code) && (
-            <div className="mt-5">
+          {gestiona && ["estudiante", "supervisor"].includes(u.role.code) && (
+            <div className="mt-5 flex flex-wrap items-start gap-2">
               <RestablecerClave userId={u.id} nombre={`${u.firstName} ${u.lastName}`} />
+              {eliminable && (
+                <EliminarTrabajador userId={u.id} nombre={`${u.firstName} ${u.lastName}`} volver="/empresa/trabajadores" />
+              )}
             </div>
           )}
 

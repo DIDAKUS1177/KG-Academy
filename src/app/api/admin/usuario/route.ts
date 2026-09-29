@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, hashPassword, revocarSesiones } from "@/lib/auth";
+import { motivoParaConservar } from "@/lib/cuentas";
 import { ROLES, USER_STATUS } from "@/lib/constants";
 import {
   ROLES_KG,
@@ -316,33 +317,16 @@ export async function DELETE(req: Request) {
   const cuerpo = await leerCuerpo(req, borrarSchema);
   if (cuerpo.error) return cuerpo.error;
 
-  const user = await prisma.user.findUnique({
-    where: { id: cuerpo.data.userId },
-    include: {
-      role: true,
-      _count: {
-        select: {
-          attempts: true, certificates: true, lessonProgress: true, orders: true, revokedCerts: true, coursesTaught: true,
-        },
-      },
-    },
-  });
+  const user = await prisma.user.findUnique({ where: { id: cuerpo.data.userId }, include: { role: true } });
   if (!user) return respuestaError("Usuario no encontrado", 404);
   if (user.id === actor.id) return respuestaError("No puede eliminar su propia cuenta");
   if (user.role.code === ROLES.SUPERADMIN && !puedeTocarSuperadmin(actor.role.code)) {
     return respuestaError("Solo un superadministrador puede eliminar a otro superadministrador", 403);
   }
 
-  const c = user._count;
-  if (c.coursesTaught > 0) return respuestaError("Esta cuenta es instructora de cursos: reasígnelos antes de eliminarla", 409);
-  if (c.attempts + c.certificates + c.lessonProgress + c.orders + c.revokedCerts > 0) {
-    return respuestaError(
-      "Esta cuenta ya tiene avance, evaluaciones o certificados y es evidencia ante la ARL. Cámbiela a inactiva o bloqueada.",
-      409
-    );
-  }
+  const motivo = await motivoParaConservar(user.id);
+  if (motivo) return respuestaError(motivo, 409);
 
-  // Sesiones, matrículas sin avance, membresías y notificaciones se van con ella.
   await prisma.user.delete({ where: { id: user.id } });
 
   await audit({

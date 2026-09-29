@@ -320,6 +320,27 @@ async function acciones(cursoId: string) {
   const kgAdminDespues = await prisma.user.findUniqueOrThrow({ where: { id: kgAdmin.id } });
   paso("La empresa no puede apropiarse de una cuenta ajena", robo.status === 409 && kgAdminDespues.companyId === kgAdmin.companyId, `${robo.status}`);
 
+  // 9b. La empresa elimina trabajadores suyos sin historial, y nada más.
+  const correoBorrar = `borrar.${sufijo}@demo.test`;
+  await llamar("POST", "/api/empresa/trabajadores", empresa, {
+    companyId,
+    modo: "individual",
+    trabajador: { firstName: "Borrar", lastName: "Recorrido", documentNumber: `RB${sufijo}`, email: correoBorrar },
+  });
+  const aBorrar = await prisma.user.findUnique({ where: { email: correoBorrar } });
+  if (aBorrar) {
+    const ficha = await llamar("GET", `/empresa/trabajadores/${aBorrar.id}`, empresa);
+    const baja = await llamar("DELETE", "/api/empresa/trabajadores/cuenta", empresa, { userId: aBorrar.id });
+    const queda = await prisma.user.findUnique({ where: { id: aBorrar.id } });
+    paso("La empresa elimina un trabajador sin historial", ficha.texto.includes("Eliminar cuenta") && baja.status === 200 && !queda, `${baja.status} ${baja.texto.slice(0, 80)}`);
+  } else paso("La empresa elimina un trabajador sin historial", false, "no se creó el trabajador");
+  const fichaConHistorial = await llamar("GET", `/empresa/trabajadores/${trabajador.id}`, empresa);
+  const bajaConHistorial = await llamar("DELETE", "/api/empresa/trabajadores/cuenta", empresa, { userId: trabajador.id });
+  paso("La empresa no elimina un trabajador con historial", !fichaConHistorial.texto.includes("Eliminar cuenta") && bajaConHistorial.status === 409, `${bajaConHistorial.status}`);
+  const bajaAdmin = await llamar("DELETE", "/api/empresa/trabajadores/cuenta", empresa, { userId: kgAdmin.id });
+  const bajaAjeno = intruso ? await llamar("DELETE", "/api/empresa/trabajadores/cuenta", empresa, { userId: intruso.id }) : null;
+  paso("La empresa no elimina a KG ni a personas de fuera", bajaAdmin.status === 403 && (!bajaAjeno || bajaAjeno.status === 403), `${bajaAdmin.status} ${bajaAjeno?.status ?? ""}`);
+
   // 8b. Recuperación de contraseña con código enviado al correo.
   const correoReg = `registro.${sufijo}@demo.test`;
   let claveReg = `Registro-${sufijo}-Clave`;
