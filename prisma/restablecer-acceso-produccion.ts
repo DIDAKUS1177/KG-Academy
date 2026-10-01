@@ -53,7 +53,7 @@ async function main() {
 
   console.log("\n========= KG ACADEMY - ACCESO RESTABLECIDO =========");
   console.table(resultado);
-  console.log("Contraseña: la que escribió al correr el script.");
+  console.log("Contraseña: la indicada en esta ventana.");
   console.log("Al iniciar sesión, cada cuenta debe definir una propia antes de continuar.");
   console.log("====================================================\n");
 }
