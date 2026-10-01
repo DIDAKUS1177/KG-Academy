@@ -173,7 +173,17 @@ async function completarInteractivo(db: Db, c: CursoInteractivo, publicar: boole
   if (course.modules.some((m) => m.lessons.some((l) => l.contentType === "interactivo"))) {
     return { curso: nombre, estado: "ya estaba completo, sin cambios" };
   }
-  const avance = await db.lessonProgress.count({ where: { lesson: { module: { courseId: course.id } } } });
+  // Que el personal de KG haya abierto la lección de espera (sin contenido) al
+  // revisar el borrador no es historial; el avance de cualquier otra persona, sí.
+  const avance = await db.lessonProgress.count({
+    where: {
+      lesson: { module: { courseId: course.id } },
+      NOT: {
+        lesson: { contentType: "pendiente" },
+        user: { role: { code: { in: ["superadmin", "admin_kg", "instructor"] } } },
+      },
+    },
+  });
   const intentos = await db.assessmentAttempt.count({ where: { assessment: { courseId: course.id } } });
   if (avance || intentos) {
     return { curso: nombre, estado: "tiene avance de estudiantes; no se reemplaza su estructura" };
