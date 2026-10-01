@@ -18,7 +18,6 @@ export async function crearCursoInteractivo(
   opciones: { categoryId: string; instructorId: string | null; status: "publicado" | "borrador" }
 ) {
   const publicado = opciones.status === "publicado";
-  const pesoModulo = 100 / c.modules.length;
 
   const course = await db.course.create({
     data: {
@@ -47,6 +46,23 @@ export async function crearCursoInteractivo(
       certificateEnabled: true,
       certificateValidityMonths: 24,
       publishedAt: publicado ? new Date() : null,
+    },
+  });
+
+  await crearContenidoInteractivo(db, course, c);
+  return course;
+}
+
+/**
+ * Módulos, lecciones, banco de preguntas y evaluación final de un curso
+ * interactivo, sobre un curso que ya existe (recién creado o cuya estructura de
+ * espera se acaba de retirar).
+ */
+export async function crearContenidoInteractivo(db: Db, course: { id: string; title: string }, c: CursoInteractivo) {
+  const pesoModulo = 100 / c.modules.length;
+  await db.course.update({
+    where: { id: course.id },
+    data: {
       modules: {
         create: c.modules.map((m, mi) => ({
           title: m.title,
@@ -114,5 +130,4 @@ export async function crearCursoInteractivo(
     });
   }
 
-  return course;
 }

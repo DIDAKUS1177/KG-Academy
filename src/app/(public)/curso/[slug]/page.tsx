@@ -159,7 +159,7 @@ export default async function CursoPublicoPage(props: { params: Promise<{ slug: 
                 <ul className="space-y-2.5 pt-3 text-sm text-navy-500">
                   {[
                     "Acceso 24/7 desde cualquier dispositivo",
-                    "Evaluación diagnóstica y final",
+                    course.assessments.some((a) => a.type === "diagnostica") ? "Evaluación diagnóstica y final" : "Evaluación final",
                     "Certificado con código único y QR",
                     `Nota mínima aprobatoria: ${course.minPassingScore}/100`,
                     `Intentos permitidos: ${course.maxAttempts}`,

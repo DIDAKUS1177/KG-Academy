@@ -16,6 +16,7 @@ import { CURSOS_INTERACTIVOS } from "./cursos-interactivos";
 import { crearCursoInteractivo } from "./crear-curso-interactivo";
 import { EVALUACIONES_FINALES } from "./evaluaciones";
 import { crearEvaluacionFinal } from "./crear-evaluacion";
+import { completarCursos } from "./completar-cursos";
 
 const prisma = new PrismaClient();
 const PASS = "KgAcademy2026*";
@@ -613,6 +614,11 @@ async function main() {
 
     cursosCreados.push({ course, finalEval });
   }
+
+  // Módulos 4 a 7 del Curso Básico y Pediátricos/Psicológicos completos. Estos
+  // dos siguen en borrador en la demo: el recorrido prueba los borradores con ellos.
+  console.log("Completando los cursos de primeros auxilios...");
+  await completarCursos(prisma, { publicar: false });
 
   /* ------------------------ CURSOS INTERACTIVOS (DEMO) ----------------------- */
   // Prototipos construidos con el motor de lecciones nativo. Se publican solo en

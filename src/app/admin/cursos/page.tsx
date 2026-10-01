@@ -6,6 +6,7 @@ import { ROLES } from "@/lib/constants";
 import { formatDate, cantidad } from "@/lib/utils";
 import { ProgressBar, SectionTitle, StatusBadge, StatCard } from "@/components/ui";
 import { IconBook, IconArrowRight, IconAlert, IconCheck, IconLayers } from "@/components/Icons";
+import { SimboloCurso, numeroCurso } from "@/components/SimboloCurso";
 import { NuevoCurso } from "./NuevoCurso";
 
 export const metadata: Metadata = { title: "Gestión de cursos" };
@@ -90,8 +91,9 @@ export default async function AdminCursos() {
           return (
             <div key={c.id} className="card overflow-hidden">
               <div className="flex flex-wrap items-start gap-5 p-6">
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-kg-gradient font-display text-sm font-extrabold text-lime-400">
-                  {c.code.split("-").pop()}
+                <span className="flex h-16 w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-kg-gradient text-lime-400">
+                  <SimboloCurso code={c.code} width={26} height={26} />
+                  <span className="font-display text-[11px] font-extrabold leading-none tracking-wide">{numeroCurso(c.code)}</span>
                 </span>
 
                 <div className="min-w-[240px] flex-1">

@@ -14,7 +14,7 @@
  */
 import type { LeccionInteractiva } from "../src/lib/leccion-interactiva";
 
-type Pregunta = {
+export type Pregunta = {
   statement: string;
   explanation: string;
   type?: "unica" | "verdadero_falso";

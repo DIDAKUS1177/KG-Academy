@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn, cantidad } from "@/lib/utils";
-import { IconClock, IconLayers, IconArrowRight, IconGraduation, IconCheck } from "./Icons";
+import { IconClock, IconLayers, IconArrowRight, IconCheck } from "./Icons";
+import { SimboloCurso, numeroCurso } from "./SimboloCurso";
 import { ProgressBar } from "./ui";
 
 export type CourseCardData = {
@@ -50,8 +51,9 @@ export function CourseCard({ course, href }: { course: CourseCardData; href?: st
             <span className="font-mono text-[10px] font-bold text-white/50">{course.code}</span>
           </div>
           <div className="flex items-end gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-lime-500 text-navy-900 shadow-kg">
-              <IconGraduation width={22} height={22} />
+            <span className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-lime-500 text-navy-900 shadow-kg">
+              <SimboloCurso code={course.code} width={22} height={22} />
+              <span className="font-display text-[9px] font-extrabold leading-none">{numeroCurso(course.code)}</span>
             </span>
             <p className="font-display text-[13px] font-bold uppercase tracking-wide text-white/70">
               {LEVEL_LABEL[course.level] ?? course.level} &middot; {course.durationHours} h

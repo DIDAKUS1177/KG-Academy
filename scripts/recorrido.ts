@@ -14,6 +14,7 @@
 import { PrismaClient } from "@prisma/client";
 import { readdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
+import { leccionInteractivaSchema } from "../src/lib/leccion-interactiva";
 
 const BASE = process.env.RECORRIDO_URL ?? "http://localhost:3000";
 const CLAVE_DEMO = "KgAcademy2026*";
@@ -49,7 +50,14 @@ async function abrir(ruta: string, cookie?: string) {
 async function main() {
   const [curso, cursoJuego, evaluacion, certificado, miembro] = await Promise.all([
     prisma.course.findFirst({ where: { status: "publicado", modules: { some: { lessons: { some: { contentType: "genially" } } } } } }),
-    prisma.course.findFirst({ where: { status: "publicado", modules: { some: { lessons: { some: { contentType: "interactivo" } } } } } }),
+    // Curso de juego: todas sus lecciones son interactivas (el Básico mezcla Genially e interactivas).
+    prisma.course.findFirst({
+      where: {
+        status: "publicado",
+        modules: { some: { lessons: { some: { contentType: "interactivo" } } } },
+        NOT: { modules: { some: { lessons: { some: { contentType: { not: "interactivo" } } } } } },
+      },
+    }),
     prisma.assessment.findFirst({ where: { type: "final", isPublished: true, course: { status: "publicado" } } }),
     prisma.certificate.findFirst({ include: { user: true } }),
     prisma.companyMember.findFirst({ include: { user: { include: { role: true } } }, where: { user: { role: { code: "estudiante" } } } }),
@@ -89,6 +97,8 @@ async function main() {
     console.log(`${malos.length ? "✗" : "✓"} ${p.nombre}: ${p.casos.length - malos.length}/${p.casos.length}`);
     for (const m of malos) console.log(`    ${m}`);
   }
+
+  fallos += await catalogo();
 
   // El ciclo completo con un curso de juego y con uno de Genially.
   fallos += await acciones(cursoJuego.id);
@@ -419,6 +429,46 @@ async function ultimoCodigo(correo: string) {
 }
 
 /** Borra lo que creó el recorrido, para que la demostración quede como estaba. */
+/** Cada curso tiene su examen final y todas sus lecciones interactivas se pueden abrir. */
+async function catalogo() {
+  const cursos = await prisma.course.findMany({
+    where: { code: { not: { startsWith: "KG-RC-" } } },
+    include: {
+      modules: { include: { lessons: true } },
+      assessments: { where: { type: "final", isPublished: true }, include: { _count: { select: { questions: true } } } },
+    },
+    orderBy: { code: "asc" },
+  });
+  const pasos: { nombre: string; ok: boolean; detalle?: string }[] = [];
+  const sinExamen = cursos.filter((c) => !c.assessments.some((a) => a._count.questions >= 10));
+  pasos.push({ nombre: "Todos los cursos tienen evaluación final (10 preguntas o más)", ok: sinExamen.length === 0, detalle: sinExamen.map((c) => c.code).join(", ") });
+  const pendientes = cursos.filter((c) => c.modules.some((m) => m.lessons.some((l) => l.contentType === "pendiente")));
+  pasos.push({ nombre: "Ningún curso tiene lecciones sin contenido", ok: pendientes.length === 0, detalle: pendientes.map((c) => c.code).join(", ") });
+  const basico = cursos.find((c) => c.code === "KG-PA-001");
+  pasos.push({ nombre: "El Curso Básico tiene sus 7 módulos", ok: basico?.modules.length === 7, detalle: `${basico?.modules.length ?? 0} módulos` });
+  const rotas: string[] = [];
+  for (const c of cursos) {
+    for (const m of c.modules) {
+      for (const l of m.lessons) {
+        if (l.contentType !== "interactivo") continue;
+        let json: unknown = null;
+        try {
+          json = JSON.parse(l.contentBody ?? "");
+        } catch {
+          /* se reporta abajo */
+        }
+        if (!leccionInteractivaSchema.safeParse(json).success) rotas.push(`${c.code} · ${l.title}`);
+      }
+    }
+  }
+  pasos.push({ nombre: "Todas las lecciones interactivas son válidas", ok: rotas.length === 0, detalle: rotas.join("; ") });
+
+  const malos = pasos.filter((p) => !p.ok);
+  console.log(`${malos.length ? "✗" : "✓"} Catálogo: ${pasos.length - malos.length}/${pasos.length}`);
+  for (const p of pasos) console.log(`    ${p.ok ? "✓" : "✗"} ${p.nombre}${p.ok || !p.detalle ? "" : ` (${p.detalle})`}`);
+  return malos.length;
+}
+
 async function limpiar() {
   const usuarios = await prisma.user.findMany({ where: { email: { endsWith: "@demo.test" } }, select: { id: true } });
   const ids = usuarios.map((u) => u.id);

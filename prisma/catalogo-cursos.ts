@@ -73,27 +73,19 @@ export const CURSOS = [
       "Integrantes de brigadas de emergencia, equipos de primera respuesta, COPASST y personal designado para la atención inicial de emergencias.",
     requirements: "No requiere conocimientos previos. Se recomienda computador o celular con internet.",
     methodology:
-      "100% virtual asincrónico. Cada módulo se desarrolla en una presentación interactiva de Genially, con evaluación diagnóstica, evaluaciones por módulo y evaluación final.",
+      "100% virtual asincrónico. Los módulos 1 a 3 se desarrollan en presentaciones interactivas de Genially y los módulos 4 a 7 en lecciones interactivas de la plataforma, con práctica calificada en cada lección y evaluación final.",
     level: "basico",
-    // 3 módulos publicados (60 + 60 + 90 min) y la evaluación final. Al publicar
-    // los módulos 4 a 7 del temario hay que subir la intensidad.
-    durationHours: 4,
+    // Módulos 1-3 en Genially (60 + 60 + 90 min), módulos 4-7 interactivos
+    // (8 lecciones de 20 min) y la evaluación final: unas 7 horas.
+    durationHours: 7,
     price: 149000,
     status: "publicado",
     accessType: "pago",
     launch: "22 de agosto de 2026",
-    // Se siembran solo los módulos que KG tiene producidos. Sembrar los demás
-    // vacíos permitía que un trabajador los marcara como completados sin
-    // estudiar nada y saliera certificado.
-    //
-    // Temario oficial completo, tomado del índice de la presentación de KG. Los
-    // módulos 4 a 7 se agregan aquí a medida que KG entregue cada presentación:
-    //   4. Manejo de la Vía Aérea y Obstrucción (OVACE)  <- ojo: el Módulo 3
-    //      entregado ya cubre OVACE (obstrucción leve y grave). Confirmar con
-    //      KG si el 4 se reduce, se fusiona o cambia de alcance.
-    //   5. Control de Hemorragias, Heridas y Quemaduras
-    //   6. Lesiones Osteomusculares, Shock y Alteraciones de Conciencia
-    //   7. Movilización, Transporte de Pacientes y Casos Prácticos
+    // Aquí van solo los módulos de Genially que entregó KG. Los módulos 4 a 7
+    // del temario oficial son lecciones interactivas de la plataforma, en
+    // prisma/contenido/pa001-modulos.ts, y los agrega prisma/completar-cursos.ts
+    // (el 4 profundiza en vía aérea sin repetir la OVACE básica del Módulo 3).
     modules: [
       {
         title: "Módulo 1. Introducción a los Primeros Auxilios y Marco Legal del Brigadista",
@@ -155,13 +147,14 @@ export const CURSOS = [
     requirements: "Se recomienda haber cursado Primeros Auxilios Básicos.",
     methodology: "100% virtual asincrónico con casos clínicos guiados y evaluación final.",
     level: "intermedio",
-    durationHours: 60,
+    durationHours: 3,
     price: 169000,
     status: "borrador",
     accessType: "pago",
     launch: "Finales de agosto de 2026",
-    // Estructura tentativa: KG aún no entrega el material. Se siembra un solo
-    // módulo, igual que KG-PA-001, y el temario real se define cuando llegue.
+    // Estructura de espera: el curso completo (módulos interactivos y
+    // evaluación) está en prisma/contenido/pa002-pediatricos.ts y lo carga
+    // prisma/completar-cursos.ts.
     modules: [
       {
         title: "Módulo 1. El paciente pediátrico es diferente",
@@ -182,12 +175,13 @@ export const CURSOS = [
     requirements: "No requiere formación previa en salud mental.",
     methodology: "100% virtual asincrónico con simulaciones de diálogo y evaluación final.",
     level: "basico",
-    durationHours: 12,
+    durationHours: 3,
     price: 139000,
     status: "borrador",
     accessType: "pago",
     launch: "Finales de agosto de 2026",
-    // Estructura tentativa: KG aún no entrega el material.
+    // Estructura de espera: el curso completo está en
+    // prisma/contenido/pa003-psicologicos.ts (lo carga completar-cursos.ts).
     modules: [
       {
         title: "Módulo 1. Crisis y reacción humana",
