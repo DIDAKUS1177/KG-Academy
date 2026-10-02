@@ -113,7 +113,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-cloud">
       {/* Sidebar escritorio */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[268px] overflow-hidden lg:block">{sidebar}</aside>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[268px] overflow-hidden lg:block print:hidden">{sidebar}</aside>
 
       {/* Sidebar movil */}
       {open && (
@@ -123,8 +123,8 @@ export function AppShell({
         </div>
       )}
 
-      <div className="lg:pl-[268px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-navy-100 bg-white/85 px-4 backdrop-blur-xl lg:px-8">
+      <div className="lg:pl-[268px] print:pl-0">
+        <header className="sticky top-0 z-30 flex h-16 print:hidden items-center gap-4 border-b border-navy-100 bg-white/85 px-4 backdrop-blur-xl lg:px-8">
           <button className="rounded-lg p-2 text-navy-600 hover:bg-navy-50 lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menu">
             <IconMenu />
           </button>

@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
 import { LogoFull } from "@/components/Logo";
 import { Breadcrumb } from "@/components/ui";
-import { PrintButton } from "./PrintButton";
+import { PrintButton } from "@/components/PrintButton";
 import { IconArrowRight } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";

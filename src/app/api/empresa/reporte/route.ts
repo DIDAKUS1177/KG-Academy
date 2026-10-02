@@ -5,7 +5,23 @@ import { toCsv, formatDate } from "@/lib/utils";
 
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 
-/** Exportación de reportes a CSV (punto 13 del esqueleto). */
+/** Área, cargo y sede de cada trabajador de la empresa, para cruzar en los reportes. */
+async function fichas(companyId: string) {
+  const miembros = await prisma.companyMember.findMany({
+    where: { companyId },
+    include: { area: true, position: true, location: true },
+  });
+  const porUsuario = new Map(miembros.map((m) => [m.userId, m]));
+  return (userId: string) => {
+    const m = porUsuario.get(userId);
+    return { Area: m?.area?.name ?? "", Cargo: m?.position?.name ?? "", Sede: m?.location?.name ?? "" };
+  };
+}
+
+/**
+ * Exportación de reportes a CSV (se abre directo en Excel):
+ * seguimiento, trabajadores, evaluaciones, lecciones, cursos y certificados.
+ */
 export async function GET(req: Request) {
   const user = await requireUser();
   if (!PERMITIDOS.includes(user.role.code)) {
@@ -47,6 +63,76 @@ export async function GET(req: Request) {
         : 0,
       Certificados: m.user.certificates.length,
       Ultimo_acceso: m.user.lastLoginAt ? formatDate(m.user.lastLoginAt) : "",
+    }));
+  } else if (tipo === "evaluaciones") {
+    nombre = "evaluaciones";
+    const datos = await fichas(companyId);
+    const intentos = await prisma.assessmentAttempt.findMany({
+      where: { status: "finalizado", user: { memberships: { some: { companyId } } } },
+      include: { user: true, assessment: { include: { course: true } } },
+      orderBy: { submittedAt: "desc" },
+    });
+    rows = intentos.map((i) => ({
+      Documento: i.user.documentNumber ?? "",
+      Trabajador: `${i.user.firstName} ${i.user.lastName}`,
+      Correo: i.user.email,
+      ...datos(i.userId),
+      Curso: i.assessment.course.title,
+      Codigo_curso: i.assessment.course.code,
+      Evaluacion: i.assessment.title,
+      Tipo: i.assessment.type,
+      Intento: i.attemptNo,
+      Nota: Math.round(i.score ?? 0),
+      Correctas: `${i.correctCount ?? 0}/${i.totalCount ?? 0}`,
+      Resultado: i.passed ? "Aprobó" : "No aprobó",
+      Fecha: i.submittedAt ? formatDate(i.submittedAt) : "",
+      Duracion_min: i.durationSec ? Math.round(i.durationSec / 60) : "",
+    }));
+  } else if (tipo === "lecciones") {
+    nombre = "avance_por_leccion";
+    const datos = await fichas(companyId);
+    const avances = await prisma.lessonProgress.findMany({
+      where: { user: { memberships: { some: { companyId } } } },
+      include: { user: true, lesson: { include: { module: { include: { course: true } } } } },
+      orderBy: [{ userId: "asc" }, { updatedAt: "desc" }],
+    });
+    rows = avances.map((a) => ({
+      Documento: a.user.documentNumber ?? "",
+      Trabajador: `${a.user.firstName} ${a.user.lastName}`,
+      ...datos(a.userId),
+      Curso: a.lesson.module.course.title,
+      Modulo: a.lesson.module.title,
+      Leccion: a.lesson.title,
+      Estado: a.status,
+      Avance_pct: Math.round(a.percent),
+      Tiempo_min: Math.round(a.timeSpentSec / 60),
+      Inicio: a.startedAt ? formatDate(a.startedAt) : "",
+      Completada: a.completedAt ? formatDate(a.completedAt) : "",
+    }));
+  } else if (tipo === "cursos") {
+    // Programa de capacitación: lo que la empresa asignó, con su ficha técnica.
+    nombre = "programa_de_capacitacion";
+    const cursos = await prisma.course.findMany({
+      where: { assignments: { some: { companyId } } },
+      include: {
+        modules: { where: { isPublished: true }, orderBy: { order: "asc" } },
+        assignments: { where: { companyId }, select: { status: true } },
+      },
+      orderBy: { code: "asc" },
+    });
+    rows = cursos.map((c) => ({
+      Codigo: c.code,
+      Curso: c.title,
+      Intensidad_horas: c.durationHours,
+      Modalidad: c.modality,
+      Objetivo: c.objective ?? "",
+      Dirigido_a: c.targetAudience ?? "",
+      Contenido: c.modules.map((m) => m.title).join(" | "),
+      Nota_minima: c.minPassingScore,
+      Intentos: c.maxAttempts,
+      Vigencia_certificado_meses: c.certificateValidityMonths ?? "",
+      Asignados: c.assignments.length,
+      Completados: c.assignments.filter((a) => a.status === "completado").length,
     }));
   } else if (tipo === "certificados") {
     nombre = "certificados";

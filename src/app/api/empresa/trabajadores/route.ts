@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser, audit, hashPassword } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { claveTemporal } from "@/lib/admin-api";
+import { cuposEmpresa, mensajeSinCupo } from "@/lib/cupos";
 
 // Cada contraseña se cifra por separado; una nómina grande tarda. 60 s es el
 // máximo del plan gratuito de Vercel y alcanza para el tope de filas de abajo.
@@ -38,6 +39,10 @@ export async function POST(req: Request) {
 
   const rolEstudiante = await prisma.role.findUnique({ where: { code: ROLES.ESTUDIANTE } });
   if (!rolEstudiante) return NextResponse.json({ error: "Roles no inicializados" }, { status: 500 });
+
+  // Cada trabajador nuevo o vinculado ocupa un cupo del plan contratado.
+  const cupos = await cuposEmpresa(companyId);
+  let disponibles = cupos.disponibles;
 
   // Antes todos los trabajadores nacían con la misma clave fija, que además
   // estaba publicada en la pantalla de ingreso: cualquiera podía entrar como
@@ -79,6 +84,8 @@ export async function POST(req: Request) {
       if (yaExiste.role.code !== ROLES.ESTUDIANTE || yaExiste.companyId) {
         return { creado: false, conflicto: "Ese correo o documento ya pertenece a otra cuenta. Si es el mismo trabajador, pídale a KG que lo traslade." };
       }
+      if (disponibles <= 0) return { creado: false, sinCupo: true };
+      disponibles--;
       await prisma.companyMember.create({
         data: {
           companyId,
@@ -93,6 +100,8 @@ export async function POST(req: Request) {
       return { creado: false, vinculado: true };
     }
 
+    if (disponibles <= 0) return { creado: false, sinCupo: true };
+    disponibles--;
     const clave = claveTemporal();
     const nuevo = await prisma.user.create({
       data: {
@@ -135,6 +144,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
     const r = await crear(t as never);
+    if ("sinCupo" in r && r.sinCupo) {
+      return NextResponse.json({ error: mensajeSinCupo(cupos) }, { status: 409 });
+    }
     if ("conflicto" in r && r.conflicto) {
       return NextResponse.json({ error: r.conflicto }, { status: 409 });
     }
@@ -173,6 +185,7 @@ export async function POST(req: Request) {
 
   let creados = 0;
   let omitidos = 0;
+  let sinCupo = 0;
   const credenciales: { email: string; clave: string }[] = [];
   for (const linea of lineas) {
     const [firstName, lastName, documentNumber, email, employeeCode] = linea
@@ -186,7 +199,8 @@ export async function POST(req: Request) {
     if (r.creado) {
       creados++;
       credenciales.push({ email: r.email!, clave: r.clave! });
-    } else omitidos++;
+    } else if ("sinCupo" in r && r.sinCupo) sinCupo++;
+    else omitidos++;
   }
 
   await audit({
@@ -195,8 +209,15 @@ export async function POST(req: Request) {
     action: "crear",
     entity: "company_members",
     entityId: companyId,
-    summary: `Carga masiva: ${creados} creados, ${omitidos} omitidos`,
+    summary: `Carga masiva: ${creados} creados, ${omitidos} omitidos${sinCupo ? `, ${sinCupo} sin cupo` : ""}`,
   });
 
-  return NextResponse.json({ ok: true, creados, omitidos, credenciales });
+  return NextResponse.json({
+    ok: true,
+    creados,
+    omitidos,
+    sinCupo,
+    ...(sinCupo ? { aviso: `${sinCupo} trabajador(es) no se crearon por falta de cupo. ${mensajeSinCupo(cupos)}` } : {}),
+    credenciales,
+  });
 }

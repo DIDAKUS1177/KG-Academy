@@ -81,11 +81,14 @@ function Credenciales({ lista }: { lista: Credencial[] }) {
 
 export function NuevoTrabajador({
   companyId,
+  disponibles,
   areas,
   positions,
   locations,
 }: {
   companyId: string;
+  /** Cupos libres del plan; sin cupo no se abre el formulario. */
+  disponibles: number;
   areas: Opt[];
   positions: Opt[];
   locations: Opt[];
@@ -140,8 +143,8 @@ export function NuevoTrabajador({
     setLoading(false);
     if (!res.ok) return setMsg({ ok: false, text: data.error ?? "No fue posible procesar el archivo" });
     setMsg({
-      ok: true,
-      text: `${data.creados} trabajador(es) creado(s), ${data.omitidos} omitido(s) por duplicado.`,
+      ok: !data.sinCupo,
+      text: `${data.creados} trabajador(es) creado(s), ${data.omitidos} omitido(s) por duplicado o datos incompletos.${data.aviso ? ` ${data.aviso}` : ""}`,
     });
     setCreds(data.credenciales ?? []);
     setBulk("");
@@ -150,7 +153,12 @@ export function NuevoTrabajador({
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="btn-lime">
+      <button
+        onClick={() => setOpen(true)}
+        disabled={disponibles <= 0}
+        title={disponibles <= 0 ? "No quedan cupos en el plan" : undefined}
+        className="btn-lime disabled:cursor-not-allowed disabled:opacity-50"
+      >
         <IconUsers width={16} height={16} /> Agregar trabajadores
       </button>
     );

@@ -68,7 +68,7 @@ async function main() {
 
   const publicas = ["/", "/catalogo", `/curso/${curso.slug}`, `/curso/${cursoJuego.slug}`, "/verificar", `/verificar/${certificado.code}`, "/ingresar", "/registro", "/recuperar"];
   const aula = ["/aula", "/aula/cursos", `/aula/curso/${curso.slug}`, `/aula/curso/${cursoJuego.slug}`, "/aula/certificados", "/aula/logros", "/aula/notificaciones", "/aula/perfil"];
-  const empresa = ["/empresa", "/empresa/trabajadores", `/empresa/trabajadores/${miembro.userId}`, "/empresa/asignar", "/empresa/seguimiento", "/empresa/reportes"];
+  const empresa = ["/empresa", "/empresa/trabajadores", `/empresa/trabajadores/${miembro.userId}`, "/empresa/asignar", "/empresa/seguimiento", "/empresa/reportes", "/empresa/reportes/informe"];
   const admin = ["/admin", "/admin/usuarios", "/admin/empresas", "/admin/cursos", `/admin/cursos/${curso.id}`, `/admin/cursos/${cursoJuego.id}`, "/admin/evaluaciones", `/admin/evaluaciones/${evaluacion.id}`, "/admin/certificados", "/admin/reportes", "/admin/auditoria", "/admin/permisos", "/admin/configuracion"];
 
   const ok = (rs: string[]): Caso[] => rs.map((ruta) => ({ ruta, espera: "ok" }));
@@ -266,6 +266,37 @@ async function acciones(cursoId: string) {
   const rep = await fetch(`${BASE}/api/empresa/reporte?tipo=seguimiento`, { headers: { cookie: empresa } });
   const csv = await rep.text();
   paso("Empresa descarga el reporte de seguimiento", rep.status === 200 && csv.includes(correo), `${rep.status} ${rep.headers.get("content-type")}`);
+  const descargas: [string, string][] = [["evaluaciones", "Nota"], ["lecciones", "Leccion"], ["cursos", curso.code], ["trabajadores", correo], ["certificados", "Codigo"]];
+  const malas: string[] = [];
+  for (const [tipo, debeTener] of descargas) {
+    const d = await fetch(`${BASE}/api/empresa/reporte?tipo=${tipo}`, { headers: { cookie: empresa } });
+    const texto = await d.text();
+    if (d.status !== 200 || !texto.includes(debeTener)) malas.push(`${tipo} ${d.status}`);
+  }
+  paso("Empresa descarga evaluaciones, avance por lección, programa, nómina y certificados", malas.length === 0, malas.join(", "));
+  const informe = await llamar("GET", "/empresa/reportes/informe", empresa);
+  paso("Empresa abre el informe imprimible de capacitación", informe.status === 200 && informe.texto.includes("Informe de capacitación") && informe.texto.includes(curso.title), `${informe.status}`);
+
+  // 5b. Cupos: sin cupo libre no se crean ni vinculan trabajadores.
+  const suscripcion = await prisma.companySubscription.findFirstOrThrow({ where: { companyId, status: "activa" }, orderBy: { startsAt: "desc" } });
+  const ocupados = await prisma.companyMember.count({ where: { companyId, status: { not: "retirado" }, user: { role: { code: "estudiante" } } } });
+  await prisma.companySubscription.update({ where: { id: suscripcion.id }, data: { seats: ocupados } });
+  try {
+    const lleno = await llamar("POST", "/api/empresa/trabajadores", empresa, {
+      companyId,
+      modo: "individual",
+      trabajador: { firstName: "Sin", lastName: "Cupo", documentNumber: `SC${sufijo}`, email: `sincupo.${sufijo}@demo.test` },
+    });
+    const masivo = await llamar("POST", "/api/empresa/trabajadores", empresa, {
+      companyId,
+      modo: "masivo",
+      csv: `Sin;Cupo;SM${sufijo};sincupo2.${sufijo}@demo.test`,
+    });
+    const creadoIgual = await prisma.user.count({ where: { email: { in: [`sincupo.${sufijo}@demo.test`, `sincupo2.${sufijo}@demo.test`] } } });
+    paso("Sin cupos no se crean trabajadores (ni de a uno ni en carga masiva)", lleno.status === 409 && masivo.data.sinCupo === 1 && creadoIgual === 0, `${lleno.status} ${masivo.texto.slice(0, 80)}`);
+  } finally {
+    await prisma.companySubscription.update({ where: { id: suscripcion.id }, data: { seats: suscripcion.seats } });
+  }
 
   // 6. KG crea un usuario con clave temporal.
   const u = await llamar("POST", "/api/admin/usuario", admin, { firstName: "Usuario", lastName: "Recorrido", email: `usuario.${sufijo}@demo.test`, roleCode: "estudiante" });

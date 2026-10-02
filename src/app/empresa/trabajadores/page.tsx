@@ -6,6 +6,7 @@ import { resolveCompany } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { Avatar, EmptyState, ProgressBar, SectionTitle, StatusBadge } from "@/components/ui";
+import { cuposEmpresa } from "@/lib/cupos";
 import { NuevoTrabajador } from "./NuevoTrabajador";
 import { IconUsers, IconSearch, IconDownload, IconArrowRight } from "@/components/Icons";
 
@@ -22,7 +23,7 @@ export default async function TrabajadoresPage(props: {
 
   const q = searchParams.q?.trim();
 
-  const [members, areas, positions, locations] = await Promise.all([
+  const [members, areas, positions, locations, cupos] = await Promise.all([
     prisma.companyMember.findMany({
       where: {
         companyId: company.id,
@@ -51,6 +52,7 @@ export default async function TrabajadoresPage(props: {
     prisma.area.findMany({ where: { companyId: company.id } }),
     prisma.position.findMany({ where: { companyId: company.id } }),
     prisma.companyLocation.findMany({ where: { companyId: company.id } }),
+    cuposEmpresa(company.id),
   ]);
 
   const puedeEditar = user.role.code !== ROLES.SUPERVISOR;
@@ -100,9 +102,30 @@ export default async function TrabajadoresPage(props: {
         </Link>
       </form>
 
+      {/* Cupos del plan contratado */}
+      <div className="card mb-6 flex flex-wrap items-center gap-4 p-4">
+        <div className="min-w-[220px] flex-1">
+          <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <p className="text-sm font-semibold text-navy-700">Cupos de trabajadores</p>
+            <span className="text-xs font-bold text-navy-500">
+              {cupos.usados} de {cupos.limite} usados
+            </span>
+          </div>
+          <ProgressBar value={cupos.limite ? (cupos.usados / cupos.limite) * 100 : 100} />
+        </div>
+        <p className={`text-xs font-semibold ${cupos.disponibles ? "text-lime-600" : "text-red-600"}`}>
+          {cupos.limite === 0
+            ? "Sin cupos activos: comuníquese con KG"
+            : cupos.disponibles
+              ? `${cupos.disponibles} disponibles`
+              : "Cupos agotados: pídale a KG ampliar el plan"}
+        </p>
+      </div>
+
       {puedeEditar && (
         <NuevoTrabajador
           companyId={company.id}
+          disponibles={cupos.disponibles}
           areas={areas.map((a) => ({ id: a.id, name: a.name }))}
           positions={positions.map((p) => ({ id: p.id, name: p.name }))}
           locations={locations.map((l) => ({ id: l.id, name: l.name }))}

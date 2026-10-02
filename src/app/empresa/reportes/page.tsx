@@ -1,10 +1,11 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { resolveCompany, companyKpis } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
 import { EmptyState, ProgressBar, SectionTitle, StatCard } from "@/components/ui";
-import { IconDownload, IconFile, IconUsers, IconAward, IconChart, IconCheck } from "@/components/Icons";
+import { IconDownload, IconFile, IconUsers, IconAward, IconChart, IconCheck, IconClipboard, IconBook, IconClock, IconArrowRight } from "@/components/Icons";
 
 export const metadata: Metadata = { title: "Reportes" };
 export const dynamic = "force-dynamic";
@@ -59,6 +60,24 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
       tipo: "certificados",
       icon: <IconAward width={20} height={20} />,
     },
+    {
+      titulo: "Reporte de evaluaciones",
+      desc: "Cada intento presentado: nota, respuestas correctas, resultado, fecha y duración.",
+      tipo: "evaluaciones",
+      icon: <IconClipboard width={20} height={20} />,
+    },
+    {
+      titulo: "Avance por lección",
+      desc: "Detalle de cada lección por trabajador: estado, porcentaje, tiempo de estudio y fechas.",
+      tipo: "lecciones",
+      icon: <IconClock width={20} height={20} />,
+    },
+    {
+      titulo: "Programa de capacitación",
+      desc: "Ficha técnica de los cursos asignados: objetivo, intensidad, contenido, reglas de aprobación y cobertura.",
+      tipo: "cursos",
+      icon: <IconBook width={20} height={20} />,
+    },
   ];
 
   return (
@@ -76,6 +95,25 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
         <StatCard label="Certificados" value={certs} tone="lime" icon={<IconAward width={20} height={20} />} />
       </div>
 
+      {/* Informe consolidado para auditoría */}
+      <Link
+        href={`/empresa/reportes/informe?empresa=${company.id}`}
+        className="card card-hover mt-8 flex flex-wrap items-center gap-5 bg-kg-gradient p-6 text-white"
+      >
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-lime-500 text-navy-900">
+          <IconFile width={22} height={22} />
+        </span>
+        <div className="min-w-[220px] flex-1">
+          <p className="font-display text-lg font-bold">Informe de capacitación para auditoría (PDF)</p>
+          <p className="mt-1 text-sm text-white/70">
+            Resumen de cumplimiento por curso y por área, cursos vencidos y espacio de firmas, listo para la ARL o el SG-SST.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 text-sm font-bold text-lime-300">
+          Abrir informe <IconArrowRight width={16} height={16} />
+        </span>
+      </Link>
+
       {/* Descargas */}
       <div className="mt-8 grid gap-5 lg:grid-cols-3">
         {REPORTES.map((r) => (
@@ -89,7 +127,7 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
               href={`/api/empresa/reporte?tipo=${r.tipo}&empresa=${company.id}`}
               className="btn-lime btn-sm mt-5 self-start"
             >
-              <IconDownload width={14} height={14} /> Descargar CSV
+              <IconDownload width={14} height={14} /> Descargar Excel (CSV)
             </a>
           </div>
         ))}
