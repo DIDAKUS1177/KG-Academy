@@ -5,6 +5,8 @@ import { requireRole } from "@/lib/auth";
 import { resolveCompany, companyKpis } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
 import { formatDate, cantidad } from "@/lib/utils";
+import { indicadoresEmpresa } from "@/lib/indicadores";
+import { TableroIndicadores } from "@/components/TableroIndicadores";
 import {
   StatCard,
   SectionTitle,
@@ -42,7 +44,7 @@ export default async function EmpresaDashboard(props: { searchParams: Promise<{ 
     );
   }
 
-  const kpis = await companyKpis(company.id);
+  const [kpis, indicadores] = await Promise.all([companyKpis(company.id), indicadoresEmpresa(company.id)]);
 
   const [porCurso, porArea, recientes, workers] = await Promise.all([
     prisma.courseAssignment.findMany({
@@ -135,6 +137,21 @@ export default async function EmpresaDashboard(props: { searchParams: Promise<{ 
           hint={`${kpis.noIniciados} sin iniciar`}
           icon={<IconAlert width={20} height={20} />}
         />
+      </div>
+
+      {/* Indicadores de gestión con semáforo */}
+      <div>
+        <SectionTitle
+          eyebrow="SG-SST"
+          title="Indicadores de gestión"
+          description="Cada indicador muestra su fórmula y su meta de referencia. El semáforo compara el resultado con la meta."
+          action={
+            <a href={`/api/empresa/reporte?tipo=indicadores&empresa=${company.id}`} className="btn-outline btn-sm">
+              Descargar Excel (CSV)
+            </a>
+          }
+        />
+        <TableroIndicadores indicadores={indicadores} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

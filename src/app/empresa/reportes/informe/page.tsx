@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { resolveCompany, companyKpis } from "@/lib/empresa";
 import { cuposEmpresa } from "@/lib/cupos";
+import { indicadoresEmpresa, mostrarMeta, mostrarValor } from "@/lib/indicadores";
+import { EtiquetaSemaforo } from "@/components/TableroIndicadores";
 import { ROLES } from "@/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { EmptyState } from "@/components/ui";
@@ -23,7 +25,7 @@ export default async function InformePage(props: { searchParams: Promise<{ empre
   if (!company) return <EmptyState title="Sin empresa asociada" />;
 
   const hoy = new Date();
-  const [kpis, cupos, asignaciones, miembros, certificados] = await Promise.all([
+  const [kpis, cupos, asignaciones, miembros, certificados, indicadores] = await Promise.all([
     companyKpis(company.id),
     cuposEmpresa(company.id),
     prisma.courseAssignment.findMany({
@@ -38,6 +40,7 @@ export default async function InformePage(props: { searchParams: Promise<{ empre
       where: { user: { memberships: { some: { companyId: company.id } } } },
       select: { status: true, expiresAt: true, hours: true },
     }),
+    indicadoresEmpresa(company.id),
   ]);
 
   const vigentes = certificados.filter((c) => c.status === "vigente" && (!c.expiresAt || c.expiresAt > hoy));
@@ -126,6 +129,35 @@ export default async function InformePage(props: { searchParams: Promise<{ empre
               </div>
             ))}
           </dl>
+        </section>
+
+        <section>
+          <h2 className="font-display text-base font-bold text-navy-700">Indicadores de gestión</h2>
+          <div className="mt-3 overflow-x-auto print:overflow-visible">
+            <table className="table-kg">
+              <thead>
+                <tr>
+                  <th>Indicador</th>
+                  <th>Resultado</th>
+                  <th>Meta</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {indicadores.map((i) => (
+                  <tr key={i.clave}>
+                    <td>
+                      <p className="font-semibold text-navy-700">{i.nombre}</p>
+                      <p className="text-[11px] text-navy-400">{i.formula}</p>
+                    </td>
+                    <td className="whitespace-nowrap font-bold">{mostrarValor(i)}</td>
+                    <td className="whitespace-nowrap">{mostrarMeta(i)}</td>
+                    <td><EtiquetaSemaforo indicador={i} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section>

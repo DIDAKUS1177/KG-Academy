@@ -266,16 +266,18 @@ async function acciones(cursoId: string) {
   const rep = await fetch(`${BASE}/api/empresa/reporte?tipo=seguimiento`, { headers: { cookie: empresa } });
   const csv = await rep.text();
   paso("Empresa descarga el reporte de seguimiento", rep.status === 200 && csv.includes(correo), `${rep.status} ${rep.headers.get("content-type")}`);
-  const descargas: [string, string][] = [["evaluaciones", "Nota"], ["lecciones", "Leccion"], ["cursos", curso.code], ["trabajadores", correo], ["certificados", "Codigo"]];
+  const descargas: [string, string][] = [["indicadores", "Cobertura de capacitación"], ["evaluaciones", "Nota"], ["lecciones", "Leccion"], ["cursos", curso.code], ["trabajadores", correo], ["certificados", "Codigo"]];
   const malas: string[] = [];
   for (const [tipo, debeTener] of descargas) {
     const d = await fetch(`${BASE}/api/empresa/reporte?tipo=${tipo}`, { headers: { cookie: empresa } });
     const texto = await d.text();
     if (d.status !== 200 || !texto.includes(debeTener)) malas.push(`${tipo} ${d.status}`);
   }
-  paso("Empresa descarga evaluaciones, avance por lección, programa, nómina y certificados", malas.length === 0, malas.join(", "));
+  paso("Empresa descarga indicadores, evaluaciones, avance por lección, programa, nómina y certificados", malas.length === 0, malas.join(", "));
   const informe = await llamar("GET", "/empresa/reportes/informe", empresa);
-  paso("Empresa abre el informe imprimible de capacitación", informe.status === 200 && informe.texto.includes("Informe de capacitación") && informe.texto.includes(curso.title), `${informe.status}`);
+  paso("Empresa abre el informe imprimible de capacitación", informe.status === 200 && informe.texto.includes("Informe de capacitación") && informe.texto.includes(curso.title) && informe.texto.includes("Indicadores de gestión"), `${informe.status}`);
+  const panel = await llamar("GET", "/empresa", empresa);
+  paso("El panel de la empresa muestra los indicadores con semáforo", panel.status === 200 && panel.texto.includes("Indicadores de gestión") && panel.texto.includes("Cumplimiento dentro del plazo"), `${panel.status}`);
 
   // 5b. Cupos: sin cupo libre no se crean ni vinculan trabajadores.
   const suscripcion = await prisma.companySubscription.findFirstOrThrow({ where: { companyId, status: "activa" }, orderBy: { startsAt: "desc" } });

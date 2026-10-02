@@ -61,6 +61,12 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
       icon: <IconAward width={20} height={20} />,
     },
     {
+      titulo: "Indicadores de gestión",
+      desc: "Cobertura, cumplimiento, oportunidad, aprobación, participación y vigencia, con fórmula, meta y semáforo.",
+      tipo: "indicadores",
+      icon: <IconCheck width={20} height={20} />,
+    },
+    {
       titulo: "Reporte de evaluaciones",
       desc: "Cada intento presentado: nota, respuestas correctas, resultado, fecha y duración.",
       tipo: "evaluaciones",

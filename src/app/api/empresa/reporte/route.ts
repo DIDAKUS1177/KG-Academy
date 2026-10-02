@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { toCsv, formatDate } from "@/lib/utils";
+import { ETIQUETA_SEMAFORO, indicadoresEmpresa, mostrarMeta, mostrarValor, semaforo } from "@/lib/indicadores";
 
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 
@@ -20,7 +21,7 @@ async function fichas(companyId: string) {
 
 /**
  * Exportación de reportes a CSV (se abre directo en Excel):
- * seguimiento, trabajadores, evaluaciones, lecciones, cursos y certificados.
+ * seguimiento, trabajadores, indicadores, evaluaciones, lecciones, cursos y certificados.
  */
 export async function GET(req: Request) {
   const user = await requireUser();
@@ -63,6 +64,19 @@ export async function GET(req: Request) {
         : 0,
       Certificados: m.user.certificates.length,
       Ultimo_acceso: m.user.lastLoginAt ? formatDate(m.user.lastLoginAt) : "",
+    }));
+  } else if (tipo === "indicadores") {
+    nombre = "indicadores";
+    const lista = await indicadoresEmpresa(companyId);
+    rows = lista.map((i) => ({
+      Grupo: i.grupo,
+      Indicador: i.nombre,
+      Resultado: mostrarValor(i),
+      Meta: mostrarMeta(i),
+      Estado: ETIQUETA_SEMAFORO[semaforo(i)],
+      Detalle: i.detalle,
+      Formula: i.formula,
+      Fecha_corte: formatDate(new Date()),
     }));
   } else if (tipo === "evaluaciones") {
     nombre = "evaluaciones";
