@@ -56,15 +56,17 @@ export function LoginForm() {
 
         <div className="mb-4">
           <label className="label" htmlFor="email">
-            Correo electrónico
+            Correo o número de documento
           </label>
           <input
             id="email"
-            type="email"
+            type="text"
             required
-            autoComplete="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
             className="input"
-            placeholder="nombre@empresa.com"
+            placeholder="nombre@empresa.com o 1098765432"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />

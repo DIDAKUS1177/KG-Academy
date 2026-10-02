@@ -3,10 +3,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, createSession, verifyPassword } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
+import { normalizarDocumento } from "@/lib/identidad";
 
 /**
- * Intentos fallidos permitidos por correo en la ventana; después se bloquea el
- * ingreso con ese correo hasta que la ventana pase. Frena la prueba de
+ * Intentos fallidos permitidos por cuenta en la ventana; después se bloquea el
+ * ingreso a esa cuenta hasta que la ventana pase. Frena la prueba de
  * contraseñas por fuerza bruta.
  */
 const MAX_FALLOS = 8;
@@ -18,8 +19,12 @@ const VENTANA_MIN = 15;
  */
 const HASH_FICTICIO = "$2a$10$eQifdQvX.Z/5cRLDkey/DOfAavxiuFNNsurFi5V0rXP5lz5eNBEqW";
 
+/**
+ * Se ingresa con el correo o, para quien no tiene correo, con el número de
+ * documento (el campo se sigue llamando "email" por compatibilidad).
+ */
 const schema = z.object({
-  email: z.string().email("Correo inválido"),
+  email: z.string().trim().min(3, "Ingrese su correo o número de documento").max(200),
   password: z.string().min(1, "Ingrese su contraseña"),
 });
 
@@ -30,7 +35,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  const email = parsed.data.email.trim().toLowerCase();
+  const usuario = parsed.data.email.trim();
+  const user = usuario.includes("@")
+    ? await prisma.user.findUnique({ where: { email: usuario.toLowerCase() }, include: { role: true } })
+    : await prisma.user.findUnique({ where: { documentNumber: normalizarDocumento(usuario) }, include: { role: true } });
+  // Los fallos se cuentan por cuenta: entrar por correo o por documento suma al mismo contador.
+  const email = user?.email ?? usuario.toLowerCase();
 
   const fallos = await prisma.auditLog.count({
     where: { action: "login_fallido", actorEmail: email, createdAt: { gte: new Date(Date.now() - VENTANA_MIN * 60_000) } },
@@ -42,14 +52,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { email }, include: { role: true } });
   const valida = await verifyPassword(parsed.data.password, user?.passwordHash ?? HASH_FICTICIO);
 
   if (!user || !valida) {
     await prisma.auditLog.create({
       data: { userId: user?.id ?? null, actorEmail: email, action: "login_fallido", entity: "users", entityId: user?.id ?? null, summary: "Intento de ingreso con contraseña incorrecta" },
     });
-    return NextResponse.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
+    return NextResponse.json({ error: "Usuario o contraseña incorrectos" }, { status: 401 });
   }
   if (user.status === "bloqueado") {
     return NextResponse.json({ error: "Su cuenta está bloqueada. Contacte al administrador." }, { status: 403 });

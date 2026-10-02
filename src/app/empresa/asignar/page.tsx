@@ -6,6 +6,7 @@ import { ROLES } from "@/lib/constants";
 import { EmptyState, SectionTitle } from "@/components/ui";
 import { AsignarForm } from "./AsignarForm";
 import { IconBook, IconBuilding } from "@/components/Icons";
+import { correoVisible } from "@/lib/identidad";
 
 export const metadata: Metadata = { title: "Asignar cursos" };
 export const dynamic = "force-dynamic";
@@ -60,7 +61,7 @@ export default async function AsignarPage(props: { searchParams: Promise<{ empre
         members={members.map((m) => ({
           userId: m.userId,
           name: `${m.user.firstName} ${m.user.lastName}`,
-          email: m.user.email,
+          email: correoVisible(m.user.email),
           areaId: m.areaId,
           areaName: m.area?.name ?? "Sin área",
           position: m.position?.name ?? "—",

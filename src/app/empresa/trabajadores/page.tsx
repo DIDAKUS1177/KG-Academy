@@ -9,6 +9,7 @@ import { Avatar, EmptyState, ProgressBar, SectionTitle, StatusBadge } from "@/co
 import { cuposEmpresa } from "@/lib/cupos";
 import { NuevoTrabajador } from "./NuevoTrabajador";
 import { IconUsers, IconSearch, IconDownload, IconArrowRight } from "@/components/Icons";
+import { correoVisible } from "@/lib/identidad";
 
 export const metadata: Metadata = { title: "Trabajadores" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function TrabajadoresPage(props: {
 
   const q = searchParams.q?.trim();
 
-  const [members, areas, positions, locations, cupos] = await Promise.all([
+  const [members, areas, positions, locations, cupos, cursos] = await Promise.all([
     prisma.companyMember.findMany({
       where: {
         companyId: company.id,
@@ -53,6 +54,7 @@ export default async function TrabajadoresPage(props: {
     prisma.position.findMany({ where: { companyId: company.id } }),
     prisma.companyLocation.findMany({ where: { companyId: company.id } }),
     cuposEmpresa(company.id),
+    prisma.course.findMany({ where: { status: "publicado" }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }),
   ]);
 
   const puedeEditar = user.role.code !== ROLES.SUPERVISOR;
@@ -126,6 +128,7 @@ export default async function TrabajadoresPage(props: {
         <NuevoTrabajador
           companyId={company.id}
           disponibles={cupos.disponibles}
+          cursos={cursos}
           areas={areas.map((a) => ({ id: a.id, name: a.name }))}
           positions={positions.map((p) => ({ id: p.id, name: p.name }))}
           locations={locations.map((l) => ({ id: l.id, name: l.name }))}
@@ -168,7 +171,7 @@ export default async function TrabajadoresPage(props: {
                           <p className="truncate font-semibold text-navy-700">
                             {m.user.firstName} {m.user.lastName}
                           </p>
-                          <p className="truncate text-[11px] text-navy-400">{m.user.email}</p>
+                          <p className="truncate text-[11px] text-navy-400">{correoVisible(m.user.email)}</p>
                         </div>
                       </div>
                     </td>

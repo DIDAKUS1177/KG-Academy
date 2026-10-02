@@ -48,7 +48,7 @@ export default function RecuperarPage() {
             <p className="font-display text-base font-bold text-navy-700">Si su empresa le dio el acceso</p>
             <p className="mt-1 text-sm leading-relaxed text-navy-500">
               Pídale al área de talento humano o al responsable de SST de su empresa que restablezca su
-              contraseña desde el panel empresarial.
+              contraseña desde el panel empresarial. Es la vía para quien ingresa con su número de documento porque no tiene correo registrado.
             </p>
           </div>
         </div>

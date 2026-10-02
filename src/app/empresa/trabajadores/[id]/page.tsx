@@ -10,6 +10,7 @@ import { IconAward, IconBook, IconCheck, IconClock, IconArrowRight } from "@/com
 import { motivoParaConservar } from "@/lib/cuentas";
 import { RestablecerClave } from "./RestablecerClave";
 import { EliminarTrabajador } from "./EliminarTrabajador";
+import { correoVisible } from "@/lib/identidad";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,7 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
                 {u.firstName} {u.lastName}
               </h1>
               <p className="text-sm text-navy-400">
-                {u.email} &middot; CC {u.documentNumber ?? "—"}
+                {correoVisible(u.email)} &middot; CC {u.documentNumber ?? "—"}
               </p>
             </div>
             <div className="mb-2">

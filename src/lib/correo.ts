@@ -15,6 +15,7 @@
  *     recuperación manual (empresa o KG).
  */
 import nodemailer from "nodemailer";
+import { tieneCorreoReal } from "@/lib/identidad";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -35,6 +36,8 @@ export function correoConfigurado() {
 export type Correo = { para: string; asunto: string; texto: string; html: string };
 
 export async function enviarCorreo(c: Correo) {
+  // Las cuentas sin correo (ingresan con su documento) no reciben mensajes.
+  if (!tieneCorreoReal(c.para)) return;
   const smtp = datosSmtp();
   if (smtp) {
     const transporte = nodemailer.createTransport(smtp);

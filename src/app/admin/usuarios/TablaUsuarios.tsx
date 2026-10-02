@@ -5,6 +5,7 @@ import { STATUS_LABEL, ROLE_LABEL } from "@/lib/constants";
 import { Avatar, StatusBadge } from "@/components/ui";
 import { IconUsers } from "@/components/Icons";
 import { GestionUsuarios, type UsuarioFila } from "./GestionUsuarios";
+import { correoVisible, tieneCorreoReal } from "@/lib/identidad";
 
 type Fila = UsuarioFila & {
   companyName: string | null;
@@ -70,7 +71,7 @@ export function TablaUsuarios({
                       <p className="truncate font-semibold text-navy-700">
                         {u.firstName} {u.lastName}
                       </p>
-                      <p className="truncate text-[11px] text-navy-400">{u.email}</p>
+                      <p className="truncate text-[11px] text-navy-400">{correoVisible(u.email)}{u.documentNumber && !tieneCorreoReal(u.email) ? ` · ingresa con ${u.documentNumber}` : ""}</p>
                     </div>
                   </div>
                 </td>

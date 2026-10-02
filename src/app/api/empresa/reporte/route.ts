@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { toCsv, formatDate } from "@/lib/utils";
+import { correoVisible, usuarioDeIngreso } from "@/lib/identidad";
 import { ETIQUETA_SEMAFORO, indicadoresEmpresa, mostrarMeta, mostrarValor, semaforo } from "@/lib/indicadores";
 
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
@@ -52,7 +53,8 @@ export async function GET(req: Request) {
       Nombres: m.user.firstName,
       Apellidos: m.user.lastName,
       Documento: m.user.documentNumber ?? "",
-      Correo: m.user.email,
+      Correo: correoVisible(m.user.email),
+      Usuario_de_ingreso: usuarioDeIngreso(m.user),
       Area: m.area?.name ?? "",
       Cargo: m.position?.name ?? "",
       Sede: m.location?.name ?? "",
@@ -89,7 +91,7 @@ export async function GET(req: Request) {
     rows = intentos.map((i) => ({
       Documento: i.user.documentNumber ?? "",
       Trabajador: `${i.user.firstName} ${i.user.lastName}`,
-      Correo: i.user.email,
+      Correo: correoVisible(i.user.email),
       ...datos(i.userId),
       Curso: i.assessment.course.title,
       Codigo_curso: i.assessment.course.code,
@@ -185,7 +187,7 @@ export async function GET(req: Request) {
       return {
         Documento: a.user.documentNumber ?? "",
         Trabajador: `${a.user.firstName} ${a.user.lastName}`,
-        Correo: a.user.email,
+        Correo: correoVisible(a.user.email),
         Area: m?.area?.name ?? "",
         Cargo: m?.position?.name ?? "",
         Sede: m?.location?.name ?? "",

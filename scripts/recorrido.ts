@@ -143,6 +143,7 @@ async function entrarCon(correo: string, clave: string) {
 
 type Paso = { nombre: string; ok: boolean; detalle?: string; curso?: string };
 const lotesCreados: string[] = [];
+const INICIO = new Date();
 
 async function acciones(cursoId: string) {
   const sufijo = Date.now().toString(36);
@@ -299,6 +300,40 @@ async function acciones(cursoId: string) {
   } finally {
     await prisma.companySubscription.update({ where: { id: suscripcion.id }, data: { seats: suscripcion.seats } });
   }
+
+  // 5c. Alta versátil: sin correo, área/cargo/sede nuevas, supervisor, fila inválida y cursos en el mismo paso.
+  const docSinCorreo = `RCDOC${sufijo}`.toUpperCase();
+  const lote = await llamar("POST", "/api/empresa/trabajadores", empresa, {
+    companyId,
+    modo: "masivo",
+    cursos: [curso.id],
+    filas: [
+      { firstName: "Sin", lastName: "Correo", documentNumber: docSinCorreo, area: `Recorrido área ${sufijo}`, cargo: `Recorrido cargo ${sufijo}`, sede: `Recorrido sede ${sufijo}` },
+      { firstName: "Super", lastName: "Visor", email: `supervisor.${sufijo}@demo.test`, rol: "supervisor" },
+      { firstName: "Mal", lastName: "Correo", email: "no-es-un-correo" },
+    ],
+  });
+  const sinCorreo = await prisma.user.findUnique({
+    where: { documentNumber: docSinCorreo },
+    include: { memberships: { include: { area: true, position: true, location: true } }, enrollments: true },
+  });
+  const supervisor = await prisma.user.findUnique({ where: { email: `supervisor.${sufijo}@demo.test` }, include: { role: true, enrollments: true } });
+  const vinculo = sinCorreo?.memberships[0];
+  paso(
+    "Carga masiva con persona sin correo, área/cargo/sede nuevas, supervisor y una fila inválida",
+    lote.status === 200 && lote.data.creados === 2 && (lote.data.errores as unknown[]).length === 1 &&
+      vinculo?.area?.name === `Recorrido área ${sufijo}` && vinculo?.position?.name === `Recorrido cargo ${sufijo}` &&
+      vinculo?.location?.name === `Recorrido sede ${sufijo}` && supervisor?.role.code === "supervisor",
+    `${lote.status} ${lote.texto.slice(0, 160)}`
+  );
+  paso(
+    "Los cursos elegidos se asignan en el mismo paso",
+    !!sinCorreo?.enrollments.some((e) => e.courseId === curso.id) && !!supervisor?.enrollments.some((e) => e.courseId === curso.id),
+    `${lote.data.asignadas}`
+  );
+  const credencial = (lote.data.credenciales as { usuario: string; clave: string }[] | undefined)?.find((c) => c.usuario === docSinCorreo);
+  const porDocumento = credencial ? await entrarCon(docSinCorreo, credencial.clave) : null;
+  paso("Quien no tiene correo ingresa con su número de documento", porDocumento?.redirect === "/cambiar-clave", `${porDocumento?.status ?? "sin credencial"}`);
 
   // 6. KG crea un usuario con clave temporal.
   const u = await llamar("POST", "/api/admin/usuario", admin, { firstName: "Usuario", lastName: "Recorrido", email: `usuario.${sufijo}@demo.test`, roleCode: "estudiante" });
@@ -503,7 +538,10 @@ async function catalogo() {
 }
 
 async function limpiar() {
-  const usuarios = await prisma.user.findMany({ where: { email: { endsWith: "@demo.test" } }, select: { id: true } });
+  const usuarios = await prisma.user.findMany({
+    where: { OR: [{ email: { endsWith: "@demo.test" } }, { email: { endsWith: "@sin-correo.invalid" }, documentNumber: { startsWith: "RCDOC" } }] },
+    select: { id: true },
+  });
   const ids = usuarios.map((u) => u.id);
   const cursos = await prisma.course.findMany({ where: { code: { startsWith: "KG-RC-" } }, select: { id: true } });
   const idsCursos = cursos.map((c) => c.id);
@@ -515,6 +553,10 @@ async function limpiar() {
     prisma.user.deleteMany({ where: { id: { in: ids } } }),
     prisma.assignmentBatch.deleteMany({ where: { id: { in: lotesCreados } } }),
     prisma.course.deleteMany({ where: { id: { in: idsCursos } } }),
+    prisma.assignmentBatch.deleteMany({ where: { name: { startsWith: "Alta de trabajadores" }, createdAt: { gte: INICIO } } }),
+    prisma.area.deleteMany({ where: { name: { startsWith: "Recorrido " } } }),
+    prisma.position.deleteMany({ where: { name: { startsWith: "Recorrido " } } }),
+    prisma.companyLocation.deleteMany({ where: { name: { startsWith: "Recorrido " } } }),
   ]);
   for (const a of await readdir(BUZON).catch(() => [] as string[])) {
     if (a.includes("@demo.test")) await rm(path.join(BUZON, a), { force: true });

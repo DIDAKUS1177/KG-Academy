@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser, audit } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
-import { formatDate } from "@/lib/utils";
+import { asignarCurso } from "@/lib/asignaciones";
 
 const schema = z.object({
   companyId: z.string(),
@@ -58,86 +58,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "La fecha límite no es válida" }, { status: 400 });
   }
 
-  const batch = await prisma.assignmentBatch.create({
-    data: {
-      companyId,
-      courseId,
-      createdById: user.id,
-      name: parsed.data.batchName ?? `Asignación ${course.code}`,
-      dueDate,
-      totalTargets: userIds.length,
-    },
+  const { creadas, omitidas, batchId } = await asignarCurso({
+    companyId,
+    course,
+    userIds,
+    actorId: user.id,
+    dueDate,
+    isMandatory: parsed.data.isMandatory,
+    batchName: parsed.data.batchName,
   });
-
-  let creadas = 0;
-  let omitidas = 0;
-
-  for (const userId of userIds) {
-    const existe = await prisma.courseAssignment.findUnique({
-      where: { companyId_courseId_userId: { companyId, courseId, userId } },
-    });
-    if (existe) {
-      omitidas++;
-      continue;
-    }
-
-    const assignment = await prisma.courseAssignment.create({
-      data: {
-        companyId,
-        courseId,
-        userId,
-        batchId: batch.id,
-        assignedById: user.id,
-        isMandatory: parsed.data.isMandatory ?? true,
-        dueDate,
-        notifiedAt: new Date(),
-        status: "asignado",
-      },
-    });
-
-    const yaMatriculado = await prisma.enrollment.findUnique({
-      where: { userId_courseId: { userId, courseId } },
-    });
-    if (yaMatriculado) {
-      await prisma.enrollment.update({
-        where: { id: yaMatriculado.id },
-        data: { assignmentId: assignment.id, expiresAt: dueDate },
-      });
-    } else {
-      await prisma.enrollment.create({
-        data: {
-          userId,
-          courseId,
-          origin: "asignacion_empresa",
-          assignmentId: assignment.id,
-          expiresAt: dueDate,
-        },
-      });
-    }
-
-    await prisma.notification.create({
-      data: {
-        userId,
-        title: "Nuevo curso asignado",
-        message: `Su empresa le asignó el curso "${course.title}".${
-          dueDate ? ` Fecha limite: ${formatDate(dueDate)}.` : ""
-        }`,
-        linkUrl: `/aula/curso/${course.slug}`,
-        type: "info",
-      },
-    });
-
-    creadas++;
-  }
 
   await audit({
     userId: user.id,
     actorEmail: user.email,
     action: "asignar",
     entity: "course_assignments",
-    entityId: batch.id,
+    entityId: batchId,
     summary: `Asignación de "${course.title}": ${creadas} creadas, ${omitidas} omitidas`,
   });
 
-  return NextResponse.json({ ok: true, creadas, omitidas, batchId: batch.id });
+  return NextResponse.json({ ok: true, creadas, omitidas, batchId });
 }
