@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconUsers, IconAlert, IconCheck, IconUpload, IconDownload } from "@/components/Icons";
+import { esCorreoValido, normalizarDocumento } from "@/lib/identidad";
 
 type Opt = { id: string; name: string };
 type Curso = { id: string; code: string; title: string };
@@ -13,34 +14,53 @@ type Mensaje = { ok: boolean; text: string } | null;
 
 /** Columnas que se reconocen en la primera fila, en cualquier orden. */
 const ENCABEZADOS: Record<string, string[]> = {
-  firstName: ["nombres", "nombre", "primer nombre"],
-  lastName: ["apellidos", "apellido"],
-  documentNumber: ["documento", "cedula", "cc", "numero de documento", "identificacion", "no documento"],
-  email: ["correo", "email", "e-mail", "correo electronico"],
-  employeeCode: ["codigo", "codigo de empleado", "cod empleado"],
-  area: ["area", "departamento"],
-  cargo: ["cargo", "puesto"],
-  sede: ["sede", "ubicacion"],
-  rol: ["rol", "perfil"],
+  firstName: ["nombres", "nombre", "nombre s", "primer nombre", "nombres completos"],
+  lastName: ["apellidos", "apellido", "apellido s"],
+  documentNumber: [
+    "documento", "cedula", "cc", "c c", "numero de documento", "numero documento", "no documento", "no de documento",
+    "n documento", "nro documento", "documento de identidad", "documento identidad", "cedula de ciudadania", "cedula ciudadania",
+    "identificacion", "numero de identificacion",
+  ],
+  email: ["correo", "email", "e mail", "correo electronico", "mail"],
+  employeeCode: ["codigo", "codigo de empleado", "codigo empleado", "cod empleado", "codigo interno"],
+  area: ["area", "departamento", "dependencia"],
+  cargo: ["cargo", "puesto", "ocupacion"],
+  sede: ["sede", "ubicacion", "centro de trabajo"],
+  rol: ["rol", "perfil", "tipo"],
 };
 /** Sin encabezado, las columnas se toman en este orden (el de la plantilla). */
 const ORDEN = ["firstName", "lastName", "documentNumber", "email", "employeeCode", "area", "cargo", "sede", "rol"];
+/** Filas por petición: cada lote es corto y nunca llega al tiempo máximo del servidor. */
+const BLOQUE = 25;
 
 const sinTildes = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+/** "N° de Documento", "Nombre(s)", "Correo  electrónico" → texto comparable. */
+const titulo = (s: string) => sinTildes(s).replace(/[^a-z0-9]+/g, " ").trim();
+/** Palabras de relleno en los títulos: "N° de documento" y "Documento" son lo mismo. */
+const RELLENO = new Set(["n", "no", "nro", "num", "numero", "de", "del", "la", "el"]);
+const esencia = (t: string) => t.split(" ").filter((w) => !RELLENO.has(w)).join(" ");
+function columnaDe(h: string) {
+  const t = titulo(h);
+  return Object.entries(ENCABEZADOS).find(([, alias]) => alias.includes(t) || alias.includes(esencia(t)))?.[0] ?? "";
+}
 
-/** Divide una línea respetando comillas ("Gómez, Ana"). */
+/** Divide una línea respetando comillas al inicio de la celda ("Gómez, Ana"). */
 function partir(linea: string, sep: string) {
   const out: string[] = [];
   let actual = "";
   let comillas = false;
   for (let i = 0; i < linea.length; i++) {
     const c = linea[i];
-    if (c === '"') {
-      if (comillas && linea[i + 1] === '"') {
+    if (comillas) {
+      if (c === '"' && linea[i + 1] === '"') {
         actual += '"';
         i++;
-      } else comillas = !comillas;
-    } else if (c === sep && !comillas) {
+      } else if (c === '"') comillas = false;
+      else actual += c;
+    } else if (c === '"' && actual.trim() === "") {
+      comillas = true;
+      actual = "";
+    } else if (c === sep) {
       out.push(actual.trim());
       actual = "";
     } else actual += c;
@@ -50,48 +70,62 @@ function partir(linea: string, sep: string) {
 }
 
 type FilaLote = { linea: number; datos: Record<string, string>; error: string | null };
+type Lote = { filas: FilaLote[]; ignoradas: string[] };
 
-function leerLote(texto: string): FilaLote[] {
-  const lineas = texto.replace(/^﻿/, "").split(/\r?\n/).filter((l) => l.trim());
-  if (!lineas.length) return [];
+function leerLote(texto: string): Lote {
+  // La fila de cada línea es la de Excel, contando también las vacías.
+  const lineas = texto
+    .replace(/^﻿/, "")
+    .split(/\r\n|\r|\n/)
+    .map((l, i) => ({ l, n: i + 1 }))
+    .filter(({ l }) => l.replace(/[;,\t\s"]/g, "") !== "");
+  if (!lineas.length) return { filas: [], ignoradas: [] };
   // Separador: tabulador (pegado desde Excel), punto y coma (Excel en español) o coma.
-  const primera = lineas[0];
+  const primera = lineas[0].l;
   const sep = primera.includes("\t") ? "\t" : (primera.match(/;/g)?.length ?? 0) >= (primera.match(/,/g)?.length ?? 0) ? ";" : ",";
 
   let columnas = ORDEN;
-  let desde = 0;
-  const cabecera = partir(primera, sep).map(sinTildes);
-  const reconocidas = cabecera.map((h) => Object.entries(ENCABEZADOS).find(([, alias]) => alias.includes(h))?.[0] ?? "");
+  let ignoradas: string[] = [];
+  let datosDesde = 0;
+  const cabecera = partir(primera, sep);
+  const reconocidas = cabecera.map(columnaDe);
   if (reconocidas.filter(Boolean).length >= 2) {
     columnas = reconocidas;
-    desde = 1;
+    ignoradas = cabecera.filter((h, k) => h && !reconocidas[k]);
+    datosDesde = 1;
   }
 
   const vistos = new Set<string>();
-  return lineas.slice(desde).map((linea, i) => {
-    const celdas = partir(linea, sep);
+  const filas = lineas.slice(datosDesde).map(({ l, n }) => {
+    const celdas = partir(l, sep);
     const datos: Record<string, string> = {};
-    columnas.forEach((col, j) => {
-      if (col && celdas[j]) datos[col] = celdas[j];
+    columnas.forEach((col, k) => {
+      if (col && celdas[k]) datos[col] = celdas[k];
     });
     let error: string | null = null;
     const correo = (datos.email ?? "").toLowerCase();
-    const doc = (datos.documentNumber ?? "").replace(/[.\s-]/g, "");
+    const doc = normalizarDocumento(datos.documentNumber ?? "");
     if (!datos.firstName || !datos.lastName) error = "Faltan nombres o apellidos";
-    else if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) error = "Correo no válido";
+    else if (correo && !esCorreoValido(correo)) error = "Correo no válido";
     else if (!correo && !doc) error = "Sin correo, el documento es obligatorio";
     else if ((correo && vistos.has(correo)) || (doc && vistos.has(doc))) error = "Repetido en el archivo";
     if (!error) {
       if (correo) vistos.add(correo);
       if (doc) vistos.add(doc);
     }
-    return { linea: i + 1 + desde, datos, error };
+    return { linea: n, datos, error };
   });
+  return { filas, ignoradas };
 }
 
-/** Lee un CSV de Excel: primero como UTF-8 y, si trae tildes de Windows, como ANSI. */
+/**
+ * Lee un CSV o texto de Excel: UTF-16 ("Texto Unicode"), UTF-8 o, si trae
+ * tildes de Windows, ANSI (windows-1252).
+ */
 async function leerArchivo(archivo: File) {
-  const bytes = await archivo.arrayBuffer();
+  const bytes = new Uint8Array(await archivo.arrayBuffer());
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(bytes);
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(bytes);
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
@@ -106,7 +140,8 @@ function descargarCsv(nombre: string, contenido: string) {
   a.href = url;
   a.download = nombre;
   a.click();
-  URL.revokeObjectURL(url);
+  // Liberar enseguida puede cancelar la descarga en Firefox o Safari.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 const PLANTILLA = [
@@ -257,9 +292,9 @@ export function NuevoTrabajador({
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [fecha, setFecha] = useState("");
 
-  const lote = useMemo(() => leerLote(texto), [texto]);
+  const [progreso, setProgreso] = useState<string | null>(null);
+  const { filas: lote, ignoradas } = useMemo(() => leerLote(texto), [texto]);
   const validas = lote.filter((f) => !f.error);
-  const trabajadoresValidos = validas.filter((f) => sinTildes(f.datos.rol ?? "") !== "supervisor").length;
 
   const asignacion = { cursos: elegidos, dueDate: fecha || null };
   const textoAsignadas = (n?: number) => (n ? ` Se asignaron ${n} curso(s).` : "");
@@ -283,6 +318,7 @@ export function NuevoTrabajador({
     setLoading(true);
     setMsg(null);
     setCreds([]);
+    setErroresServidor([]);
     const { ok, data } = await enviar({ modo: "individual", trabajador: datos });
     setLoading(false);
     if (!ok) return setMsg({ ok: false, text: data.error ?? "No fue posible crear el trabajador" });
@@ -305,22 +341,49 @@ export function NuevoTrabajador({
     setMsg(null);
     setCreds([]);
     setErroresServidor([]);
-    const { ok, data } = await enviar({ modo: "masivo", filas: validas.map((f) => f.datos) });
+    // Se envía por bloques: un lote de 170 personas en una sola petición podía
+    // pasar el tiempo máximo del servidor y perder las contraseñas temporales.
+    const total = { creados: 0, vinculados: 0, omitidos: 0, sinCupo: 0, asignadas: 0 };
+    const errores: { linea: number; motivo: string }[] = [];
+    const nuevas: Credencial[] = [];
+    let aviso = "";
+    let cortado: string | null = null;
+    for (let k = 0; k < validas.length; k += BLOQUE) {
+      const bloque = validas.slice(k, k + BLOQUE);
+      setProgreso(`Cargando ${Math.min(k + BLOQUE, validas.length)} de ${validas.length}...`);
+      const { ok, data } = await enviar({ modo: "masivo", filas: bloque.map((f) => f.datos) });
+      if (!ok) {
+        cortado = `${data.error ?? "Se interrumpió la carga"}. Quedaron sin procesar ${validas.length - k} fila(s) desde la fila ${bloque[0].linea}.`;
+        break;
+      }
+      for (const c of Object.keys(total) as (keyof typeof total)[]) total[c] += data[c] ?? 0;
+      nuevas.push(...(data.credenciales ?? []));
+      errores.push(
+        ...(data.errores ?? []).map((er: { fila: number; motivo: string }) => ({ linea: bloque[er.fila - 1]?.linea ?? er.fila, motivo: er.motivo }))
+      );
+      if (data.aviso) aviso = data.aviso;
+    }
+    setProgreso(null);
     setLoading(false);
-    if (!ok) return setMsg({ ok: false, text: data.error ?? "No fue posible procesar el archivo" });
-    const partes = [`${data.creados} cuenta(s) creada(s)`];
-    if (data.vinculados) partes.push(`${data.vinculados} vinculada(s)`);
-    if (data.omitidos) partes.push(`${data.omitidos} omitida(s)`);
+
+    const partes = [`${total.creados} cuenta(s) creada(s)`];
+    if (total.vinculados) partes.push(`${total.vinculados} vinculada(s)`);
+    if (total.omitidos) partes.push(`${total.omitidos} ya estaban o con error`);
+    const conErrores = lote.length - validas.length;
     setMsg({
-      ok: !data.sinCupo && !data.errores?.length,
-      text: `${partes.join(", ")}.${textoAsignadas(data.asignadas)}${data.aviso ? ` ${data.aviso}` : ""}`,
+      ok: !cortado && !errores.length && !conErrores,
+      text: `${partes.join(", ")}.${textoAsignadas(total.asignadas)}${aviso ? ` ${aviso}` : ""}${
+        conErrores ? ` ${conErrores} fila(s) con errores no se enviaron: corríjalas en la vista previa.` : ""
+      }${cortado ? ` ${cortado}` : ""}`,
     });
-    setErroresServidor(
-      (data.errores ?? []).map((er: { fila: number; motivo: string }) => ({ linea: validas[er.fila - 1]?.linea ?? er.fila, motivo: er.motivo }))
-    );
-    setCreds(data.credenciales ?? []);
-    setTexto("");
-    setArchivo(null);
+    setErroresServidor(errores);
+    setCreds(nuevas);
+    // Si todo entró, se limpia; si no, se deja el texto para corregir y volver a
+    // cargar (quien ya quedó en la empresa se omite solo).
+    if (!cortado && !errores.length && !conErrores) {
+      setTexto("");
+      setArchivo(null);
+    }
     router.refresh();
   }
 
@@ -407,8 +470,8 @@ export function NuevoTrabajador({
             <div>
               <label className="label">Rol</label>
               <select name="rol" className="select" defaultValue="trabajador">
-                <option value="trabajador">Trabajador (toma cursos, ocupa cupo)</option>
-                <option value="supervisor">Supervisor (consulta el avance, no ocupa cupo)</option>
+                <option value="trabajador">Trabajador (toma cursos)</option>
+                <option value="supervisor">Supervisor (también consulta el avance de su equipo)</option>
               </select>
             </div>
             <div>
@@ -456,9 +519,9 @@ export function NuevoTrabajador({
         ) : (
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
-              <label className="btn-outline btn-sm cursor-pointer">
+              <label className="btn-outline btn-sm cursor-pointer focus-within:ring-2 focus-within:ring-lime-400">
                 <IconUpload width={14} height={14} /> Subir archivo CSV
-                <input type="file" accept=".csv,.txt,text/csv,text/plain" onChange={elegirArchivo} className="hidden" />
+                <input type="file" accept=".csv,.txt,text/csv,text/plain" onChange={elegirArchivo} className="sr-only" />
               </label>
               <button type="button" onClick={() => descargarCsv("plantilla-trabajadores-kg-academy.csv", PLANTILLA)} className="btn-ghost btn-sm">
                 <IconDownload width={14} height={14} /> Descargar plantilla
@@ -492,11 +555,18 @@ export function NuevoTrabajador({
                   {lote.length - validas.length > 0 && (
                     <span className="font-bold text-red-600">{lote.length - validas.length} con errores (no se cargan)</span>
                   )}
-                  <span className={trabajadoresValidos > disponibles ? "font-bold text-amber-700" : "text-navy-500"}>
-                    {trabajadoresValidos} ocupan cupo · {disponibles} disponibles
-                    {trabajadoresValidos > disponibles ? " · los que no alcancen quedarán por fuera" : ""}
+                  <span className={validas.length > disponibles ? "font-bold text-amber-700" : "text-navy-500"}>
+                    {disponibles} cupos disponibles
+                    {validas.length > disponibles ? " · quienes no alcancen quedarán por fuera" : ""}
                   </span>
+                  {lote.length > 200 && <span className="text-navy-500">Se muestran las primeras 200 filas; se cargan todas.</span>}
                 </div>
+                {ignoradas.length > 0 && (
+                  <p className="mb-2 text-xs text-amber-700">
+                    Columnas que no se reconocieron y se ignoran: {ignoradas.join(", ")}. Use los títulos de la plantilla si
+                    las necesita.
+                  </p>
+                )}
                 <div className="max-h-72 overflow-auto rounded-xl border border-navy-100">
                   <table className="table-kg">
                     <thead>
@@ -531,11 +601,11 @@ export function NuevoTrabajador({
             <div>
               <button onClick={crearMasivo} disabled={loading || validas.length === 0} className="btn-lime">
                 <IconUpload width={16} height={16} />
-                {loading ? "Procesando..." : `Cargar ${validas.length} persona(s)`}
+                {loading ? progreso ?? "Procesando..." : `Cargar ${validas.length} persona(s)`}
               </button>
               <p className="mt-2 text-xs text-navy-400">
-                Hasta 200 por carga. Quien ya está en la empresa se omite; cada cuenta nueva recibe su propia contraseña
-                temporal.
+                Se cargan por bloques de {BLOQUE}, sin límite de filas más allá de los cupos. Quien ya está en la empresa se
+                omite; cada cuenta nueva recibe su propia contraseña temporal.
               </p>
             </div>
           </div>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
-import { resolveCompany, companyKpis } from "@/lib/empresa";
+import { resolveCompany, companyKpis, alcanceEmpresa, asignacionesVigentes } from "@/lib/empresa";
 import { cuposEmpresa } from "@/lib/cupos";
 import { indicadoresEmpresa, mostrarMeta, mostrarValor } from "@/lib/indicadores";
 import { EtiquetaSemaforo } from "@/components/TableroIndicadores";
@@ -29,17 +29,22 @@ export default async function InformePage(props: { searchParams: Promise<{ empre
     companyKpis(company.id),
     cuposEmpresa(company.id),
     prisma.courseAssignment.findMany({
-      where: { companyId: company.id },
+      where: asignacionesVigentes(company.id),
       include: { course: true, enrollment: true, user: true },
     }),
     prisma.companyMember.findMany({
       where: { companyId: company.id, status: { not: "retirado" } },
       include: { area: true },
     }),
-    prisma.certificate.findMany({
-      where: { user: { memberships: { some: { companyId: company.id } } } },
-      select: { status: true, expiresAt: true, hours: true },
-    }),
+    // Solo certificados de cursos que la empresa asignó a esa persona.
+    alcanceEmpresa(company.id).then(async (alcance) =>
+      (
+        await prisma.certificate.findMany({
+          where: { userId: { in: alcance.userIds }, courseId: { in: alcance.courseIds } },
+          select: { status: true, expiresAt: true, hours: true, userId: true, courseId: true },
+        })
+      ).filter((c) => c.courseId && alcance.incluye(c.userId, c.courseId))
+    ),
     indicadoresEmpresa(company.id),
   ]);
 
@@ -87,6 +92,8 @@ export default async function InformePage(props: { searchParams: Promise<{ empre
 
   return (
     <div className="mx-auto max-w-5xl">
+      {/* El informe se imprime en vertical (el certificado usa horizontal). */}
+      <style>{"@media print { @page { size: A4 portrait; margin: 12mm; } }"}</style>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/empresa/reportes" className="btn-ghost btn-sm">← Volver a reportes</Link>
         <PrintButton texto="Imprimir o guardar en PDF" />

@@ -6,13 +6,14 @@ import { ROLES } from "@/lib/constants";
 import { claveTemporal } from "@/lib/admin-api";
 import { cuposEmpresa, mensajeSinCupo } from "@/lib/cupos";
 import { asignarCurso } from "@/lib/asignaciones";
-import { correoInterno, normalizarDocumento, usuarioDeIngreso } from "@/lib/identidad";
+import { correoInterno, esCorreoValido, normalizarDocumento, usuarioDeIngreso } from "@/lib/identidad";
+import { finDelDia } from "@/lib/utils";
 
 /**
  * Alta de trabajadores de una empresa: de a uno o en lote (filas leídas de un
  * Excel/CSV o pegadas desde Excel).
  *
- *   - Trabajador o supervisor. Solo los trabajadores ocupan cupo del plan.
+ *   - Trabajador o supervisor. Los dos ocupan cupo del plan.
  *   - Sin correo se puede: la persona ingresa con su número de documento.
  *   - Área, cargo y sede llegan por id (formulario) o por nombre (lote); un
  *     nombre que la empresa aún no tiene se crea.
@@ -56,7 +57,6 @@ const filaSchema = z.object({
 });
 type Fila = z.infer<typeof filaSchema>;
 
-const correoValido = z.string().email();
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 
 type Resultado =
@@ -80,6 +80,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado sobre esta empresa" }, { status: 403 });
   }
 
+  if (!(await prisma.company.findUnique({ where: { id: companyId }, select: { id: true } }))) {
+    return NextResponse.json({ error: "Empresa no encontrada" }, { status: 404 });
+  }
+
   const [rolEstudiante, rolSupervisor] = await Promise.all([
     prisma.role.findUnique({ where: { code: ROLES.ESTUDIANTE } }),
     prisma.role.findUnique({ where: { code: ROLES.SUPERVISOR } }),
@@ -94,7 +98,7 @@ export async function POST(req: Request) {
   if (cursos.length !== idsCursos.length) {
     return NextResponse.json({ error: "Solo se pueden asignar cursos publicados" }, { status: 409 });
   }
-  const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
+  const dueDate = parsed.data.dueDate ? finDelDia(parsed.data.dueDate) : null;
   if (dueDate && Number.isNaN(dueDate.getTime())) {
     return NextResponse.json({ error: "La fecha límite no es válida" }, { status: 400 });
   }
@@ -138,7 +142,7 @@ export async function POST(req: Request) {
   async function crear(f: Fila): Promise<Resultado> {
     const documento = f.documentNumber ? normalizarDocumento(f.documentNumber) : "";
     const correo = f.email.toLowerCase();
-    if (correo && !correoValido.safeParse(correo).success) return { tipo: "error", motivo: "El correo no es válido" };
+    if (correo && !esCorreoValido(correo)) return { tipo: "error", motivo: "El correo no es válido" };
     if (!correo && !documento) return { tipo: "error", motivo: "Sin correo, el documento es obligatorio: con él ingresará" };
     const email = correo || correoInterno(documento);
     const esSupervisor = clave(f.rol ?? "") === "supervisor";
@@ -160,7 +164,9 @@ export async function POST(req: Request) {
       const miembro = await prisma.companyMember.findUnique({
         where: { companyId_userId: { companyId, userId: yaExiste.id } },
       });
-      if (miembro) return { tipo: "ya_estaba", userId: yaExiste.id };
+      if (miembro?.status === "activo") return { tipo: "ya_estaba", userId: yaExiste.id };
+      // Retirado o suspendido: reactivarlo es decisión de KG (puede estar en otra empresa).
+      if (miembro) return { tipo: "error", motivo: "Esa persona figura como retirada de la empresa. Pídale a KG que la reactive." };
       // Solo se vincula a un estudiante independiente. Una cuenta de otra
       // empresa o del equipo de KG no se puede "traer": se la quitaría a quien
       // corresponde.
@@ -174,11 +180,8 @@ export async function POST(req: Request) {
       return { tipo: "vinculado", userId: yaExiste.id };
     }
 
-    // Los supervisores no ocupan cupo de trabajadores.
-    if (!esSupervisor) {
-      if (disponibles <= 0) return { tipo: "sin_cupo" };
-      disponibles--;
-    }
+    if (disponibles <= 0) return { tipo: "sin_cupo" };
+    disponibles--;
     const temporal = claveTemporal();
     const nuevo = await prisma.user.create({
       data: {
@@ -282,7 +285,14 @@ export async function POST(req: Request) {
       errores.push({ fila: i + 1, motivo: fila.error.issues[0].message });
       continue;
     }
-    const r = await crear(fila.data);
+    // Una fila que falla no detiene el lote: las cuentas ya creadas deben
+    // llegar con su contraseña temporal.
+    let r: Resultado;
+    try {
+      r = await crear(fila.data);
+    } catch {
+      r = { tipo: "error", motivo: "No se pudo procesar esta fila; inténtelo de nuevo" };
+    }
     if (r.tipo === "creado") {
       creados++;
       credenciales.push({ nombre: r.nombre, usuario: r.usuario, email: r.usuario, clave: r.clave });
@@ -293,7 +303,10 @@ export async function POST(req: Request) {
     } else if (r.tipo === "ya_estaba") {
       omitidos++;
       enLaEmpresa.push(r.userId);
-    } else if (r.tipo === "sin_cupo") sinCupo++;
+    } else if (r.tipo === "sin_cupo") {
+      sinCupo++;
+      errores.push({ fila: i + 1, motivo: "Sin cupo disponible en el plan" });
+    }
     else if (r.tipo === "error") {
       omitidos++;
       errores.push({ fila: i + 1, motivo: r.motivo });

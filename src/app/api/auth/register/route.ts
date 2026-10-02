@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { audit, createSession, hashPassword } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { problemaClaveNueva } from "@/lib/claves";
+import { normalizarDocumento, tieneCorreoReal } from "@/lib/identidad";
 
 const schema = z.object({
   firstName: z.string().min(2, "Ingrese su nombre"),
@@ -25,11 +26,16 @@ export async function POST(req: Request) {
   }
   const d = parsed.data;
   const email = d.email.trim().toLowerCase();
+  const documento = d.documentNumber ? normalizarDocumento(d.documentNumber) || null : null;
+  // El dominio interno es de las cuentas sin correo que crea una empresa.
+  if (!tieneCorreoReal(email)) {
+    return NextResponse.json({ error: "Escriba su correo electrónico real" }, { status: 400 });
+  }
 
   if (await prisma.user.findUnique({ where: { email } })) {
     return NextResponse.json({ error: "Ya existe una cuenta con ese correo" }, { status: 409 });
   }
-  if (d.documentNumber && (await prisma.user.findUnique({ where: { documentNumber: d.documentNumber } }))) {
+  if (documento && (await prisma.user.findUnique({ where: { documentNumber: documento } }))) {
     return NextResponse.json({ error: "Ya existe una cuenta con ese documento" }, { status: 409 });
   }
 
@@ -50,7 +56,7 @@ export async function POST(req: Request) {
       firstName: d.firstName.trim(),
       lastName: d.lastName.trim(),
       documentType: d.documentType || null,
-      documentNumber: d.documentNumber?.trim() || null,
+      documentNumber: documento,
       phone: d.phone?.trim() || null,
       roleId: role.id,
       companyId: null,

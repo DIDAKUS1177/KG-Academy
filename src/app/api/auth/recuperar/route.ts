@@ -4,6 +4,7 @@ import { audit } from "@/lib/auth";
 import { leerCuerpo, respuestaError, respuestaOk } from "@/lib/admin-api";
 import { correoConfigurado, enviarCorreo, plantillaCorreo } from "@/lib/correo";
 import { emitirCodigo, MINUTOS_VIGENCIA } from "@/lib/recuperacion";
+import { tieneCorreoReal } from "@/lib/identidad";
 
 /**
  * Paso 1 de la recuperación: envía un código al correo registrado.
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
   const { email } = cuerpo.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (user && user.status !== "bloqueado" && user.status !== "inactivo") {
+  if (user && tieneCorreoReal(user.email) && user.status !== "bloqueado" && user.status !== "inactivo") {
     const emitido = await emitirCodigo(user.id);
     if (emitido) {
       try {

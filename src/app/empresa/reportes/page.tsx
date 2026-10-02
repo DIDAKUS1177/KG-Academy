@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
-import { resolveCompany, companyKpis } from "@/lib/empresa";
+import { resolveCompany, companyKpis, alcanceEmpresa } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
 import { EmptyState, ProgressBar, SectionTitle, StatCard } from "@/components/ui";
 import { IconDownload, IconFile, IconUsers, IconAward, IconChart, IconCheck, IconClipboard, IconBook, IconClock, IconArrowRight } from "@/components/Icons";
@@ -24,7 +24,15 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
       include: { location: true, position: true, user: { include: { enrollments: true } } },
     }),
     prisma.position.findMany({ where: { companyId: company.id } }),
-    prisma.certificate.count({ where: { user: { companyId: company.id } } }),
+    // Solo certificados de cursos que la empresa asignó a esa persona.
+    alcanceEmpresa(company.id).then(async (alcance) =>
+      (
+        await prisma.certificate.findMany({
+          where: { userId: { in: alcance.userIds }, courseId: { in: alcance.courseIds } },
+          select: { userId: true, courseId: true },
+        })
+      ).filter((c) => c.courseId && alcance.incluye(c.userId, c.courseId)).length
+    ),
   ]);
 
   function agrupar(key: "location" | "position") {

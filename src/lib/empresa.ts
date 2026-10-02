@@ -21,10 +21,38 @@ export async function resolveCompany(user: {
   return prisma.company.findUnique({ where: { id } });
 }
 
+/**
+ * Asignaciones vigentes de una empresa: las de personas que siguen vinculadas
+ * (no retiradas). Es el mismo universo para el panel, el informe y los
+ * indicadores, para que el cumplimiento no salga con dos cifras distintas.
+ */
+export const asignacionesVigentes = (companyId: string) => ({
+  companyId,
+  user: { memberships: { some: { companyId, status: { not: "retirado" } } } },
+});
+
+/**
+ * Alcance de los reportes de una empresa: solo los pares (trabajador, curso)
+ * que ella asignó. Una persona que también está en otra empresa, o que compró
+ * un curso por su cuenta, no expone esos resultados a esta empresa.
+ */
+export async function alcanceEmpresa(companyId: string) {
+  const asignaciones = await prisma.courseAssignment.findMany({
+    where: { companyId },
+    select: { userId: true, courseId: true },
+  });
+  const pares = new Set(asignaciones.map((a) => `${a.userId}|${a.courseId}`));
+  return {
+    userIds: [...new Set(asignaciones.map((a) => a.userId))],
+    courseIds: [...new Set(asignaciones.map((a) => a.courseId))],
+    incluye: (userId: string, courseId: string) => pares.has(`${userId}|${courseId}`),
+  };
+}
+
 /** Indicadores de cumplimiento de una empresa. */
 export async function companyKpis(companyId: string) {
   const assignments = await prisma.courseAssignment.findMany({
-    where: { companyId },
+    where: asignacionesVigentes(companyId),
     include: { enrollment: true },
   });
 

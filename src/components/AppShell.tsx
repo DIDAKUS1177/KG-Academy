@@ -150,7 +150,7 @@ export function AppShell({
 
         <main className="mx-auto max-w-[1400px] px-4 py-8 lg:px-8">{children}</main>
 
-        <footer className="border-t border-navy-100 px-4 py-6 text-center text-[11px] text-navy-300 lg:px-8">
+        <footer className="border-t border-navy-100 px-4 py-6 text-center text-[11px] text-navy-300 lg:px-8 print:hidden">
           KG Academy &middot; KG Gestión Integral S.A.S. &middot; Desarrollado por{" "}
           <CreditoDesarrollo />
         </footer>

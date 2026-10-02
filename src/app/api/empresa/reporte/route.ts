@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { toCsv, formatDate } from "@/lib/utils";
+import { alcanceEmpresa } from "@/lib/empresa";
 import { correoVisible, usuarioDeIngreso } from "@/lib/identidad";
 import { ETIQUETA_SEMAFORO, indicadoresEmpresa, mostrarMeta, mostrarValor, semaforo } from "@/lib/indicadores";
 
@@ -83,11 +84,14 @@ export async function GET(req: Request) {
   } else if (tipo === "evaluaciones") {
     nombre = "evaluaciones";
     const datos = await fichas(companyId);
-    const intentos = await prisma.assessmentAttempt.findMany({
-      where: { status: "finalizado", user: { memberships: { some: { companyId } } } },
-      include: { user: true, assessment: { include: { course: true } } },
-      orderBy: { submittedAt: "desc" },
-    });
+    const alcance = await alcanceEmpresa(companyId);
+    const intentos = (
+      await prisma.assessmentAttempt.findMany({
+        where: { status: "finalizado", userId: { in: alcance.userIds }, assessment: { courseId: { in: alcance.courseIds } } },
+        include: { user: true, assessment: { include: { course: true } } },
+        orderBy: { submittedAt: "desc" },
+      })
+    ).filter((i) => alcance.incluye(i.userId, i.assessment.courseId));
     rows = intentos.map((i) => ({
       Documento: i.user.documentNumber ?? "",
       Trabajador: `${i.user.firstName} ${i.user.lastName}`,
@@ -107,11 +111,18 @@ export async function GET(req: Request) {
   } else if (tipo === "lecciones") {
     nombre = "avance_por_leccion";
     const datos = await fichas(companyId);
-    const avances = await prisma.lessonProgress.findMany({
-      where: { user: { memberships: { some: { companyId } } } },
-      include: { user: true, lesson: { include: { module: { include: { course: true } } } } },
-      orderBy: [{ userId: "asc" }, { updatedAt: "desc" }],
-    });
+    const alcance = await alcanceEmpresa(companyId);
+    const avances = (
+      await prisma.lessonProgress.findMany({
+        where: { userId: { in: alcance.userIds }, lesson: { module: { courseId: { in: alcance.courseIds } } } },
+        select: {
+          userId: true, status: true, percent: true, timeSpentSec: true, startedAt: true, completedAt: true,
+          user: { select: { firstName: true, lastName: true, documentNumber: true } },
+          lesson: { select: { title: true, module: { select: { title: true, courseId: true, course: { select: { title: true } } } } } },
+        },
+        orderBy: [{ userId: "asc" }, { updatedAt: "desc" }],
+      })
+    ).filter((a) => alcance.incluye(a.userId, a.lesson.module.courseId));
     rows = avances.map((a) => ({
       Documento: a.user.documentNumber ?? "",
       Trabajador: `${a.user.firstName} ${a.user.lastName}`,
@@ -152,11 +163,13 @@ export async function GET(req: Request) {
     }));
   } else if (tipo === "certificados") {
     nombre = "certificados";
-    const certs = await prisma.certificate.findMany({
-      where: { user: { companyId } },
-      include: { user: true },
-      orderBy: { issuedAt: "desc" },
-    });
+    const alcance = await alcanceEmpresa(companyId);
+    const certs = (
+      await prisma.certificate.findMany({
+        where: { userId: { in: alcance.userIds }, courseId: { in: alcance.courseIds } },
+        orderBy: { issuedAt: "desc" },
+      })
+    ).filter((c) => c.courseId && alcance.incluye(c.userId, c.courseId));
     rows = certs.map((c) => ({
       Codigo: c.code,
       Trabajador: c.studentName,

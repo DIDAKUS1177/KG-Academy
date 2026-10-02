@@ -282,7 +282,7 @@ async function acciones(cursoId: string) {
 
   // 5b. Cupos: sin cupo libre no se crean ni vinculan trabajadores.
   const suscripcion = await prisma.companySubscription.findFirstOrThrow({ where: { companyId, status: "activa" }, orderBy: { startsAt: "desc" } });
-  const ocupados = await prisma.companyMember.count({ where: { companyId, status: { not: "retirado" }, user: { role: { code: "estudiante" } } } });
+  const ocupados = await prisma.companyMember.count({ where: { companyId, status: { not: "retirado" }, user: { role: { code: { in: ["estudiante", "supervisor"] } } } } });
   await prisma.companySubscription.update({ where: { id: suscripcion.id }, data: { seats: ocupados } });
   try {
     const lleno = await llamar("POST", "/api/empresa/trabajadores", empresa, {
@@ -334,6 +334,38 @@ async function acciones(cursoId: string) {
   const credencial = (lote.data.credenciales as { usuario: string; clave: string }[] | undefined)?.find((c) => c.usuario === docSinCorreo);
   const porDocumento = credencial ? await entrarCon(docSinCorreo, credencial.clave) : null;
   paso("Quien no tiene correo ingresa con su número de documento", porDocumento?.redirect === "/cambiar-clave", `${porDocumento?.status ?? "sin credencial"}`);
+
+  // 5d. Correcciones de la revisión previa al despliegue.
+  if (sinCorreo) {
+    await prisma.companyMember.updateMany({ where: { companyId, userId: sinCorreo.id }, data: { status: "retirado" } });
+    const retirado = await llamar("POST", "/api/empresa/trabajadores", empresa, {
+      companyId,
+      modo: "masivo",
+      cursos: [curso.id],
+      filas: [{ firstName: "Sin", lastName: "Correo", documentNumber: docSinCorreo }],
+    });
+    const errorRetirado = (retirado.data.errores as { motivo: string }[] | undefined)?.[0]?.motivo ?? "";
+    paso("A una persona retirada no la reactiva la empresa por su cuenta", retirado.status === 200 && errorRetirado.includes("retirada"), errorRetirado || retirado.texto.slice(0, 100));
+  }
+  const formula = await llamar("POST", "/api/empresa/trabajadores", empresa, {
+    companyId,
+    modo: "individual",
+    cursos: [curso.id],
+    dueDate: "2030-01-15",
+    trabajador: { firstName: "=HYPERLINK(1)", lastName: "Formula", documentNumber: `RF${sufijo}`, email: `formula.${sufijo}@demo.test` },
+  });
+  const nomina = await (await fetch(`${BASE}/api/empresa/reporte?tipo=trabajadores`, { headers: { cookie: empresa } })).text();
+  paso("Los CSV neutralizan fórmulas de Excel en los nombres", formula.status === 200 && nomina.includes("'=HYPERLINK(1)") && !nomina.includes(";=HYPERLINK"), `${formula.status}`);
+  const asignacionFecha = await prisma.courseAssignment.findFirst({ where: { user: { email: `formula.${sufijo}@demo.test` }, courseId: curso.id } });
+  paso("La fecha límite vale hasta el final del día en Colombia", asignacionFecha?.dueDate?.toISOString() === "2030-01-16T04:59:59.999Z", asignacionFecha?.dueDate?.toISOString() ?? "sin asignación");
+  const interno = await llamar("POST", "/api/auth/register", undefined, {
+    firstName: "Intruso",
+    lastName: "Interno",
+    email: `doc.${sufijo}@sin-correo.invalid`,
+    password: `Registro-${sufijo}-Clave`,
+    acceptedTerms: true,
+  });
+  paso("Nadie se registra con un correo interno de las cuentas sin correo", interno.status === 400, `${interno.status}`);
 
   // 6. KG crea un usuario con clave temporal.
   const u = await llamar("POST", "/api/admin/usuario", admin, { firstName: "Usuario", lastName: "Recorrido", email: `usuario.${sufijo}@demo.test`, roleCode: "estudiante" });

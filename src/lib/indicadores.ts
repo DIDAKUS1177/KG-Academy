@@ -5,12 +5,14 @@
  * calcula el semáforo. Las metas son referencias de buena práctica para el
  * SG-SST; cada empresa puede fijar las suyas en su plan de trabajo anual.
  *
- * Se calculan sobre los trabajadores (rol estudiante) vinculados y no
- * retirados. Los usan el panel de la empresa, el informe imprimible y el
+ * Se calculan sobre las personas vinculadas y no retiradas que toman cursos
+ * (trabajadores y supervisores), y solo con los cursos que la empresa les
+ * asignó. Los usan el panel de la empresa, el informe imprimible y el
  * reporte "indicadores".
  */
 import { prisma } from "@/lib/prisma";
-import { ROLES } from "@/lib/constants";
+import { ROLES_CON_CUPO } from "@/lib/cupos";
+import { alcanceEmpresa, asignacionesVigentes } from "@/lib/empresa";
 
 export type Indicador = {
   clave: string;
@@ -63,30 +65,43 @@ export function mostrarMeta(i: Indicador) {
 
 export async function indicadoresEmpresa(companyId: string): Promise<Indicador[]> {
   const hoy = new Date();
-  const miembros = await prisma.companyMember.findMany({
-    where: { companyId, status: { not: "retirado" }, user: { role: { code: ROLES.ESTUDIANTE } } },
-    select: { userId: true, user: { select: { lastLoginAt: true } } },
-  });
+  const [miembros, alcance] = await Promise.all([
+    prisma.companyMember.findMany({
+      where: { companyId, status: { not: "retirado" }, user: { role: { code: { in: ROLES_CON_CUPO } } } },
+      select: { userId: true, user: { select: { lastLoginAt: true } } },
+    }),
+    alcanceEmpresa(companyId),
+  ]);
   const ids = miembros.map((m) => m.userId);
 
-  const [asignaciones, intentos, certificados, tiempo] = await Promise.all([
+  const [asignaciones, todosIntentos, todosCertificados, avances] = await Promise.all([
     prisma.courseAssignment.findMany({
-      where: { companyId, userId: { in: ids } },
+      where: asignacionesVigentes(companyId),
       select: { userId: true, status: true, dueDate: true, createdAt: true, enrollment: { select: { completedAt: true, finalScore: true } } },
     }),
     prisma.assessmentAttempt.findMany({
-      where: { userId: { in: ids }, status: "finalizado", attemptNo: 1, assessment: { type: "final" } },
-      select: { passed: true },
+      where: { userId: { in: ids }, status: "finalizado", attemptNo: 1, assessment: { type: "final", courseId: { in: alcance.courseIds } } },
+      select: { passed: true, userId: true, assessment: { select: { courseId: true } } },
     }),
     prisma.certificate.findMany({
-      where: { userId: { in: ids }, status: "vigente" },
-      select: { hours: true, expiresAt: true },
+      where: { userId: { in: ids }, status: "vigente", courseId: { in: alcance.courseIds } },
+      select: { hours: true, expiresAt: true, userId: true, courseId: true },
     }),
-    prisma.lessonProgress.aggregate({ where: { userId: { in: ids } }, _sum: { timeSpentSec: true } }),
+    prisma.lessonProgress.findMany({
+      where: { userId: { in: ids }, lesson: { module: { courseId: { in: alcance.courseIds } } } },
+      select: { timeSpentSec: true, userId: true, lesson: { select: { module: { select: { courseId: true } } } } },
+    }),
   ]);
+  // Solo los cursos que esta empresa le asignó a cada persona.
+  const intentos = todosIntentos.filter((i) => alcance.incluye(i.userId, i.assessment.courseId));
+  const certificados = todosCertificados.filter((c) => c.courseId && alcance.incluye(c.userId, c.courseId));
+  const segundos = avances
+    .filter((a) => alcance.incluye(a.userId, a.lesson.module.courseId))
+    .reduce((s, a) => s + a.timeSpentSec, 0);
 
   const total = ids.length;
-  const conCurso = new Set(asignaciones.map((a) => a.userId)).size;
+  const enCupo = new Set(ids);
+  const conCurso = new Set(asignaciones.filter((a) => enCupo.has(a.userId)).map((a) => a.userId)).size;
   const completadas = asignaciones.filter((a) => a.status === "completado");
   const vencidas = asignaciones.filter((a) => a.dueDate && a.dueDate < hoy && a.status !== "completado");
   // Oportunidad: entre las asignaciones con fecha límite cuyo plazo ya se cumplió
@@ -98,7 +113,9 @@ export async function indicadoresEmpresa(companyId: string): Promise<Indicador[]
   const notas = completadas.map((a) => a.enrollment?.finalScore).filter((n): n is number => typeof n === "number");
   const dias = completadas
     .filter((a) => a.enrollment?.completedAt)
-    .map((a) => (a.enrollment!.completedAt!.getTime() - a.createdAt.getTime()) / DIA);
+    .map((a) => (a.enrollment!.completedAt!.getTime() - a.createdAt.getTime()) / DIA)
+    // Quien ya había terminado el curso antes de que se lo asignaran no cuenta.
+    .filter((d) => d >= 0);
   const activados = miembros.filter((m) => m.user.lastLoginAt).length;
   const activos30 = miembros.filter((m) => m.user.lastLoginAt && hoy.getTime() - m.user.lastLoginAt.getTime() <= 30 * DIA).length;
   const vigentes = certificados.filter((c) => !c.expiresAt || c.expiresAt > hoy);
@@ -210,10 +227,10 @@ export async function indicadoresEmpresa(companyId: string): Promise<Indicador[]
       clave: "estudio",
       grupo: "Vigencia",
       nombre: "Tiempo de estudio registrado",
-      valor: (tiempo._sum.timeSpentSec ?? 0) / 3600,
+      valor: segundos / 3600,
       unidad: "h",
       formula: "Suma del tiempo que los trabajadores pasaron dentro de las lecciones",
-      detalle: total ? `${Math.round((tiempo._sum.timeSpentSec ?? 0) / 60 / total)} min por trabajador` : "Sin trabajadores",
+      detalle: total ? `${Math.round(segundos / 60 / total)} min por persona` : "Sin trabajadores",
     },
     {
       clave: "por_vencer",

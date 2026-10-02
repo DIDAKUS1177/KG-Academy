@@ -9,6 +9,7 @@
  * Centralizar eso aquí evita que cada ruta repita el mismo bloque de veinte
  * líneas y que una olvide, por ejemplo, la auditoría.
  */
+import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { ZodSchema } from "zod";
 import { requireUser } from "@/lib/auth";
@@ -82,7 +83,7 @@ export const limpiar = (v?: string | null) => {
 export function claveTemporal() {
   const letras = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
   const bloque = (n: number) =>
-    Array.from({ length: n }, () => letras[Math.floor(Math.random() * letras.length)]).join("");
-  const numero = String(Math.floor(1000 + Math.random() * 9000));
+    Array.from({ length: n }, () => letras[randomInt(letras.length)]).join("");
+  const numero = String(randomInt(1000, 10000));
   return `Kg-${bloque(4)}-${numero}`;
 }

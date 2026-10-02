@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit, hashPassword, revocarSesiones } from "@/lib/auth";
 import { motivoParaConservar } from "@/lib/cuentas";
+import { correoInterno, normalizarDocumento, tieneCorreoReal } from "@/lib/identidad";
 import { ROLES, USER_STATUS } from "@/lib/constants";
 import {
   ROLES_KG,
@@ -60,6 +61,12 @@ const editarSchema = z.object({
 
 const borrarSchema = z.object({ userId: z.string().min(1) });
 
+/** Documento como lo guarda toda la plataforma (sin puntos ni espacios), o null. */
+function documentoNormalizado(v: string | null | undefined) {
+  const l = limpiar(v);
+  return l ? normalizarDocumento(l) || null : null;
+}
+
 /** Solo un superadministrador puede crear o tocar a otro superadministrador. */
 function puedeTocarSuperadmin(actorRole: string) {
   return actorRole === ROLES.SUPERADMIN;
@@ -79,10 +86,11 @@ export async function POST(req: Request) {
   }
 
   const email = d.email.toLowerCase();
+  if (!tieneCorreoReal(email)) return respuestaError("Escriba un correo real");
   if (await prisma.user.findUnique({ where: { email } })) {
     return respuestaError("Ya existe una cuenta con ese correo", 409);
   }
-  const documento = limpiar(d.documentNumber);
+  const documento = documentoNormalizado(d.documentNumber);
   if (documento && (await prisma.user.findUnique({ where: { documentNumber: documento } }))) {
     return respuestaError("Ya existe una cuenta con ese documento", 409);
   }
@@ -222,18 +230,28 @@ export async function PATCH(req: Request) {
     return respuestaError("Solo un superadministrador puede otorgar ese rol", 403);
   }
 
-  const email = d.email?.toLowerCase();
+  let email = d.email?.toLowerCase();
+  if (email && email !== before.email && !tieneCorreoReal(email)) {
+    return respuestaError("Escriba un correo real");
+  }
   if (email && email !== before.email) {
     if (await prisma.user.findUnique({ where: { email } })) {
       return respuestaError("Ya existe otra cuenta con ese correo", 409);
     }
   }
-  const documento = d.documentNumber === undefined ? undefined : limpiar(d.documentNumber);
+  const documento = d.documentNumber === undefined ? undefined : documentoNormalizado(d.documentNumber);
   if (documento && documento !== before.documentNumber) {
     if (await prisma.user.findUnique({ where: { documentNumber: documento } })) {
       return respuestaError("Ya existe otra cuenta con ese documento", 409);
     }
   }
+  // Quien no tiene correo ingresa con su documento: no se le puede quitar, y su
+  // dirección interna sigue al documento nuevo.
+  const sinCorreo = !tieneCorreoReal(email ?? before.email);
+  if (sinCorreo && documento === null) {
+    return respuestaError("Esta persona no tiene correo: el documento es obligatorio porque ingresa con él");
+  }
+  if (sinCorreo && documento && documento !== before.documentNumber) email = correoInterno(documento);
 
   let roleId: string | undefined;
   if (d.roleCode && d.roleCode !== before.role.code) {

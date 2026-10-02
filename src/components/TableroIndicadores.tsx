@@ -13,7 +13,11 @@ export function EtiquetaSemaforo({ indicador }: { indicador: Indicador }) {
   const s = semaforo(indicador);
   const c = COLOR[s];
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${c.fondo} ${c.texto}`}>
+    // print-color-adjust: el navegador no imprime colores de fondo si no se le pide.
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${c.fondo} ${c.texto}`}
+      style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}
+    >
       <span className={`h-2 w-2 rounded-full ${c.punto}`} aria-hidden />
       {ETIQUETA_SEMAFORO[s]}
     </span>

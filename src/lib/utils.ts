@@ -63,17 +63,32 @@ export function certificateCode(year = new Date().getFullYear()) {
   return `KG-${year}-${out}`;
 }
 
+/**
+ * CSV con punto y coma (Excel en español). Excel ejecuta como fórmula un texto
+ * que empieza con = + - @: a esos se les antepone un apóstrofo, para que un
+ * nombre malicioso cargado en la nómina no se ejecute al abrir el archivo.
+ */
 export function toCsv(rows: Record<string, unknown>[]): string {
-  if (!rows.length) return "";
+  if (!rows.length) return "Mensaje\nSin registros a la fecha";
   const headers = Object.keys(rows[0]);
   const escape = (v: unknown) => {
-    const s = v === null || v === undefined ? "" : String(v);
-    return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    let s = v === null || v === undefined ? "" : String(v);
+    if (typeof v === "string" && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",;\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [
     headers.join(";"),
     ...rows.map((r) => headers.map((h) => escape(r[h])).join(";")),
   ].join("\n");
+}
+
+/**
+ * Fecha límite elegida en un calendario ("2026-10-15"): vale hasta el final de
+ * ese día en Colombia. new Date("2026-10-15") sería la medianoche UTC, que en
+ * Colombia es el día anterior a las 7 p. m.
+ */
+export function finDelDia(fecha: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? new Date(`${fecha}T23:59:59.999-05:00`) : new Date(fecha);
 }
 
 /** "1 módulo", "3 módulos": número con la palabra en singular o plural. */

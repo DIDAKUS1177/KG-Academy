@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser, audit } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { asignarCurso } from "@/lib/asignaciones";
+import { finDelDia } from "@/lib/utils";
 
 const schema = z.object({
   companyId: z.string(),
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Solo puede asignar cursos a trabajadores activos de su empresa" }, { status: 403 });
   }
 
-  const dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
+  const dueDate = parsed.data.dueDate ? finDelDia(parsed.data.dueDate) : null;
   if (dueDate && Number.isNaN(dueDate.getTime())) {
     return NextResponse.json({ error: "La fecha límite no es válida" }, { status: 400 });
   }
