@@ -68,7 +68,7 @@ async function main() {
 
   const publicas = ["/", "/catalogo", `/curso/${curso.slug}`, `/curso/${cursoJuego.slug}`, "/verificar", `/verificar/${certificado.code}`, "/ingresar", "/registro", "/recuperar"];
   const aula = ["/aula", "/aula/cursos", `/aula/curso/${curso.slug}`, `/aula/curso/${cursoJuego.slug}`, "/aula/certificados", "/aula/logros", "/aula/notificaciones", "/aula/perfil"];
-  const empresa = ["/empresa", "/empresa/trabajadores", `/empresa/trabajadores/${miembro.userId}`, "/empresa/asignar", "/empresa/seguimiento", "/empresa/reportes", "/empresa/reportes/informe"];
+  const empresa = ["/empresa", "/empresa/trabajadores", `/empresa/trabajadores/${miembro.userId}`, "/empresa/asignar", "/empresa/seguimiento", "/empresa/reportes", "/empresa/reportes/informe", "/empresa/cursos"];
   const admin = ["/admin", "/admin/usuarios", "/admin/empresas", "/admin/cursos", `/admin/cursos/${curso.id}`, `/admin/cursos/${cursoJuego.id}`, "/admin/evaluaciones", `/admin/evaluaciones/${evaluacion.id}`, "/admin/certificados", "/admin/reportes", "/admin/auditoria", "/admin/permisos", "/admin/configuracion"];
 
   const ok = (rs: string[]): Caso[] => rs.map((ruta) => ({ ruta, espera: "ok" }));
@@ -366,6 +366,82 @@ async function acciones(cursoId: string) {
     acceptedTerms: true,
   });
   paso("Nadie se registra con un correo interno de las cuentas sin correo", interno.status === 400, `${interno.status}`);
+
+  // 5e. KG decide qué cursos ve cada empresa. Se usa la cuenta recién creada
+  // (la del trabajador principal ya tuvo su sesión anulada al restablecerle la clave).
+  const correoAlumno = `formula.${sufijo}@demo.test`;
+  const claveAlumno = (formula.data.credenciales as { clave: string }[] | undefined)?.[0]?.clave;
+  const alumnoUser = await prisma.user.findUnique({ where: { email: correoAlumno } });
+  let alumno: string | undefined;
+  if (claveAlumno) {
+    const temporal = await entrarCon(correoAlumno, claveAlumno);
+    const definitiva = `Recorrido-${sufijo}-Otra`;
+    await llamar("POST", "/api/auth/clave", temporal.cookie, { actual: claveAlumno, nueva: definitiva });
+    alumno = (await entrarCon(correoAlumno, definitiva)).cookie;
+  }
+  const [otro, oculto] = await prisma.course.findMany({
+    where: { status: "publicado", id: { not: curso.id }, enrollments: { none: { userId: alumnoUser?.id ?? "" } } },
+    take: 2,
+  });
+  if (alumno && alumnoUser && otro && oculto) {
+    // Ya tenía "oculto" antes de que KG restringiera el catálogo.
+    await prisma.enrollment.create({ data: { userId: alumnoUser.id, courseId: oculto.id, origin: "asignacion_empresa" } });
+    const restringir = await llamar("PUT", "/api/admin/empresa/cursos", admin, { companyId, catalogo: "seleccion", courseIds: [curso.id] });
+    try {
+      const pantallaAsignar = await llamar("GET", "/empresa/asignar", empresa);
+      const asignarOtro = await llamar("POST", "/api/empresa/asignar", empresa, { companyId, courseId: otro.id, userIds: [alumnoUser.id] });
+      paso(
+        "Con catálogo restringido la empresa solo asigna los cursos habilitados",
+        restringir.status === 200 && !pantallaAsignar.texto.includes(otro.title) && pantallaAsignar.texto.includes(curso.title) && asignarOtro.status === 403,
+        `${restringir.status} ${asignarOtro.status}`
+      );
+      const disponibles = await llamar("GET", "/aula/cursos", alumno);
+      const abrirOtro = await llamar("GET", `/aula/curso/${otro.slug}`, alumno);
+      const matriculado = await prisma.enrollment.findUnique({ where: { userId_courseId: { userId: alumnoUser.id, courseId: otro.id } } });
+      paso(
+        "Su trabajador no ve ni puede abrir un curso no habilitado",
+        disponibles.status === 200 && !disponibles.texto.includes(otro.title) && abrirOtro.status === 404 && !matriculado,
+        `${disponibles.status} ${abrirOtro.status} ${matriculado ? "se matriculó" : ""}`
+      );
+      const planEmpresa = await llamar("GET", "/empresa/cursos", empresa);
+      paso("La empresa ve en «Cursos de su plan» solo lo habilitado", planEmpresa.texto.includes(curso.title) && !planEmpresa.texto.includes(otro.title), `${planEmpresa.status}`);
+      const propio = await llamar("GET", `/aula/curso/${oculto.slug}`, alumno);
+      paso("Un curso que ya tenía sigue abriéndose aunque se oculte", propio.status === 200, `${propio.status}`);
+    } finally {
+      await llamar("PUT", "/api/admin/empresa/cursos", admin, { companyId, catalogo: "todos" });
+    }
+    const empresaDemo2 = await prisma.company.findUniqueOrThrow({ where: { id: companyId }, include: { cursosHabilitados: true } });
+    paso("Al volver a «todo el catálogo» no quedan restricciones", empresaDemo2.catalogo === "todos" && empresaDemo2.cursosHabilitados.length === 0, empresaDemo2.catalogo);
+
+    // 5f. Curso exclusivo: solo lo ven las empresas a las que KG se lo habilita.
+    const otraEmpresa = await prisma.company.findFirst({ where: { id: { not: companyId } } });
+    const exclusivo = await llamar("PUT", "/api/admin/curso/empresas", admin, { courseId: otro.id, visibilidad: "exclusivo", companyIds: otraEmpresa ? [otraEmpresa.id] : [] });
+    try {
+      const catalogoPublico = await llamar("GET", "/catalogo");
+      const fichaPublica = await llamar("GET", `/curso/${otro.slug}`);
+      const asignarSinEl = await llamar("GET", "/empresa/asignar", empresa);
+      const asignarlo = await llamar("POST", "/api/empresa/asignar", empresa, { companyId, courseId: otro.id, userIds: [alumnoUser.id] });
+      paso(
+        "Un curso exclusivo no lo ve el público ni otra empresa, aunque tenga catálogo completo",
+        exclusivo.status === 200 && !catalogoPublico.texto.includes(otro.title) && fichaPublica.status === 404 &&
+          !asignarSinEl.texto.includes(otro.title) && asignarlo.status === 403,
+        `${exclusivo.status} ${fichaPublica.status} ${asignarlo.status}`
+      );
+      await llamar("PUT", "/api/admin/empresa/cursos", admin, { companyId, catalogo: "todos", courseIds: [otro.id] });
+      const asignarConEl = await llamar("GET", "/empresa/asignar", empresa);
+      const planConEl = await llamar("GET", "/empresa/cursos", empresa);
+      paso(
+        "Al habilitarle el exclusivo, la empresa lo ve y lo puede asignar",
+        asignarConEl.texto.includes(otro.title) && planConEl.texto.includes(otro.title),
+        `${asignarConEl.status}`
+      );
+    } finally {
+      await llamar("PUT", "/api/admin/empresa/cursos", admin, { companyId, catalogo: "todos" });
+      await llamar("PUT", "/api/admin/curso/empresas", admin, { courseId: otro.id, visibilidad: "general", companyIds: [] });
+    }
+    const otroDespues = await prisma.course.findUniqueOrThrow({ where: { id: otro.id }, include: { empresasHabilitadas: true } });
+    paso("El curso vuelve a ser general sin empresas atadas", otroDespues.visibilidad === "general" && otroDespues.empresasHabilitadas.length === 0, otroDespues.visibilidad);
+  } else paso("Prueba de cursos visibles", false, "faltan datos: cuenta o cursos publicados");
 
   // 6. KG crea un usuario con clave temporal.
   const u = await llamar("POST", "/api/admin/usuario", admin, { firstName: "Usuario", lastName: "Recorrido", email: `usuario.${sufijo}@demo.test`, roleCode: "estudiante" });

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { filtroCatalogo } from "@/lib/acceso-cursos";
 import { requireRole } from "@/lib/auth";
 import { resolveCompany } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
@@ -54,7 +55,9 @@ export default async function TrabajadoresPage(props: {
     prisma.position.findMany({ where: { companyId: company.id } }),
     prisma.companyLocation.findMany({ where: { companyId: company.id } }),
     cuposEmpresa(company.id),
-    prisma.course.findMany({ where: { status: "publicado" }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }),
+    filtroCatalogo(company.id).then((catalogo) =>
+      prisma.course.findMany({ where: { status: "publicado", ...catalogo }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } })
+    ),
   ]);
 
   const puedeEditar = user.role.code !== ROLES.SUPERVISOR;

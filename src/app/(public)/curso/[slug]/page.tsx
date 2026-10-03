@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { esEquipoKG, puedeEmpezarCurso, puedeVerCurso } from "@/lib/acceso-cursos";
 import {
   IconClock,
   IconLayers,
@@ -43,6 +43,11 @@ export default async function CursoPublicoPage(props: { params: Promise<{ slug: 
         where: { userId_courseId: { userId: user.id, courseId: course.id } },
       })
     : null;
+
+  // ¿Su empresa (o el catálogo público) incluye el curso? Lo ya matriculado se conserva.
+  const habilitado = !!enrollment || (!!user && (await puedeEmpezarCurso(user, course)));
+  // Un curso exclusivo de una empresa solo lo ven ella y el equipo de KG.
+  if (course.visibilidad === "exclusivo" && !habilitado && !(user && esEquipoKG(user.role.code))) notFound();
 
   // Un curso sin publicar se anuncia, pero todavía no admite inscripciones.
   // Los revisores de KG sí pueden abrirlo en el aula para validarlo.
@@ -112,8 +117,8 @@ export default async function CursoPublicoPage(props: { params: Promise<{ slug: 
                   Acceso por suscripción
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-navy-400">
-                  KG Academy se contrata como servicio: su empresa activa el plan y todo el catálogo,
-                  con evaluaciones y certificados, queda disponible para sus trabajadores.
+                  KG Academy se contrata como servicio: su empresa activa el plan y los cursos que incluye,
+                  con evaluaciones y certificados, quedan disponibles para sus trabajadores.
                 </p>
               </div>
 
@@ -138,6 +143,13 @@ export default async function CursoPublicoPage(props: { params: Promise<{ slug: 
                   <Link href={`/aula/curso/${course.slug}`} className="btn-lime w-full py-3">
                     <IconPlay width={16} height={16} /> Continuar el curso
                   </Link>
+                ) : user && !habilitado ? (
+                  <div className="rounded-xl border border-navy-100 bg-navy-50/70 p-4 text-center">
+                    <p className="font-display text-base font-bold text-navy-700">No está en el plan de su empresa</p>
+                    <p className="mt-1 text-xs leading-relaxed text-navy-500">
+                      Pídale al responsable de capacitación de su empresa, o a KG, que lo habiliten.
+                    </p>
+                  </div>
                 ) : user ? (
                   <form action="/api/aula/matricular" method="post">
                     <input type="hidden" name="courseId" value={course.id} />

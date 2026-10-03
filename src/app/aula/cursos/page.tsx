@@ -114,7 +114,7 @@ export default async function MisCursosPage(props: { searchParams: Promise<{ est
       )}
 
       <div className="mt-12">
-        <CursosDisponibles userId={user.id} rol={user.role.code} />
+        <CursosDisponibles userId={user.id} rol={user.role.code} companyId={user.companyId} />
       </div>
     </div>
   );

@@ -48,7 +48,8 @@ export default async function LandingPage() {
   // Primero los cursos disponibles; si son menos de tres, se completan con los
   // que vienen en camino.
   const todos = await prisma.course.findMany({
-    where: { status: { in: ["publicado", "revision", "borrador"] } },
+    // Los cursos exclusivos de una empresa no se anuncian al público.
+    where: { status: { in: ["publicado", "revision", "borrador"] }, visibilidad: { not: "exclusivo" } },
     include: {
       category: true,
       modules: { include: { lessons: true } },

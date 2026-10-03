@@ -11,10 +11,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminEmpresas() {
   await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
 
-  const [companies, plans] = await Promise.all([
+  const [companies, plans, cursos] = await Promise.all([
     prisma.company.findMany({
       include: {
         _count: { select: { members: true } },
+        cursosHabilitados: { select: { courseId: true } },
         assignments: { select: { status: true, enrollment: { select: { progress: true } } } },
         subscriptions: {
           where: { status: "activa" },
@@ -26,6 +27,11 @@ export default async function AdminEmpresas() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.plan.findMany({ orderBy: { pricePerMonth: "asc" } }),
+    prisma.course.findMany({
+      where: { status: { not: "archivado" } },
+      select: { id: true, code: true, title: true, status: true, visibilidad: true },
+      orderBy: { code: "asc" },
+    }),
   ]);
 
   const leerLista = (json: string | null): string[] => {
@@ -46,6 +52,7 @@ export default async function AdminEmpresas() {
       />
 
       <PanelEmpresas
+        cursos={cursos}
         planes={plans.map((p) => ({
           id: p.id,
           code: p.code,
@@ -79,6 +86,8 @@ export default async function AdminEmpresas() {
             planNombre: sub?.plan.name ?? null,
             planValor: sub?.plan.pricePerMonth ?? null,
             seats: sub?.seats ?? 0,
+            catalogo: c.catalogo,
+            habilitados: c.cursosHabilitados.map((h) => h.courseId),
             trabajadores: c._count.members,
             asignaciones: total,
             completadas: c.assignments.filter((a) => a.status === "completado").length,

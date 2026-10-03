@@ -163,6 +163,8 @@ model Company {
   city          String?
   logoUrl       String?
   status        String   @default("activa") // activa | suspendida | inactiva
+  /// Qué cursos ve: "todos" (todo el catálogo publicado) o "seleccion" (solo los de company_courses).
+  catalogo      String   @default("todos")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -175,6 +177,7 @@ model Company {
   assignments   CourseAssignment[]
   batches       AssignmentBatch[]
   orders        Order[]
+  cursosHabilitados CompanyCourse[]
 
   @@map("companies")
 }
@@ -261,6 +264,20 @@ model Plan {
   @@map("plans")
 }
 
+/// Cursos habilitados para una empresa: los de su selección y los exclusivos que KG le activa.
+model CompanyCourse {
+  companyId String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, courseId])
+  @@index([courseId])
+  @@map("company_courses")
+}
+
 model CompanySubscription {
   id        String    @id @default(cuid())
   companyId String
@@ -316,6 +333,8 @@ model Course {
   categoryId     String
   instructorId   String?
   status         String    @default("borrador") // borrador | revision | publicado | despublicado | archivado
+  /// "general": todas las empresas con catálogo completo y el público; "exclusivo": solo las empresas habilitadas.
+  visibilidad    String    @default("general")
   accessType     String    @default("pago") // gratuito | pago | plan_empresarial | asignado
   price          Int       @default(0) // COP
   discountPrice  Int?
@@ -345,6 +364,7 @@ model Course {
   certificates Certificate[]
   orderItems   OrderItem[]
   questionBanks QuestionBank[]
+  empresasHabilitadas CompanyCourse[]
 
   @@index([status])
   @@index([categoryId])

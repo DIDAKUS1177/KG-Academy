@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ensureEnrollment } from "@/lib/progress";
-import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { puedeEmpezarCurso, puedeVerCurso } from "@/lib/acceso-cursos";
 import { htmlSeguro } from "@/lib/html-seguro";
 import { Breadcrumb, ProgressRing, StatusBadge } from "@/components/ui";
 import { LessonPlayer } from "./LessonPlayer";
@@ -48,7 +48,13 @@ export default async function AulaCursoPage(props: {
   // Un borrador solo lo abren los revisores de KG.
   if (!course || !puedeVerCurso(user.role.code, course.status)) notFound();
 
-  let enrollment = await ensureEnrollment(user.id, course.id, "gratuito");
+  // Abrir el curso matricula; si todavía no lo tiene, su empresa debe tenerlo
+  // habilitado (KG decide qué cursos ve cada empresa).
+  const yaMatriculado = await prisma.enrollment.findUnique({
+    where: { userId_courseId: { userId: user.id, courseId: course.id } },
+  });
+  if (!yaMatriculado && !(await puedeEmpezarCurso(user, course))) notFound();
+  let enrollment = yaMatriculado ?? (await ensureEnrollment(user.id, course.id, "gratuito"));
 
   const [progressRows, attempts, certificate] = await Promise.all([
     prisma.lessonProgress.findMany({ where: { enrollmentId: enrollment.id } }),

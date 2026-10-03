@@ -100,6 +100,7 @@ export default async function AdminCursos() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-display text-lg font-bold text-navy-700">{c.title}</h3>
                     <StatusBadge status={c.status} />
+                    {c.visibilidad === "exclusivo" && <span className="badge-amber">Exclusivo</span>}
                     <span className="badge-slate">{c.category.name}</span>
                   </div>
                   <p className="mt-1 line-clamp-2 max-w-2xl text-sm text-navy-400">{c.subtitle}</p>

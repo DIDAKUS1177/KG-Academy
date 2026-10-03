@@ -33,7 +33,7 @@ export default async function EmpresaLayout({ children }: { children: React.Reac
       title: "Informes",
       items: [
         { href: "/empresa/reportes", label: "Reportes", icon: <IconFile width={18} height={18} /> },
-        { href: "/catalogo", label: "Catálogo KG", icon: <IconBook width={18} height={18} /> },
+        { href: "/empresa/cursos", label: "Cursos de su plan", icon: <IconBook width={18} height={18} /> },
       ],
     },
   ];

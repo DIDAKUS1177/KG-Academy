@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { empresaVeCurso } from "@/lib/acceso-cursos";
 import { requireUser, audit, hashPassword } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { claveTemporal } from "@/lib/admin-api";
@@ -97,6 +98,10 @@ export async function POST(req: Request) {
     : [];
   if (cursos.length !== idsCursos.length) {
     return NextResponse.json({ error: "Solo se pueden asignar cursos publicados" }, { status: 409 });
+  }
+  const vistos = await Promise.all(cursos.map((c) => empresaVeCurso(companyId, c)));
+  if (vistos.includes(false)) {
+    return NextResponse.json({ error: "Alguno de los cursos no está habilitado para su empresa. Pídale a KG que lo active." }, { status: 403 });
   }
   const dueDate = parsed.data.dueDate ? finDelDia(parsed.data.dueDate) : null;
   if (dueDate && Number.isNaN(dueDate.getTime())) {

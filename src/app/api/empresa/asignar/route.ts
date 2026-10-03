@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { empresaVeCurso } from "@/lib/acceso-cursos";
 import { requireUser, audit } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { asignarCurso } from "@/lib/asignaciones";
@@ -36,6 +37,9 @@ export async function POST(req: Request) {
 
   const course = await prisma.course.findUnique({ where: { id: courseId } });
   if (!course) return NextResponse.json({ error: "Curso no encontrado" }, { status: 404 });
+  if (!(await empresaVeCurso(companyId, course))) {
+    return NextResponse.json({ error: "Este curso no está habilitado para su empresa. Pídale a KG que lo active." }, { status: 403 });
+  }
   if (course.status !== "publicado") {
     return NextResponse.json(
       { error: "Solo se pueden asignar cursos publicados. Este todavía está en preparación." },

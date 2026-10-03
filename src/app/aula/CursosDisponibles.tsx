@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { esEquipoKG, filtroCatalogo, puedeVerCurso } from "@/lib/acceso-cursos";
 import { cantidad } from "@/lib/utils";
 import { SectionTitle } from "@/components/ui";
 import { IconArrowRight, IconBook } from "@/components/Icons";
@@ -12,11 +12,14 @@ import { IconArrowRight, IconBook } from "@/components/Icons";
  * necesita buscar el catálogo público para comenzar. El equipo de KG ve
  * además los borradores, para revisarlos como los verá el estudiante.
  */
-export async function CursosDisponibles({ userId, rol }: { userId: string; rol: string }) {
+export async function CursosDisponibles({ userId, rol, companyId }: { userId: string; rol: string; companyId: string | null }) {
+  // El equipo de KG ve todo; un trabajador, solo lo que su empresa tiene habilitado.
+  const catalogo = esEquipoKG(rol) ? {} : await filtroCatalogo(companyId);
   const cursos = await prisma.course.findMany({
     where: {
       status: { in: ["publicado", "borrador", "revision"] },
       enrollments: { none: { userId } },
+      ...catalogo,
     },
     include: { category: true, modules: { include: { lessons: { select: { id: true } } } } },
     orderBy: [{ publishedAt: "desc" }, { title: "asc" }],

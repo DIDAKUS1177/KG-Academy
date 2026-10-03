@@ -19,6 +19,8 @@ export default async function CatalogoPage(props: {
     prisma.course.findMany({
       where: {
         status: { notIn: ["archivado"] },
+        // Los cursos exclusivos de una empresa no se anuncian al público.
+        visibilidad: { not: "exclusivo" },
         ...(categoria ? { category: { slug: categoria } } : {}),
         ...(q
           ? { OR: [{ title: { contains: q } }, { subtitle: { contains: q } }, { code: { contains: q } }] }

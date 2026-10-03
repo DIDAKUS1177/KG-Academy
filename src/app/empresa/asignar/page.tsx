@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { filtroCatalogo } from "@/lib/acceso-cursos";
 import { requireRole } from "@/lib/auth";
 import { resolveCompany } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
@@ -21,8 +22,9 @@ export default async function AsignarPage(props: { searchParams: Promise<{ empre
 
   const [courses, members, areas] = await Promise.all([
     prisma.course.findMany({
-      // Solo cursos publicados: un borrador no lo puede abrir el trabajador.
-      where: { status: "publicado" },
+      // Solo cursos publicados (un borrador no lo puede abrir el trabajador) y
+      // habilitados por KG para esta empresa.
+      where: { status: "publicado", ...(await filtroCatalogo(company.id)) },
       orderBy: { title: "asc" },
       select: { id: true, title: true, code: true, durationHours: true, status: true },
     }),

@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { Breadcrumb, StatusBadge } from "@/components/ui";
 import { CursoConstructor } from "./CursoConstructor";
+import { Disponibilidad } from "./Disponibilidad";
 import { IconEye } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
   const params = await props.params;
   const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
 
-  const [course, categorias, instructores] = await Promise.all([
+  const [course, categorias, instructores, empresas] = await Promise.all([
     prisma.course.findUnique({
       where: { id: params.id },
       include: {
@@ -28,6 +29,7 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
           orderBy: { order: "asc" },
         },
         assessments: { include: { questions: true }, orderBy: { order: "asc" } },
+        empresasHabilitadas: { select: { companyId: true } },
       },
     }),
     prisma.category.findMany({ where: { isActive: true }, orderBy: { order: "asc" } }),
@@ -35,6 +37,11 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
       where: { role: { code: { in: [ROLES.INSTRUCTOR, ROLES.ADMIN_KG, ROLES.SUPERADMIN] } }, status: "activo" },
       orderBy: { firstName: "asc" },
       select: { id: true, firstName: true, lastName: true },
+    }),
+    prisma.company.findMany({
+      where: { status: { not: "inactiva" } },
+      select: { id: true, legalName: true, tradeName: true, catalogo: true },
+      orderBy: { legalName: "asc" },
     }),
   ]);
   if (!course) notFound();
@@ -54,6 +61,7 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="h-display text-2xl">{course.title}</h1>
             <StatusBadge status={course.status} />
+            {course.visibilidad === "exclusivo" && <span className="badge-amber">Exclusivo</span>}
           </div>
           <p className="mt-1 text-sm text-navy-400">
             {course.code} &middot; {course.category.name} &middot; {course.durationHours} horas
@@ -68,6 +76,15 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
           </Link>
         </div>
       </div>
+
+      {actor.role.code !== ROLES.INSTRUCTOR && (
+        <Disponibilidad
+          courseId={course.id}
+          visibilidad={course.visibilidad}
+          habilitadas={course.empresasHabilitadas.map((e) => e.companyId)}
+          empresas={empresas.map((e) => ({ id: e.id, nombre: e.tradeName ?? e.legalName, catalogo: e.catalogo }))}
+        />
+      )}
 
       <CursoConstructor
         puedePublicar={actor.role.code !== ROLES.INSTRUCTOR}

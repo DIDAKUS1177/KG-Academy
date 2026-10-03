@@ -206,7 +206,7 @@ export default async function AulaHome() {
       </div>
 
 
-      <CursosDisponibles userId={user.id} rol={user.role.code} />
+      <CursosDisponibles userId={user.id} rol={user.role.code} companyId={user.companyId} />
     </div>
   );
 }

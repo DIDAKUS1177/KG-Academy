@@ -6,6 +6,7 @@ import { formatCOP } from "@/lib/utils";
 import { EmptyState, ProgressBar, SectionTitle, StatusBadge } from "@/components/ui";
 import { IconBuilding, IconArrowRight } from "@/components/Icons";
 import { GestionEmpresas, GestionPlanes, type EmpresaFila, type PlanFila } from "./GestionEmpresas";
+import { CursosVisibles, type CursoCatalogo } from "./CursosVisibles";
 
 type Tarjeta = EmpresaFila & {
   trabajadores: number;
@@ -14,14 +15,25 @@ type Tarjeta = EmpresaFila & {
   avance: number;
   planNombre: string | null;
   planValor: number | null;
+  catalogo: string;
+  habilitados: string[];
 };
 
 /**
  * Tarjetas de empresas y tabla de planes, con creación y edición.
  * Todo el estado de "qué ventana está abierta" vive aquí.
  */
-export function PanelEmpresas({ empresas, planes }: { empresas: Tarjeta[]; planes: PlanFila[] }) {
+export function PanelEmpresas({ empresas, planes, cursos }: { empresas: Tarjeta[]; planes: PlanFila[]; cursos: CursoCatalogo[] }) {
   const [editar, setEditar] = useState<EmpresaFila | null>(null);
+  // Se guarda solo el id: así la ventana siempre muestra la empresa recién refrescada.
+  const [catalogoId, setCatalogoId] = useState<string | null>(null);
+  const catalogoDe = empresas.find((e) => e.id === catalogoId) ?? null;
+  const publicados = cursos.filter((c) => c.status === "publicado");
+  /** Cursos publicados que ve la empresa, con la misma regla que el aula. */
+  const visibles = (c: Tarjeta) =>
+    publicados.filter((p) =>
+      c.habilitados.includes(p.id) || (c.catalogo !== "seleccion" && p.visibilidad !== "exclusivo")
+    ).length;
   const [editarPlan, setEditarPlan] = useState<PlanFila | null>(null);
 
   return (
@@ -29,6 +41,15 @@ export function PanelEmpresas({ empresas, planes }: { empresas: Tarjeta[]; plane
       <div className="mb-5 flex justify-end">
         <GestionEmpresas planes={planes} editar={editar} onCerrarEdicion={() => setEditar(null)} />
       </div>
+
+      {catalogoDe && (
+        <CursosVisibles
+          key={catalogoDe.id}
+          empresa={{ id: catalogoDe.id, nombre: catalogoDe.tradeName ?? catalogoDe.legalName, catalogo: catalogoDe.catalogo, habilitados: catalogoDe.habilitados }}
+          cursos={cursos}
+          onCerrar={() => setCatalogoId(null)}
+        />
+      )}
 
       {empresas.length === 0 ? (
         <EmptyState icon={<IconBuilding width={30} height={30} />} title="Aún no hay empresas registradas" description="Cree la primera con el botón de arriba." />
@@ -71,6 +92,18 @@ export function PanelEmpresas({ empresas, planes }: { empresas: Tarjeta[]; plane
                     <span>{Math.round(c.avance)}%</span>
                   </div>
                   <ProgressBar value={c.avance} />
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-navy-50/70 px-3 py-2.5 text-xs">
+                  <span className="text-navy-500">
+                    Cursos visibles:{" "}
+                    <span className="font-semibold text-navy-700">
+                      {c.catalogo === "seleccion" ? `${visibles(c)} de ${publicados.length} publicados` : `catálogo completo (${visibles(c)})`}
+                    </span>
+                  </span>
+                  <button onClick={() => setCatalogoId(c.id)} className="font-bold text-lime-700 hover:underline">
+                    Elegir cursos
+                  </button>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between border-t border-navy-50 pt-4 text-xs">
