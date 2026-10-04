@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EvaluacionPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
+  const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
 
   const a = await prisma.assessment.findUnique({
     where: { id: params.id },
@@ -47,7 +47,7 @@ export default async function EvaluacionPage(props: { params: Promise<{ id: stri
             <StatusBadge status={a.isPublished ? "publicado" : "borrador"} />
           </div>
           <p className="mt-1 text-sm text-navy-400">
-            {a.course.code} &middot; {a.course.title} &middot; {a._count.attempts} intento(s) presentados
+            {a.course.code} &middot; {a.course.title} &middot; {a._count.attempts === 1 ? "1 intento presentado" : `${a._count.attempts} intentos presentados`}
           </p>
         </div>
         <Link href={`/admin/cursos/${a.courseId}`} className="btn-outline btn-sm">
@@ -56,6 +56,7 @@ export default async function EvaluacionPage(props: { params: Promise<{ id: stri
       </div>
 
       <EditorEvaluacion
+        puedePublicar={actor.role.code !== ROLES.INSTRUCTOR}
         evaluacion={{
           id: a.id,
           title: a.title,

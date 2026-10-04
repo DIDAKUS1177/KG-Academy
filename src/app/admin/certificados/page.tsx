@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { buscarCertificado } from "@/lib/busqueda";
 import { requireRole } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
@@ -17,15 +18,7 @@ export default async function AdminCertificados(props: { searchParams: Promise<{
   const q = searchParams.q?.trim();
 
   const certs = await prisma.certificate.findMany({
-    where: q
-      ? {
-          OR: [
-            { code: { contains: q.toUpperCase() } },
-            { studentName: { contains: q } },
-            { studentDocument: { contains: q } },
-          ],
-        }
-      : {},
+    where: q ? buscarCertificado(q) : {},
     include: { user: { include: { company: true } }, course: true },
     orderBy: { issuedAt: "desc" },
     take: 200,
@@ -114,7 +107,10 @@ export default async function AdminCertificados(props: { searchParams: Promise<{
                   </td>
                   <td className="text-right">
                     <div className="flex justify-end gap-1.5">
-                      <Link href={`/verificar/${c.code}`} target="_blank" className="btn-outline btn-sm">
+                      <Link href={`/aula/certificado/${c.code}`} target="_blank" className="btn-outline btn-sm">
+                        Ver / imprimir
+                      </Link>
+                      <Link href={`/verificar/${c.code}`} target="_blank" className="btn-ghost btn-sm">
                         Verificar <IconArrowRight width={12} height={12} />
                       </Link>
                       <AccionesCertificado id={c.id} code={c.code} status={c.status} titular={c.studentName} />

@@ -1,24 +1,27 @@
 import { prisma } from "./prisma";
 import { ROLES } from "./constants";
 
+/** Empresa que el equipo de KG eligió ver en el panel empresarial (la fija /empresa/ver). */
+export const COOKIE_EMPRESA = "kg_empresa";
+
 /**
- * Resuelve la empresa sobre la que trabaja el panel B2B.
+ * Resuelve la empresa sobre la que trabaja el panel empresarial.
  * Un usuario de empresa solo ve SU empresa (separación de información,
- * punto 17 del esqueleto). El staff KG puede pasar ?empresa=<id>.
+ * punto 17 del esqueleto). El equipo de KG ve la que eligió con "Abrir panel"
+ * (se recuerda al navegar por el panel) o la que llegue en ?empresa=<id>.
  */
 export async function resolveCompany(user: {
   companyId: string | null;
   role: { code: string };
 }, override?: string) {
-  const staff: string[] = [ROLES.SUPERADMIN, ROLES.ADMIN_KG];
-  const id = staff.includes(user.role.code) ? override ?? user.companyId : user.companyId;
-  if (!id) {
-    const first = staff.includes(user.role.code)
-      ? await prisma.company.findFirst({ orderBy: { createdAt: "asc" } })
-      : null;
-    return first;
-  }
-  return prisma.company.findUnique({ where: { id } });
+  const esStaff = ([ROLES.SUPERADMIN, ROLES.ADMIN_KG] as string[]).includes(user.role.code);
+  if (!esStaff) return user.companyId ? prisma.company.findUnique({ where: { id: user.companyId } }) : null;
+  // Import diferido: este módulo también lo usan scripts que corren fuera de Next.
+  const elegida =
+    override ?? (await import("next/headers").then(async (h) => (await h.cookies()).get(COOKIE_EMPRESA)?.value));
+  const id = elegida ?? user.companyId;
+  const empresa = id ? await prisma.company.findUnique({ where: { id } }) : null;
+  return empresa ?? prisma.company.findFirst({ orderBy: { createdAt: "asc" } });
 }
 
 /**
@@ -46,6 +49,36 @@ export async function alcanceEmpresa(companyId: string) {
     userIds: [...new Set(asignaciones.map((a) => a.userId))],
     courseIds: [...new Set(asignaciones.map((a) => a.courseId))],
     incluye: (userId: string, courseId: string) => pares.has(`${userId}|${courseId}`),
+  };
+}
+
+/**
+ * Avance de cada persona solo en los cursos que la empresa le asignó: lo que
+ * estudió por su cuenta o para otra empresa no entra en las cifras de esta.
+ * Lo usan la lista de trabajadores, su ficha, el panel y los reportes por
+ * área, sede y cargo.
+ */
+export async function avanceEnLaEmpresa(companyId: string) {
+  const asignaciones = await prisma.courseAssignment.findMany({
+    where: { companyId },
+    select: { userId: true, status: true, enrollment: { select: { progress: true } } },
+  });
+  const porPersona = new Map<string, { asignados: number; completados: number; suma: number }>();
+  for (const a of asignaciones) {
+    const p = porPersona.get(a.userId) ?? { asignados: 0, completados: 0, suma: 0 };
+    p.asignados++;
+    if (a.status === "completado") p.completados++;
+    p.suma += a.enrollment?.progress ?? 0;
+    porPersona.set(a.userId, p);
+  }
+  return (userId: string) => {
+    const p = porPersona.get(userId);
+    return {
+      asignados: p?.asignados ?? 0,
+      completados: p?.completados ?? 0,
+      /** Promedio de avance en lo asignado; null si no tiene cursos asignados. */
+      avance: p ? p.suma / p.asignados : null,
+    };
   };
 }
 

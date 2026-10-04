@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { usuarioDeIngreso } from "@/lib/identidad";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime } from "@/lib/utils";
 import { ROLE_LABEL } from "@/lib/constants";
 import { Avatar, SectionTitle, StatusBadge } from "@/components/ui";
 import { IconLock, IconBuilding } from "@/components/Icons";
 import { CambiarClave } from "./CambiarClave";
+import { minimoClave } from "@/lib/claves";
 import { EditarPerfil } from "./EditarPerfil";
 
 export const metadata: Metadata = { title: "Mi perfil" };
@@ -30,17 +32,20 @@ export default async function PerfilPage() {
           <div className="absolute inset-0 bg-grid bg-[size:24px_24px] opacity-40" />
         </div>
         <div className="px-7 pb-7">
-          <div className="-mt-10 flex flex-wrap items-end gap-5">
-            <Avatar first={user.firstName} last={user.lastName} size={84} className="ring-4 ring-white" />
-            <div className="mb-1 min-w-0 flex-1">
-              <h2 className="font-display text-2xl font-extrabold text-navy-700">
-                {user.firstName} {user.lastName}
-              </h2>
-              <p className="text-sm text-navy-400">{user.email}</p>
-            </div>
-            <div className="mb-2 flex gap-2">
-              <span className="badge-blue">{ROLE_LABEL[user.role.code]}</span>
-              <StatusBadge status={user.status} />
+          {/* El avatar va por encima de la franja y el texto empieza debajo de ella. */}
+          <div className="relative z-[1] -mt-10 flex items-start gap-4 sm:gap-5">
+            <Avatar first={user.firstName} last={user.lastName} size={84} className="shrink-0 ring-4 ring-white" />
+            <div className="min-w-0 flex-1 pt-11">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="mr-1 font-display text-2xl font-extrabold text-navy-700">
+                  {user.firstName} {user.lastName}
+                </h2>
+                <span className="badge-blue">{ROLE_LABEL[user.role.code]}</span>
+                <StatusBadge status={user.status} />
+              </div>
+              <p className="mt-1 break-words text-sm text-navy-400">
+                Entra con: <span className="font-semibold text-navy-600">{usuarioDeIngreso(user)}</span>
+              </p>
             </div>
           </div>
 
@@ -109,7 +114,7 @@ export default async function PerfilPage() {
         </dl>
       </div>
 
-      <CambiarClave temporal={user.status === "pendiente_activacion"} />
+      <CambiarClave temporal={user.status === "pendiente_activacion"} minimo={await minimoClave()} />
     </div>
   );
 }

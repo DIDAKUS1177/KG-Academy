@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { ROLES } from "@/lib/constants";
-import { toCsv, formatDate } from "@/lib/utils";
-import { alcanceEmpresa } from "@/lib/empresa";
+import { ASSESSMENT_TYPE_LABEL, ROLES, STATUS_LABEL } from "@/lib/constants";
+import { toCsv, fechaCorta } from "@/lib/utils";
+import { alcanceEmpresa, avanceEnLaEmpresa } from "@/lib/empresa";
+import { ROLES_CON_CUPO } from "@/lib/cupos";
 import { correoVisible, usuarioDeIngreso } from "@/lib/identidad";
 import { ETIQUETA_SEMAFORO, indicadoresEmpresa, mostrarMeta, mostrarValor, semaforo } from "@/lib/indicadores";
 
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERVISOR, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
+
+/** Estado legible en español (en el CSV iba el código: "en_progreso"). */
+const estado = (codigo: string) => STATUS_LABEL[codigo] ?? codigo;
 
 /** Área, cargo y sede de cada trabajador de la empresa, para cruzar en los reportes. */
 async function fichas(companyId: string) {
@@ -24,6 +28,10 @@ async function fichas(companyId: string) {
 /**
  * Exportación de reportes a CSV (se abre directo en Excel):
  * seguimiento, trabajadores, indicadores, evaluaciones, lecciones, cursos y certificados.
+ * Las fechas van como dd/mm/aaaa para que Excel las reconozca.
+ *
+ * El equipo de KG sin empresa elegida puede bajar todos los certificados
+ * (Administración → Reportes).
  */
 export async function GET(req: Request) {
   const user = await requireUser();
@@ -38,36 +46,72 @@ export async function GET(req: Request) {
       ? user.companyId
       : url.searchParams.get("empresa") ?? user.companyId;
 
-  if (!companyId) return new Response("Empresa no definida", { status: 400 });
+  const esKG = user.role.code === ROLES.SUPERADMIN || user.role.code === ROLES.ADMIN_KG;
+  if (!companyId && !(esKG && tipo === "certificados")) return new Response("Empresa no definida", { status: 400 });
 
   let rows: Record<string, unknown>[] = [];
   let nombre = "reporte";
 
-  if (tipo === "trabajadores") {
-    nombre = "trabajadores";
-    const members = await prisma.companyMember.findMany({
-      where: { companyId },
-      include: { user: { include: { enrollments: true, certificates: true } }, area: true, position: true, location: true },
+  if (!companyId) {
+    // Todos los certificados de la plataforma, con la empresa de cada persona.
+    nombre = "certificados_todos";
+    const certs = await prisma.certificate.findMany({
+      orderBy: { issuedAt: "desc" },
+      include: { user: { select: { company: { select: { tradeName: true, legalName: true } } } } },
     });
-    rows = members.map((m) => ({
-      Codigo: m.employeeCode ?? "",
-      Nombres: m.user.firstName,
-      Apellidos: m.user.lastName,
-      Documento: m.user.documentNumber ?? "",
-      Correo: correoVisible(m.user.email),
-      Usuario_de_ingreso: usuarioDeIngreso(m.user),
-      Area: m.area?.name ?? "",
-      Cargo: m.position?.name ?? "",
-      Sede: m.location?.name ?? "",
-      Estado: m.status,
-      Cursos_asignados: m.user.enrollments.length,
-      Cursos_completados: m.user.enrollments.filter((e) => e.status === "completado").length,
-      Avance_promedio: m.user.enrollments.length
-        ? Math.round(m.user.enrollments.reduce((s, e) => s + e.progress, 0) / m.user.enrollments.length)
-        : 0,
-      Certificados: m.user.certificates.length,
-      Ultimo_acceso: m.user.lastLoginAt ? formatDate(m.user.lastLoginAt) : "",
+    rows = certs.map((c) => ({
+      Codigo: c.code,
+      Trabajador: c.studentName,
+      Documento: c.studentDocument ?? "",
+      Empresa: c.user.company ? (c.user.company.tradeName ?? c.user.company.legalName) : "Independiente",
+      Curso: c.courseTitle,
+      Horas: c.hours,
+      Nota: c.finalScore ?? "",
+      Emitido: fechaCorta(c.issuedAt),
+      Vence: c.expiresAt ? fechaCorta(c.expiresAt) : "Indefinida",
+      Estado: estado(c.status),
+      Verificacion: c.verifyUrl,
     }));
+  } else if (tipo === "trabajadores") {
+    nombre = "trabajadores";
+    // Las cifras son solo de los cursos que esta empresa asignó.
+    const [members, avance, alcance] = await Promise.all([
+      prisma.companyMember.findMany({
+        where: { companyId },
+        include: { user: { include: { role: true } }, area: true, position: true, location: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      avanceEnLaEmpresa(companyId),
+      alcanceEmpresa(companyId),
+    ]);
+    const certificados = new Map<string, number>();
+    for (const c of await prisma.certificate.findMany({
+      where: { userId: { in: alcance.userIds }, courseId: { in: alcance.courseIds } },
+      select: { userId: true, courseId: true },
+    })) {
+      if (alcance.incluye(c.userId, c.courseId)) certificados.set(c.userId, (certificados.get(c.userId) ?? 0) + 1);
+    }
+    rows = members.map((m) => {
+      const a = avance(m.userId);
+      return {
+        Codigo: m.employeeCode ?? "",
+        Nombres: m.user.firstName,
+        Apellidos: m.user.lastName,
+        Documento: m.user.documentNumber ?? "",
+        Correo: correoVisible(m.user.email),
+        Usuario_de_ingreso: usuarioDeIngreso(m.user),
+        Rol: ROLES_CON_CUPO.includes(m.user.role.code) ? (m.user.role.code === ROLES.SUPERVISOR ? "Supervisor" : "Trabajador") : "Administrador (no ocupa cupo)",
+        Area: m.area?.name ?? "",
+        Cargo: m.position?.name ?? "",
+        Sede: m.location?.name ?? "",
+        Estado: m.status === "retirado" ? "Retirado" : estado(m.status),
+        Cursos_asignados: a.asignados,
+        Cursos_completados: a.completados,
+        Avance_promedio_pct: a.avance === null ? "" : Math.round(a.avance),
+        Certificados: certificados.get(m.userId) ?? 0,
+        Ultimo_ingreso: m.user.lastLoginAt ? fechaCorta(m.user.lastLoginAt) : "Nunca",
+      };
+    });
   } else if (tipo === "indicadores") {
     nombre = "indicadores";
     const lista = await indicadoresEmpresa(companyId);
@@ -79,7 +123,7 @@ export async function GET(req: Request) {
       Estado: ETIQUETA_SEMAFORO[semaforo(i)],
       Detalle: i.detalle,
       Formula: i.formula,
-      Fecha_corte: formatDate(new Date()),
+      Fecha_corte: fechaCorta(new Date()),
     }));
   } else if (tipo === "evaluaciones") {
     nombre = "evaluaciones";
@@ -100,12 +144,12 @@ export async function GET(req: Request) {
       Curso: i.assessment.course.title,
       Codigo_curso: i.assessment.course.code,
       Evaluacion: i.assessment.title,
-      Tipo: i.assessment.type,
+      Tipo: ASSESSMENT_TYPE_LABEL[i.assessment.type] ?? i.assessment.type,
       Intento: i.attemptNo,
       Nota: Math.round(i.score ?? 0),
       Correctas: `${i.correctCount ?? 0}/${i.totalCount ?? 0}`,
       Resultado: i.passed ? "Aprobó" : "No aprobó",
-      Fecha: i.submittedAt ? formatDate(i.submittedAt) : "",
+      Fecha: fechaCorta(i.submittedAt),
       Duracion_min: i.durationSec ? Math.round(i.durationSec / 60) : "",
     }));
   } else if (tipo === "lecciones") {
@@ -130,11 +174,11 @@ export async function GET(req: Request) {
       Curso: a.lesson.module.course.title,
       Modulo: a.lesson.module.title,
       Leccion: a.lesson.title,
-      Estado: a.status,
+      Estado: estado(a.status),
       Avance_pct: Math.round(a.percent),
       Tiempo_min: Math.round(a.timeSpentSec / 60),
-      Inicio: a.startedAt ? formatDate(a.startedAt) : "",
-      Completada: a.completedAt ? formatDate(a.completedAt) : "",
+      Inicio: fechaCorta(a.startedAt),
+      Completada: fechaCorta(a.completedAt),
     }));
   } else if (tipo === "cursos") {
     // Programa de capacitación: lo que la empresa asignó, con su ficha técnica.
@@ -169,7 +213,7 @@ export async function GET(req: Request) {
         where: { userId: { in: alcance.userIds }, courseId: { in: alcance.courseIds } },
         orderBy: { issuedAt: "desc" },
       })
-    ).filter((c) => c.courseId && alcance.incluye(c.userId, c.courseId));
+    ).filter((c) => alcance.incluye(c.userId, c.courseId));
     rows = certs.map((c) => ({
       Codigo: c.code,
       Trabajador: c.studentName,
@@ -177,9 +221,9 @@ export async function GET(req: Request) {
       Curso: c.courseTitle,
       Horas: c.hours,
       Nota: c.finalScore ?? "",
-      Emitido: formatDate(c.issuedAt),
-      Vence: c.expiresAt ? formatDate(c.expiresAt) : "Indefinida",
-      Estado: c.status,
+      Emitido: fechaCorta(c.issuedAt),
+      Vence: c.expiresAt ? fechaCorta(c.expiresAt) : "Indefinida",
+      Estado: estado(c.status),
       Verificacion: c.verifyUrl,
     }));
   } else {
@@ -204,15 +248,18 @@ export async function GET(req: Request) {
         Area: m?.area?.name ?? "",
         Cargo: m?.position?.name ?? "",
         Sede: m?.location?.name ?? "",
+        // Incluye a quienes la empresa retiró: su capacitación sigue siendo evidencia.
+        Vinculacion: m?.status === "retirado" ? "Retirado" : "Activo",
         Curso: a.course.title,
         Codigo_curso: a.course.code,
         Obligatorio: a.isMandatory ? "SI" : "NO",
-        Estado: vencida ? "vencido" : a.status,
+        Estado: estado(vencida ? "vencido" : a.status),
         Avance_pct: Math.round(a.enrollment?.progress ?? 0),
         Nota_final: a.enrollment?.finalScore ?? "",
-        Fecha_limite: a.dueDate ? formatDate(a.dueDate) : "",
-        Inicio: a.enrollment?.startedAt ? formatDate(a.enrollment.startedAt) : "",
-        Finalizacion: a.enrollment?.completedAt ? formatDate(a.enrollment.completedAt) : "",
+        Fecha_limite: fechaCorta(a.dueDate),
+        Inicio: fechaCorta(a.enrollment?.startedAt),
+        Finalizacion: fechaCorta(a.enrollment?.completedAt),
+        Ultimo_ingreso: a.user.lastLoginAt ? fechaCorta(a.user.lastLoginAt) : "Nunca",
       };
     });
   }

@@ -8,7 +8,7 @@
  * entrega fuera de tiempo no se califica.
  */
 import { prisma } from "@/lib/prisma";
-import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { puedeCursar } from "@/lib/acceso-cursos";
 import { exigeLecciones, leccionesPendientes } from "@/lib/evaluacion-final";
 
 export const GRACIA_SEG = 120;
@@ -20,12 +20,13 @@ export async function validarPresentacion(user: Usuario, assessmentId: string) {
     where: { id: assessmentId },
     include: { course: true, questions: { include: { question: { include: { options: true } } } } },
   });
-  if (!assessment || !assessment.isPublished || !puedeVerCurso(user.role.code, assessment.course.status)) {
-    return { error: "Evaluación no encontrada", status: 404 } as const;
-  }
+  if (!assessment || !assessment.isPublished) return { error: "Evaluación no encontrada", status: 404 } as const;
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: assessment.courseId } },
   });
+  if (!puedeCursar(user.role.code, assessment.course.status, !!enrollment)) {
+    return { error: "Evaluación no encontrada", status: 404 } as const;
+  }
   if (!enrollment) return { error: "No está matriculado en el curso", status: 403 } as const;
 
   const finalizados = await prisma.assessmentAttempt.findMany({

@@ -7,6 +7,7 @@ import { IconCheck, IconArrowRight, IconFile, IconPlay, IconClock, IconAlert } f
 import { LeccionInteractiva } from "@/components/leccion/LeccionInteractiva";
 import { huellaContenido, leerLeccionInteractiva } from "@/lib/leccion-interactiva";
 import { pedirApi } from "@/lib/api-cliente";
+import { urlDeVideo } from "@/lib/video";
 
 type Lesson = {
   id: string;
@@ -176,16 +177,17 @@ export function LessonPlayer({
                 <IconClock width={16} height={16} /> Termine la práctica para completar la lección
               </span>
             ) : !completed ? (
+              // Un solo botón: registra la lección y lleva a la siguiente.
               <button onClick={marcar} disabled={saving} className="btn-lime">
-                {saving ? "Guardando..." : "Marcar como completada"}
-                {!saving && <IconCheck width={16} height={16} strokeWidth={3} />}
+                {saving ? "Guardando..." : nextHref ? (modoJuego ? "Terminé, siguiente nivel" : "Terminé, siguiente lección") : "Terminé esta lección"}
+                {!saving && (nextHref ? <IconArrowRight width={16} height={16} /> : <IconCheck width={16} height={16} strokeWidth={3} />)}
               </button>
             ) : (
               <span className="inline-flex items-center gap-2 text-sm font-semibold text-lime-600">
                 <IconCheck width={16} height={16} strokeWidth={3} /> Lección completada
               </span>
             )}
-            {nextHref && (!modoJuego || completed) && (
+            {nextHref && completed && (
               <Link href={nextHref} className={completed ? "btn-lime" : "btn-outline"}>
                 {modoJuego ? "Siguiente nivel" : "Siguiente lección"} <IconArrowRight width={16} height={16} />
               </Link>
@@ -230,7 +232,7 @@ function ContentSlot({ lesson }: { lesson: Lesson }) {
     return (
       <div className="aspect-video overflow-hidden rounded-2xl bg-navy-900">
         <iframe
-          src={lesson.contentUrl}
+          src={urlDeVideo(lesson.contentUrl)}
           title={lesson.title}
           className="h-full w-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { buscarCurso } from "@/lib/busqueda";
 import { CourseCard } from "@/components/CourseCard";
 import { EmptyState } from "@/components/ui";
 import { IconBook, IconSearch } from "@/components/Icons";
@@ -22,9 +23,7 @@ export default async function CatalogoPage(props: {
         // Los cursos exclusivos de una empresa no se anuncian al público.
         visibilidad: { not: "exclusivo" },
         ...(categoria ? { category: { slug: categoria } } : {}),
-        ...(q
-          ? { OR: [{ title: { contains: q } }, { subtitle: { contains: q } }, { code: { contains: q } }] }
-          : {}),
+        ...(q ? buscarCurso(q) : {}),
       },
       include: { category: true, modules: { include: { lessons: true } } },
       orderBy: [{ status: "asc" }, { createdAt: "asc" }],

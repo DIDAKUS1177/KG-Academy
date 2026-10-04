@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { puedeVerCurso } from "@/lib/acceso-cursos";
+import { puedeCursar } from "@/lib/acceso-cursos";
 import { exigeLecciones, leccionesPendientes } from "@/lib/evaluacion-final";
 import { formatDateTime } from "@/lib/utils";
 import { Breadcrumb, ProgressRing, StatusBadge } from "@/components/ui";
@@ -30,12 +30,12 @@ export default async function EvaluacionPage(props: {
     },
   });
   // Una evaluación en borrador no se puede presentar.
-  if (!assessment || !assessment.isPublished || !puedeVerCurso(user.role.code, assessment.course.status)) notFound();
+  if (!assessment || !assessment.isPublished) notFound();
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: assessment.courseId } },
   });
-  if (!enrollment) notFound();
+  if (!enrollment || !puedeCursar(user.role.code, assessment.course.status, true)) notFound();
 
   const attempts = await prisma.assessmentAttempt.findMany({
     // Solo los entregados: un intento abierto no cuenta como gastado.

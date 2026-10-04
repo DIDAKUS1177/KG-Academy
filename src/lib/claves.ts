@@ -8,10 +8,14 @@ import { prisma } from "@/lib/prisma";
 const CLAVE_DEMO = "KgAcademy2026*";
 
 /** Devuelve el motivo por el que no sirve, o null si es válida. */
-export async function problemaClaveNueva(nueva: string, actual?: string): Promise<string | null> {
-  // La longitud mínima la define el superadministrador en Configuración.
+/** Longitud mínima de contraseña: la define el superadministrador en Configuración (mínimo 8). */
+export async function minimoClave() {
   const ajuste = await prisma.systemSetting.findUnique({ where: { key: "seguridad.min_password" } });
-  const minimo = Math.max(8, Number(ajuste?.value) || 8);
+  return Math.max(8, Number(ajuste?.value) || 8);
+}
+
+export async function problemaClaveNueva(nueva: string, actual?: string): Promise<string | null> {
+  const minimo = await minimoClave();
 
   if (nueva.length < minimo) return `La contraseña nueva debe tener al menos ${minimo} caracteres`;
   if (nueva.length > 200) return "La contraseña es demasiado larga";

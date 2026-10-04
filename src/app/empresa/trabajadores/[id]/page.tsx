@@ -4,13 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { resolveCompany } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
+import { ROLES_CON_CUPO } from "@/lib/cupos";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { Avatar, Breadcrumb, ProgressBar, ProgressRing, StatCard, StatusBadge } from "@/components/ui";
-import { IconAward, IconBook, IconCheck, IconClock, IconArrowRight } from "@/components/Icons";
+import { IconAward, IconBook, IconCheck, IconClock, IconArrowRight, IconAlert } from "@/components/Icons";
 import { motivoParaConservar } from "@/lib/cuentas";
 import { RestablecerClave } from "./RestablecerClave";
+import { RetirarTrabajador } from "./RetirarTrabajador";
 import { EliminarTrabajador } from "./EliminarTrabajador";
-import { correoVisible } from "@/lib/identidad";
+import { correoVisible, usuarioDeIngreso } from "@/lib/identidad";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +31,13 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
       user: {
         include: {
           role: true,
-          enrollments: { include: { course: true }, orderBy: { updatedAt: "desc" } },
-          certificates: { orderBy: { issuedAt: "desc" } },
-          attempts: { where: { status: "finalizado" }, include: { assessment: true }, orderBy: { startedAt: "desc" }, take: 10 },
-          assignments: { include: { course: true } },
+          // Solo lo que la empresa le asignó: lo que estudió por su cuenta o
+          // para otra empresa no se le muestra a esta.
+          assignments: {
+            where: { companyId: company.id },
+            include: { course: true, enrollment: true },
+            orderBy: { updatedAt: "desc" },
+          },
         },
       },
     },
@@ -40,17 +45,32 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
   if (!member) notFound();
 
   const u = member.user;
-  const avance = u.enrollments.length
-    ? u.enrollments.reduce((s, e) => s + e.progress, 0) / u.enrollments.length
+  const cursosAsignados = u.assignments.map((a) => a.courseId);
+  const [certificados, intentos] = await Promise.all([
+    prisma.certificate.findMany({ where: { userId: u.id, courseId: { in: cursosAsignados } }, orderBy: { issuedAt: "desc" } }),
+    prisma.assessmentAttempt.findMany({
+      where: { userId: u.id, status: "finalizado", assessment: { courseId: { in: cursosAsignados } } },
+      include: { assessment: true },
+      orderBy: { startedAt: "desc" },
+      take: 10,
+    }),
+  ]);
+
+  const avance = u.assignments.length
+    ? u.assignments.reduce((s, a) => s + (a.enrollment?.progress ?? 0), 0) / u.assignments.length
     : 0;
-  const completados = u.enrollments.filter((e) => e.status === "completado").length;
+  const completados = u.assignments.filter((a) => a.status === "completado").length;
+  const retirado = member.status === "retirado";
   const gestiona = staff.role.code !== ROLES.SUPERVISOR;
+  // El supervisor solo consulta; la cuenta la gestiona el administrador.
+  const acciones = gestiona && !retirado && ROLES_CON_CUPO.includes(u.role.code);
   // La empresa solo elimina trabajadores suyos que no dejaron historial.
   const eliminable =
-    gestiona &&
+    acciones &&
     u.role.code === ROLES.ESTUDIANTE &&
     u.companyId === company.id &&
     !(await motivoParaConservar(u.id));
+  const hoy = new Date();
 
   return (
     <div>
@@ -62,39 +82,61 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
         ]}
       />
 
+      {retirado && (
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-navy-100 bg-navy-50 p-4 text-sm text-navy-600">
+          <IconAlert width={18} height={18} className="mt-0.5 shrink-0" />
+          <span>
+            <strong>Retirado de la empresa.</strong> No ocupa cupo y no aparece en las cifras del panel. Su historial se conserva
+            como evidencia. Si vuelve, créelo otra vez con su documento en Trabajadores y recupera su historial.
+          </span>
+        </div>
+      )}
+
       {/* Ficha */}
       <div className="card mb-6 overflow-hidden">
         <div className="relative h-24 bg-kg-gradient">
           <div className="absolute inset-0 bg-kg-mesh opacity-80" />
           <div className="absolute inset-0 bg-grid bg-[size:24px_24px] opacity-40" />
         </div>
-        <div className="px-7 pb-7">
-          <div className="-mt-9 flex flex-wrap items-end gap-5">
-            <Avatar first={u.firstName} last={u.lastName} size={78} className="ring-4 ring-white" />
-            <div className="mb-1 min-w-0 flex-1">
-              <h1 className="font-display text-2xl font-extrabold text-navy-700">
-                {u.firstName} {u.lastName}
-              </h1>
-              <p className="text-sm text-navy-400">
+        <div className="px-5 pb-6 sm:px-7 sm:pb-7">
+          {/* El texto arranca debajo de la franja oscura: con items-end, un bloque
+              de varias líneas subía y el nombre quedaba escondido sobre ella. */}
+          <div className="relative z-[1] -mt-9 flex items-start gap-4 sm:gap-5">
+            <Avatar first={u.firstName} last={u.lastName} size={78} className="shrink-0 ring-4 ring-white" />
+            <div className="min-w-0 flex-1 pt-10">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="mr-1 font-display text-2xl font-extrabold text-navy-700">
+                  {u.firstName} {u.lastName}
+                </h1>
+                {!ROLES_CON_CUPO.includes(u.role.code) && (
+                  <span className="rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-bold text-navy-500">Administrador · no ocupa cupo</span>
+                )}
+                {u.role.code === ROLES.SUPERVISOR && (
+                  <span className="rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-bold text-navy-500">Supervisor</span>
+                )}
+                <StatusBadge status={member.status} />
+              </div>
+              <p className="mt-1 break-words text-sm text-navy-400">
                 {correoVisible(u.email)} &middot; CC {u.documentNumber ?? "—"}
               </p>
-            </div>
-            <div className="mb-2">
-              <StatusBadge status={member.status} />
+              <p className="mt-0.5 break-words text-xs text-navy-500">
+                Entra con: <span className="font-semibold text-navy-700">{usuarioDeIngreso(u)}</span> &middot; Último ingreso:{" "}
+                {u.lastLoginAt ? formatDate(u.lastLoginAt) : "nunca"}
+              </p>
             </div>
           </div>
 
-          {/* El supervisor solo consulta; la cuenta la gestiona el administrador. */}
-          {gestiona && ["estudiante", "supervisor"].includes(u.role.code) && (
+          {acciones && (
             <div className="mt-5 flex flex-wrap items-start gap-2">
-              <RestablecerClave userId={u.id} nombre={`${u.firstName} ${u.lastName}`} />
+              <RestablecerClave userId={u.id} nombre={`${u.firstName} ${u.lastName}`} usuario={usuarioDeIngreso(u)} />
+              <RetirarTrabajador userId={u.id} companyId={company.id} nombre={`${u.firstName} ${u.lastName}`} />
               {eliminable && (
                 <EliminarTrabajador userId={u.id} nombre={`${u.firstName} ${u.lastName}`} volver="/empresa/trabajadores" />
               )}
             </div>
           )}
 
-          <dl className="mt-7 grid gap-5 sm:grid-cols-4">
+          <dl className="mt-7 grid grid-cols-2 gap-5 sm:grid-cols-4">
             {[
               ["Código", member.employeeCode ?? "—"],
               ["Área", member.area?.name ?? "—"],
@@ -117,59 +159,64 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
         </div>
         <StatCard label="Cursos asignados" value={u.assignments.length} icon={<IconBook width={20} height={20} />} />
         <StatCard label="Completados" value={completados} tone="lime" icon={<IconCheck width={20} height={20} />} />
-        <StatCard
-          label="Certificados"
-          value={u.certificates.length}
-          tone="lime"
-          hint={`Último acceso: ${u.lastLoginAt ? formatDate(u.lastLoginAt) : "nunca"}`}
-          icon={<IconAward width={20} height={20} />}
-        />
+        <StatCard label="Certificados" value={certificados.length} tone="lime" icon={<IconAward width={20} height={20} />} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         {/* Cursos */}
         <div className="card overflow-hidden">
           <p className="border-b border-navy-50 px-6 py-4 font-display text-sm font-bold text-navy-700">
-            Cursos y progreso
+            Cursos asignados por la empresa
           </p>
-          <table className="table-kg">
-            <thead>
-              <tr>
-                <th>Curso</th>
-                <th className="w-40">Avance</th>
-                <th>Estado</th>
-                <th>Nota</th>
-              </tr>
-            </thead>
-            <tbody>
-              {u.enrollments.map((e) => (
-                <tr key={e.id}>
-                  <td>
-                    <p className="font-semibold text-navy-700">{e.course.title}</p>
-                    <p className="text-[11px] text-navy-400">
-                      Último acceso: {e.lastAccessAt ? formatDate(e.lastAccessAt) : "—"}
-                    </p>
-                  </td>
-                  <td>
-                    <ProgressBar value={e.progress} showLabel />
-                  </td>
-                  <td>
-                    <StatusBadge status={e.status} />
-                  </td>
-                  <td className="font-display font-bold">
-                    {e.finalScore ? Math.round(e.finalScore) : "—"}
-                  </td>
-                </tr>
-              ))}
-              {u.enrollments.length === 0 && (
+          <div className="overflow-x-auto">
+            <table className="table-kg">
+              <thead>
                 <tr>
-                  <td colSpan={4} className="py-10 text-center text-sm text-navy-300">
-                    Sin cursos asignados
-                  </td>
+                  <th>Curso</th>
+                  <th className="w-40">Avance</th>
+                  <th>Estado</th>
+                  <th>Nota</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {u.assignments.map((a) => {
+                  const vencido = a.dueDate && new Date(a.dueDate) < hoy && a.status !== "completado";
+                  return (
+                    <tr key={a.id}>
+                      <td>
+                        <p className="font-semibold text-navy-700">{a.course.title}</p>
+                        <p className="text-[11px] text-navy-400">
+                          {a.dueDate ? `Fecha límite: ${formatDate(a.dueDate)} · ` : ""}Último acceso:{" "}
+                          {a.enrollment?.lastAccessAt ? formatDate(a.enrollment.lastAccessAt) : "nunca"}
+                        </p>
+                      </td>
+                      <td>
+                        <ProgressBar value={a.enrollment?.progress ?? 0} showLabel />
+                      </td>
+                      <td>
+                        <StatusBadge status={vencido ? "vencido" : a.status} />
+                      </td>
+                      <td className="font-display font-bold">
+                        {a.enrollment?.finalScore ? Math.round(a.enrollment.finalScore) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {u.assignments.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center text-sm text-navy-300">
+                      Sin cursos asignados
+                      {gestiona && !retirado && (
+                        <Link href="/empresa/asignar" className="mt-2 block text-xs font-bold text-lime-700 hover:underline">
+                          Asignarle cursos
+                        </Link>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -179,7 +226,7 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
               Certificados
             </p>
             <ul className="divide-y divide-navy-50">
-              {u.certificates.map((c) => (
+              {certificados.map((c) => (
                 <li key={c.id} className="flex items-center gap-3 px-6 py-4">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lime-100 text-lime-700">
                     <IconAward width={17} height={17} />
@@ -193,7 +240,7 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
                   </Link>
                 </li>
               ))}
-              {u.certificates.length === 0 && (
+              {certificados.length === 0 && (
                 <li className="px-6 py-8 text-center text-xs text-navy-300">Sin certificados aún</li>
               )}
             </ul>
@@ -205,7 +252,7 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
               Resultados de evaluación
             </p>
             <ul className="divide-y divide-navy-50">
-              {u.attempts.map((a) => (
+              {intentos.map((a) => (
                 <li key={a.id} className="flex items-center gap-3 px-6 py-3.5 text-xs">
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold text-navy-600">{a.assessment.title}</span>
@@ -222,7 +269,7 @@ export default async function DetalleTrabajador(props: { params: Promise<{ id: s
                   </span>
                 </li>
               ))}
-              {u.attempts.length === 0 && (
+              {intentos.length === 0 && (
                 <li className="px-6 py-8 text-center text-xs text-navy-300">
                   <IconClock width={20} height={20} className="mx-auto mb-2 text-navy-200" />
                   Sin evaluaciones presentadas

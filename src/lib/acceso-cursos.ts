@@ -15,8 +15,25 @@ const REVISORES: string[] = [ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR]
 /** Superadministrador, administrador o instructor de KG. */
 export const esEquipoKG = (rol: string) => REVISORES.includes(rol);
 
+/**
+ * Filtro de usuarios para las cifras de la plataforma: deja fuera al equipo de
+ * KG, que se matricula al revisar los cursos ("Ver en el aula") y bajaba el
+ * avance y la tasa de finalización.
+ */
+export const fueraDelEquipoKG = { role: { code: { notIn: REVISORES } } };
+
 export function puedeVerCurso(rol: string, estadoCurso: string) {
   return estadoCurso === "publicado" || REVISORES.includes(rol);
+}
+
+/**
+ * ¿Puede seguir cursándolo? Quien ya estaba matriculado en un curso que KG
+ * retiró del catálogo (despublicado) lo puede terminar: se oculta para los
+ * nuevos, no se le quita a quien va a mitad. En borrador o revisión (KG lo
+ * está corrigiendo) solo lo abre el equipo de KG.
+ */
+export function puedeCursar(rol: string, estadoCurso: string, matriculado: boolean) {
+  return puedeVerCurso(rol, estadoCurso) || (matriculado && estadoCurso === "despublicado");
 }
 
 /* ---------------------- Catálogo habilitado por empresa ---------------------- */

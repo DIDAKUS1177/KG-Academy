@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
+import { ROLES_CON_CUPO } from "@/lib/cupos";
 import { SectionTitle } from "@/components/ui";
 import { PanelEmpresas } from "./PanelEmpresas";
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminEmpresas() {
   await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG);
 
-  const [companies, plans, cursos] = await Promise.all([
+  const [companies, plans, cursos, ocupados] = await Promise.all([
     prisma.company.findMany({
       include: {
         _count: { select: { members: true } },
@@ -32,7 +33,14 @@ export default async function AdminEmpresas() {
       select: { id: true, code: true, title: true, status: true, visibilidad: true },
       orderBy: { code: "asc" },
     }),
+    // Cupos ocupados: personas que toman cursos y siguen en la empresa (como en lib/cupos).
+    prisma.companyMember.groupBy({
+      by: ["companyId"],
+      where: { status: { not: "retirado" }, user: { role: { code: { in: ROLES_CON_CUPO } } } },
+      _count: true,
+    }),
   ]);
+  const usadosDe = new Map(ocupados.map((o) => [o.companyId, o._count]));
 
   const leerLista = (json: string | null): string[] => {
     try {
@@ -48,7 +56,7 @@ export default async function AdminEmpresas() {
       <SectionTitle
         eyebrow="Administración"
         title="Empresas y planes"
-        description="Clientes B2B, su plan contratado y su nivel de cumplimiento en capacitación."
+        description="Empresas cliente, su plan contratado, sus cupos y su nivel de cumplimiento en capacitación."
       />
 
       <PanelEmpresas
@@ -88,7 +96,8 @@ export default async function AdminEmpresas() {
             seats: sub?.seats ?? 0,
             catalogo: c.catalogo,
             habilitados: c.cursosHabilitados.map((h) => h.courseId),
-            trabajadores: c._count.members,
+            trabajadores: usadosDe.get(c.id) ?? 0,
+            tienePlan: !!sub,
             asignaciones: total,
             completadas: c.assignments.filter((a) => a.status === "completado").length,
             avance: total

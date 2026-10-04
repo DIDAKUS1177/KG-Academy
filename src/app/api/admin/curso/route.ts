@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/auth";
-import { COURSE_STATUS } from "@/lib/constants";
+import { COURSE_STATUS, ROLES } from "@/lib/constants";
 import { ROLES_KG, ROLES_CURSOS, exigirRol, leerCuerpo, limpiar, respuestaError, respuestaOk } from "@/lib/admin-api";
 
 /**
@@ -117,6 +117,23 @@ export async function PUT(req: Request) {
 
   const before = await prisma.course.findUnique({ where: { id: d.courseId } });
   if (!before) return respuestaError("Curso no encontrado", 404);
+
+  // El instructor edita la ficha; cómo se aprueba y se certifica lo decide la administración de KG.
+  if (auth.user.role.code === ROLES.INSTRUCTOR) {
+    const reglas = [
+      [d.progressRule, before.progressRule],
+      [d.minPassingScore, before.minPassingScore],
+      [d.maxAttempts, before.maxAttempts],
+      [d.requiresFinalExam, before.requiresFinalExam],
+      [d.requiresAllLessons, before.requiresAllLessons],
+      [d.certificateEnabled, before.certificateEnabled],
+      [d.certificateValidityMonths, before.certificateValidityMonths],
+      [d.allowRetake, before.allowRetake],
+    ] as const;
+    if (reglas.some(([nuevo, actual]) => nuevo !== undefined && nuevo !== actual)) {
+      return respuestaError("Las reglas de aprobación y certificación las cambia la administración de KG", 403);
+    }
+  }
 
   if (d.categoryId && !(await prisma.category.findUnique({ where: { id: d.categoryId } }))) {
     return respuestaError("La categoría indicada no existe", 404);

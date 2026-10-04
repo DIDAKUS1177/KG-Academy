@@ -12,7 +12,7 @@ import { correoVisible } from "@/lib/identidad";
 export const metadata: Metadata = { title: "Asignar cursos" };
 export const dynamic = "force-dynamic";
 
-export default async function AsignarPage(props: { searchParams: Promise<{ empresa?: string }> }) {
+export default async function AsignarPage(props: { searchParams: Promise<{ empresa?: string; curso?: string }> }) {
   const searchParams = await props.searchParams;
   const user = await requireRole(ROLES.ADMIN_EMPRESA, ROLES.SUPERADMIN, ROLES.ADMIN_KG);
   const company = await resolveCompany(user, searchParams.empresa);
@@ -70,6 +70,7 @@ export default async function AsignarPage(props: { searchParams: Promise<{ empre
           employeeCode: m.employeeCode ?? "",
         }))}
         existentes={existentes.map((e) => `${e.courseId}:${e.userId}`)}
+        cursoInicial={searchParams.curso}
       />
       )}
     </div>

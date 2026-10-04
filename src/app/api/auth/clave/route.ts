@@ -14,7 +14,8 @@ import { problemaClaveNueva } from "@/lib/claves";
  */
 
 const schema = z.object({
-  actual: z.string().min(1, "Escriba su contraseña actual"),
+  /** En el primer ingreso (cuenta pendiente) no se pide: la sesión ya prueba que la conoce. */
+  actual: z.string().optional(),
   nueva: z.string().min(1, "Escriba la contraseña nueva"),
 });
 
@@ -26,14 +27,21 @@ export async function POST(req: Request) {
   if (cuerpo.error) return cuerpo.error;
   const { actual, nueva } = cuerpo.data;
 
-  if (!(await verifyPassword(actual, user.passwordHash))) {
-    return respuestaError("La contraseña actual no es correcta", 401);
+  const activar = user.status === "pendiente_activacion";
+  // Para cambiar una contraseña ya definida se pide la actual. En el primer
+  // ingreso basta la sesión recién abierta con la temporal (un paso menos para
+  // el trabajador), pero la nueva no puede ser la misma temporal.
+  if (!activar || actual) {
+    if (!actual) return respuestaError("Escriba su contraseña actual");
+    if (!(await verifyPassword(actual, user.passwordHash))) {
+      return respuestaError("La contraseña actual no es correcta", 401);
+    }
+  } else if (await verifyPassword(nueva, user.passwordHash)) {
+    return respuestaError("La contraseña nueva debe ser distinta de la temporal");
   }
 
   const problema = await problemaClaveNueva(nueva, actual);
   if (problema) return respuestaError(problema);
-
-  const activar = user.status === "pendiente_activacion";
 
   await prisma.user.update({
     where: { id: user.id },

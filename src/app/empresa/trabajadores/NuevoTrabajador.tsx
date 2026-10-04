@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { IconUsers, IconAlert, IconCheck, IconUpload, IconDownload } from "@/components/Icons";
 import { esCorreoValido, normalizarDocumento } from "@/lib/identidad";
 import { pedirApi } from "@/lib/api-cliente";
+import { cantidad } from "@/lib/utils";
 
 type Opt = { id: string; name: string };
 type Curso = { id: string; code: string; title: string };
@@ -18,6 +19,9 @@ type RespuestaAlta = {
   sinCupo?: number;
   asignadas?: number;
   vinculado?: boolean;
+  reincorporado?: boolean;
+  claveElegida?: boolean;
+  usuario?: string;
   aviso?: string;
   errores?: { fila: number; motivo: string }[];
   credenciales?: Credencial[];
@@ -304,13 +308,16 @@ export function NuevoTrabajador({
   const [erroresServidor, setErroresServidor] = useState<{ linea: number; motivo: string }[]>([]);
   const [elegidos, setElegidos] = useState<string[]>([]);
   const [fecha, setFecha] = useState("");
+  const [claveInicial, setClaveInicial] = useState("");
+  const [verClave, setVerClave] = useState(false);
+  const [pedirCambio, setPedirCambio] = useState(true);
 
   const [progreso, setProgreso] = useState<string | null>(null);
   const { filas: lote, ignoradas } = useMemo(() => leerLote(texto), [texto]);
   const validas = lote.filter((f) => !f.error);
 
   const asignacion = { cursos: elegidos, dueDate: fecha || null };
-  const textoAsignadas = (n?: number) => (n ? ` Se asignaron ${n} curso(s).` : "");
+  const textoAsignadas = (n?: number) => (n ? ` ${n === 1 ? "Se asignó 1 curso" : `Se asignaron ${n} cursos`}.` : "");
 
   async function enviar(cuerpo: Record<string, unknown>) {
     return pedirApi<RespuestaAlta>("/api/empresa/trabajadores", "POST", { companyId, ...asignacion, ...cuerpo });
@@ -333,14 +340,19 @@ export function NuevoTrabajador({
     setMsg({
       ok: true,
       text:
-        (data.vinculado
-          ? "Esa persona ya tenía cuenta: quedó vinculada a la empresa con su contraseña de siempre."
+        (data.reincorporado
+          ? "Esa persona vuelve a la empresa con su historial. Entra con su contraseña de siempre y el sistema le pedirá cambiarla; si no la recuerda, cámbiesela desde su ficha (botón «Ver» en la lista)."
+          : data.vinculado
+          ? "Esa persona ya tenía cuenta: quedó vinculada a la empresa con su contraseña de siempre. Si no la recuerda, cámbiesela desde su ficha (botón «Ver» en la lista)."
           : data.creados
-            ? "Cuenta creada. Entregue la contraseña temporal."
+            ? data.claveElegida
+              ? `Cuenta creada. Entra con «${data.usuario}» y la contraseña que usted escribió${pedirCambio ? "; al entrar se le pedirá cambiarla" : ""}.`
+              : "Cuenta creada. Entregue la contraseña temporal."
             : "Esa persona ya estaba en la empresa.") + textoAsignadas(data.asignadas),
     });
     setCreds(data.credenciales ?? []);
     form.reset();
+    setClaveInicial("");
     router.refresh();
   }
 
@@ -428,7 +440,7 @@ export function NuevoTrabajador({
               tab === t ? "border-lime-500 text-navy-700" : "border-transparent text-navy-400 hover:text-navy-600"
             }`}
           >
-            {t === "individual" ? "Registro individual" : "Carga masiva (Excel)"}
+            {t === "individual" ? "Registro individual" : "Carga masiva (Excel o CSV)"}
           </button>
         ))}
         <button onClick={() => setOpen(false)} className="ml-auto text-xs font-semibold text-navy-400 hover:text-navy-700">
@@ -479,8 +491,32 @@ export function NuevoTrabajador({
               <label className="label">Rol</label>
               <select name="rol" className="select" defaultValue="trabajador">
                 <option value="trabajador">Trabajador (toma cursos)</option>
-                <option value="supervisor">Supervisor (también consulta el avance de su equipo)</option>
+                <option value="supervisor">Supervisor (toma cursos y consulta el avance de la empresa)</option>
               </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="label">Contraseña (opcional)</label>
+              <div className="flex gap-2">
+                <input
+                  name="clave"
+                  type={verClave ? "text" : "password"}
+                  value={claveInicial}
+                  onChange={(e) => setClaveInicial(e.target.value)}
+                  autoComplete="new-password"
+                  className="input"
+                  placeholder="Déjela vacía y el sistema genera una temporal"
+                />
+                <button type="button" onClick={() => setVerClave(!verClave)} className="btn-ghost btn-sm shrink-0">
+                  {verClave ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+              {claveInicial && (
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs font-semibold text-navy-600">
+                  <input type="checkbox" checked={pedirCambio} onChange={(e) => setPedirCambio(e.target.checked)} />
+                  Pedir que la cambie al entrar (recomendado)
+                  <input type="hidden" name="pedirCambio" value={pedirCambio ? "si" : "no"} />
+                </label>
+              )}
             </div>
             <div>
               <label className="label">Código de empleado</label>
@@ -609,7 +645,7 @@ export function NuevoTrabajador({
             <div>
               <button onClick={crearMasivo} disabled={loading || validas.length === 0} className="btn-lime">
                 <IconUpload width={16} height={16} />
-                {loading ? progreso ?? "Procesando..." : `Cargar ${validas.length} persona(s)`}
+                {loading ? progreso ?? "Procesando..." : `Cargar ${cantidad(validas.length, "persona", "personas")}`}
               </button>
               <p className="mt-2 text-xs text-navy-400">
                 Se cargan por bloques de {BLOQUE}, sin límite de filas más allá de los cupos. Quien ya está en la empresa se

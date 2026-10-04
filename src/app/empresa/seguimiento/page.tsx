@@ -1,15 +1,26 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
-import { resolveCompany } from "@/lib/empresa";
+import { asignacionesVigentes, resolveCompany } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
-import { formatDate, daysBetween } from "@/lib/utils";
+import { buscarPersona } from "@/lib/busqueda";
+import { cantidad, formatDate, daysBetween } from "@/lib/utils";
 import { Avatar, EmptyState, ProgressBar, SectionTitle, StatusBadge, StatCard } from "@/components/ui";
 import { IconDownload, IconSearch, IconCheck, IconClock, IconAlert, IconClipboard } from "@/components/Icons";
 
 export const metadata: Metadata = { title: "Seguimiento" };
 export const dynamic = "force-dynamic";
+
+const ESTADOS = [
+  ["", "Todos"],
+  ["vencido", "Vencidos"],
+  ["nunca", "Nunca ha entrado"],
+  ["asignado", "Sin iniciar"],
+  ["en_progreso", "En progreso"],
+  ["completado", "Completados"],
+] as const;
 
 export default async function SeguimientoPage(props: {
   searchParams: Promise<{ q?: string; curso?: string; estado?: string; area?: string; empresa?: string }>;
@@ -20,31 +31,34 @@ export default async function SeguimientoPage(props: {
   if (!company) return <EmptyState title="Sin empresa asociada" />;
 
   const q = searchParams.q?.trim();
+  const estado = searchParams.estado ?? "";
+  const hoy = new Date();
+
+  const filtroEstado: Prisma.CourseAssignmentWhereInput =
+    estado === "vencido"
+      ? { dueDate: { lt: hoy }, status: { not: "completado" } }
+      : estado === "nunca"
+        ? { status: { not: "completado" }, user: { lastLoginAt: null } }
+        : estado
+          ? { status: estado }
+          : {};
 
   const [asignaciones, cursos, areas] = await Promise.all([
     prisma.courseAssignment.findMany({
       where: {
-        companyId: company.id,
-        ...(searchParams.curso ? { courseId: searchParams.curso } : {}),
-        ...(searchParams.estado ? { status: searchParams.estado } : {}),
-        ...(q
-          ? {
-              user: {
-                OR: [
-                  { firstName: { contains: q } },
-                  { lastName: { contains: q } },
-                  { documentNumber: { contains: q } },
-                ],
-              },
-            }
-          : {}),
+        AND: [
+          asignacionesVigentes(company.id),
+          filtroEstado,
+          searchParams.curso ? { courseId: searchParams.curso } : {},
+          q ? { user: buscarPersona(q) } : {},
+          searchParams.area ? { user: { memberships: { some: { companyId: company.id, areaId: searchParams.area } } } } : {},
+        ],
       },
       include: {
         user: { include: { memberships: { include: { area: true, position: true } } } },
         course: true,
         enrollment: true,
       },
-      orderBy: [{ status: "asc" }, { dueDate: "asc" }],
     }),
     prisma.course.findMany({
       where: { assignments: { some: { companyId: company.id } } },
@@ -53,32 +67,31 @@ export default async function SeguimientoPage(props: {
     prisma.area.findMany({ where: { companyId: company.id } }),
   ]);
 
-  const filtradas = searchParams.area
-    ? asignaciones.filter((a) =>
-        a.user.memberships.some((m) => m.companyId === company.id && m.areaId === searchParams.area)
-      )
-    : asignaciones;
-
-  const hoy = new Date();
-  const stats = {
-    total: filtradas.length,
-    completados: filtradas.filter((a) => a.status === "completado").length,
-    progreso: filtradas.filter((a) => a.status === "en_progreso").length,
-    sinIniciar: filtradas.filter((a) => a.status === "asignado").length,
-    vencidos: filtradas.filter(
-      (a) => a.dueDate && new Date(a.dueDate) < hoy && a.status !== "completado"
-    ).length,
+  // Lo más urgente primero: lo vencido (lo más atrasado arriba), luego lo que
+  // vence antes, lo que no tiene fecha y, al final, lo terminado.
+  const urgencia = (a: (typeof asignaciones)[number]) => {
+    if (a.status === "completado") return Number.MAX_SAFE_INTEGER;
+    return a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER - 1;
   };
+  const filas = [...asignaciones].sort((a, b) => urgencia(a) - urgencia(b));
+
+  const stats = {
+    completados: filas.filter((a) => a.status === "completado").length,
+    progreso: filas.filter((a) => a.status === "en_progreso").length,
+    sinIniciar: filas.filter((a) => a.status === "asignado").length,
+    vencidos: filas.filter((a) => a.dueDate && new Date(a.dueDate) < hoy && a.status !== "completado").length,
+  };
+  const filtrando = !!(q || searchParams.curso || searchParams.area || estado);
 
   return (
     <div>
       <SectionTitle
         eyebrow={company.tradeName ?? company.legalName}
         title="Seguimiento de capacitación"
-        description="Quién inició, quién va en progreso, quién terminó y quién no ha entrado."
+        description="Quién inició, quién va en progreso, quién terminó y quién no ha entrado. Lo más urgente aparece primero."
         action={
           <a href={`/api/empresa/reporte?tipo=seguimiento&empresa=${company.id}`} className="btn-lime btn-sm">
-            <IconDownload width={14} height={14} /> Exportar CSV
+            <IconDownload width={14} height={14} /> Descargar Excel (CSV)
           </a>
         }
       />
@@ -90,8 +103,32 @@ export default async function SeguimientoPage(props: {
         <StatCard label="Vencidos" value={stats.vencidos} tone="red" icon={<IconAlert width={20} height={20} />} />
       </div>
 
+      {/* Atajos por estado */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        {ESTADOS.map(([valor, etiqueta]) => {
+          const params = new URLSearchParams();
+          if (q) params.set("q", q);
+          if (searchParams.curso) params.set("curso", searchParams.curso);
+          if (searchParams.area) params.set("area", searchParams.area);
+          if (valor) params.set("estado", valor);
+          const activo = estado === valor;
+          return (
+            <Link
+              key={valor || "todos"}
+              href={`/empresa/seguimiento${params.size ? `?${params}` : ""}`}
+              className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                activo ? "border-navy-700 bg-navy-700 text-white" : "border-navy-100 bg-white text-navy-500 hover:border-navy-300"
+              }`}
+            >
+              {etiqueta}
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Filtros */}
       <form className="card mb-6 flex flex-wrap items-end gap-3 p-4">
+        {estado && <input type="hidden" name="estado" value={estado} />}
         <div className="min-w-[200px] flex-1">
           <label className="label">Buscar trabajador</label>
           <div className="relative">
@@ -100,7 +137,7 @@ export default async function SeguimientoPage(props: {
               height={16}
               className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300"
             />
-            <input name="q" defaultValue={q} className="input pl-10" placeholder="Nombre o documento" />
+            <input name="q" defaultValue={q} className="input pl-10" placeholder="Nombre, correo o documento" />
           </div>
         </div>
         <div className="min-w-[180px]">
@@ -125,15 +162,6 @@ export default async function SeguimientoPage(props: {
             ))}
           </select>
         </div>
-        <div className="min-w-[150px]">
-          <label className="label">Estado</label>
-          <select name="estado" defaultValue={searchParams.estado ?? ""} className="select">
-            <option value="">Todos</option>
-            <option value="asignado">No iniciado</option>
-            <option value="en_progreso">En progreso</option>
-            <option value="completado">Completado</option>
-          </select>
-        </div>
         <button className="btn-primary">Filtrar</button>
         <Link href="/empresa/seguimiento" className="btn-ghost">
           Limpiar
@@ -154,7 +182,7 @@ export default async function SeguimientoPage(props: {
             </tr>
           </thead>
           <tbody>
-            {filtradas.map((a) => {
+            {filas.map((a) => {
               const m = a.user.memberships.find((x) => x.companyId === company.id);
               const dias = a.dueDate ? daysBetween(new Date(a.dueDate), hoy) : null;
               const vencido = dias !== null && dias < 0 && a.status !== "completado";
@@ -167,7 +195,12 @@ export default async function SeguimientoPage(props: {
                         <p className="truncate font-semibold text-navy-700">
                           {a.user.firstName} {a.user.lastName}
                         </p>
-                        <p className="truncate text-[11px] text-navy-400">{a.user.documentNumber}</p>
+                        <p className="truncate text-[11px] text-navy-400">
+                          {a.user.documentNumber}
+                          {!a.user.lastLoginAt && a.status !== "completado" && (
+                            <span className="font-semibold text-amber-700"> · nunca ha entrado</span>
+                          )}
+                        </p>
                       </div>
                     </Link>
                   </td>
@@ -190,18 +223,18 @@ export default async function SeguimientoPage(props: {
                       {formatDate(a.dueDate)}
                     </span>
                     {dias !== null && a.status !== "completado" && (
-                      <span className="block text-[10px] text-navy-300">
-                        {dias >= 0 ? `${dias} días restantes` : `vencido hace ${-dias} días`}
+                      <span className={`block text-[10px] ${vencido ? "text-red-500" : dias <= 7 ? "text-amber-700" : "text-navy-300"}`}>
+                        {dias > 0 ? `quedan ${cantidad(dias, "día", "días")}` : dias === 0 ? "vence hoy" : `vencido hace ${cantidad(-dias, "día", "días")}`}
                       </span>
                     )}
                   </td>
                 </tr>
               );
             })}
-            {filtradas.length === 0 && (
+            {filas.length === 0 && (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-sm text-navy-300">
-                  No hay registros con los filtros seleccionados
+                  {filtrando ? "No hay registros con los filtros seleccionados" : "Aún no hay cursos asignados"}
                 </td>
               </tr>
             )}

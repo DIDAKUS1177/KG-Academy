@@ -49,9 +49,9 @@ export default async function MisCursosPage(props: { searchParams: Promise<{ est
         title="Mis cursos"
         description="Todos los cursos en los que está matriculado, con su estado y porcentaje de avance."
         action={
-          <Link href="/catalogo" className="btn-outline btn-sm">
-            Explorar catálogo
-          </Link>
+          <a href="#disponibles" className="btn-outline btn-sm">
+            Otros cursos disponibles
+          </a>
         }
       />
 
@@ -113,7 +113,7 @@ export default async function MisCursosPage(props: { searchParams: Promise<{ est
         </div>
       )}
 
-      <div className="mt-12">
+      <div id="disponibles" className="mt-12 scroll-mt-20">
         <CursosDisponibles userId={user.id} rol={user.role.code} companyId={user.companyId} />
       </div>
     </div>

@@ -109,6 +109,13 @@ export function GestionEmpresas({ planes, editar, onCerrarEdicion }: {
     const d = leerFormulario(e.currentTarget);
     if (!d.seats) delete d.seats;
     if (!d.planCode) delete d.planCode;
+    const nombre = editar.tradeName ?? editar.legalName;
+    if (d.status !== editar.status && d.status !== "activa" && editar.status === "activa") {
+      const ok = window.confirm(
+        `¿${d.status === "suspendida" ? "Suspender" : "Inactivar"} ${nombre}?\n\nNinguna de sus cuentas podrá entrar hasta que la reactive. Su historial no se pierde.`
+      );
+      if (!ok) return setCargando(false);
+    }
     const { ok, data } = await llamar("/api/admin/empresa", "PATCH", { companyId: editar.id, ...d });
     setCargando(false);
     if (!ok) return setMsg({ ok: false, text: data.error ?? "No se pudo guardar" });

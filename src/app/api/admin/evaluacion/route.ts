@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/auth";
+import { ROLES } from "@/lib/constants";
 import { bancoDelCurso } from "@/lib/admin-evaluaciones";
 import { ROLES_CURSOS, exigirRol, leerCuerpo, limpiar, respuestaError, respuestaOk } from "@/lib/admin-api";
 
@@ -84,9 +85,32 @@ export async function PATCH(req: Request) {
 
   const before = await prisma.assessment.findUnique({
     where: { id: d.assessmentId },
-    include: { _count: { select: { questions: true } } },
+    include: { _count: { select: { questions: true } }, course: { select: { status: true, requiresFinalExam: true } } },
   });
   if (!before) return respuestaError("Evaluación no encontrada", 404);
+
+  // El instructor prepara las preguntas; publicar y fijar nota mínima e
+  // intentos (de lo que depende el certificado) es de la administración de KG.
+  const cambia = <T,>(nuevo: T | undefined, actual: T) => nuevo !== undefined && nuevo !== actual;
+  if (
+    auth.user.role.code === ROLES.INSTRUCTOR &&
+    (cambia(d.isPublished, before.isPublished) || cambia(d.minScore, before.minScore) || cambia(d.maxAttempts, before.maxAttempts))
+  ) {
+    return respuestaError("Publicar la evaluación y fijar la nota mínima o los intentos lo hace la administración de KG", 403);
+  }
+
+  // Sin la evaluación final publicada, nadie puede terminar el curso ni certificarse.
+  if (d.isPublished === false && before.isPublished && before.type === "final" && before.course.status === "publicado" && before.course.requiresFinalExam) {
+    const otras = await prisma.assessment.count({
+      where: { courseId: before.courseId, type: "final", isPublished: true, id: { not: before.id } },
+    });
+    if (!otras) {
+      return respuestaError(
+        "Es la evaluación final de un curso publicado: si la retira, nadie podrá terminarlo ni certificarse. Para corregirla, edite sus preguntas sin retirarla, o primero pase el curso a borrador.",
+        409
+      );
+    }
+  }
 
   if (d.isPublished && before._count.questions === 0) {
     return respuestaError("Cargue al menos una pregunta antes de publicar la evaluación");

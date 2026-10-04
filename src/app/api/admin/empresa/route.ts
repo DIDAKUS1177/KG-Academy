@@ -112,6 +112,11 @@ export async function POST(req: Request) {
   if (await prisma.company.findUnique({ where: { nit: d.nit } })) {
     return respuestaError("Ya existe una empresa con ese NIT", 409);
   }
+  // Sin cupos, su administrador no podría crear a nadie: que no quede así por descuido.
+  if (d.planCode && !d.seats) {
+    const plan = await prisma.plan.findUnique({ where: { code: d.planCode }, select: { maxUsers: true } });
+    if (plan && !plan.maxUsers) return respuestaError("Ese plan no trae un número de cupos: escriba los cupos contratados");
+  }
   if (d.admin) {
     const email = d.admin.email.toLowerCase();
     if (await prisma.user.findUnique({ where: { email } })) {
@@ -223,15 +228,71 @@ export async function PATCH(req: Request) {
   if (d.planCode) {
     const error = await cambiarPlan(after.id, d.planCode, d.seats);
     if (error) return respuestaError(error, 404);
+  } else if (d.seats !== undefined) {
+    // Solo cambian los cupos: se ajusta la suscripción vigente.
+    const vigente = await prisma.companySubscription.findFirst({
+      where: { companyId: after.id, status: "activa" },
+      orderBy: { startsAt: "desc" },
+    });
+    if (!vigente) return respuestaError("La empresa no tiene un plan vigente: elija un plan para fijar sus cupos");
+    if (vigente.seats !== d.seats) {
+      await prisma.companySubscription.update({ where: { id: vigente.id }, data: { seats: d.seats } });
+    }
   }
 
-  // Al suspender o inactivar la empresa, sus cuentas dejan de poder entrar;
-  // al reactivarla, vuelven. Los estudiantes conservan su historial intacto.
-  if (d.status && d.status !== before.status) {
-    await prisma.user.updateMany({
-      where: { companyId: after.id, role: { code: { not: ROLES.SUPERADMIN } } },
-      data: { status: d.status === "activa" ? "activo" : "inactivo" },
+  // Al suspender o inactivar la empresa, sus cuentas dejan de poder entrar. Se
+  // anota quiénes y en qué estado estaban para que, al reactivarla, cada una
+  // vuelva a su estado: un bloqueado sigue bloqueado y quien no había cambiado
+  // la contraseña temporal la sigue teniendo que cambiar.
+  const estabaActiva = before.status === "activa";
+  const quedaActiva = after.status === "activa";
+  if (estabaActiva && !quedaActiva) {
+    const cuentas = await prisma.user.findMany({
+      where: { companyId: after.id, status: { in: ["activo", "pendiente_activacion"] }, role: { code: { not: ROLES.SUPERADMIN } } },
+      select: { id: true, status: true },
     });
+    const ids = cuentas.map((c) => c.id);
+    await prisma.user.updateMany({ where: { id: { in: ids } }, data: { status: "inactivo" } });
+    await prisma.session.deleteMany({ where: { userId: { in: ids } } });
+    await audit({
+      userId: actor.id,
+      actorEmail: actor.email,
+      action: "suspender_cuentas",
+      entity: "companies",
+      entityId: after.id,
+      summary: `${ids.length} cuenta(s) de ${after.tradeName} sin acceso: empresa ${after.status}`,
+      after: { cuentas },
+    });
+  } else if (!estabaActiva && quedaActiva) {
+    const registro = await prisma.auditLog.findFirst({
+      where: { entity: "companies", entityId: after.id, action: "suspender_cuentas" },
+      orderBy: { createdAt: "desc" },
+    });
+    let cuentas: { id: string; status: string }[] | null = null;
+    try {
+      cuentas = registro?.afterJson ? (JSON.parse(registro.afterJson).cuentas ?? null) : null;
+    } catch {
+      cuentas = null;
+    }
+    if (cuentas) {
+      for (const estado of ["activo", "pendiente_activacion"]) {
+        const ids = cuentas.filter((c) => c.status === estado).map((c) => c.id);
+        if (ids.length) {
+          await prisma.user.updateMany({ where: { id: { in: ids }, companyId: after.id, status: "inactivo" }, data: { status: estado } });
+        }
+      }
+    } else {
+      // Suspendida antes de que se anotara quiénes: vuelven las inactivas (las
+      // bloqueadas no), y quien nunca entró conserva el cambio de contraseña pendiente.
+      const inactivas = await prisma.user.findMany({
+        where: { companyId: after.id, status: "inactivo", role: { code: { not: ROLES.SUPERADMIN } } },
+        select: { id: true, lastLoginAt: true },
+      });
+      const entraron = inactivas.filter((u) => u.lastLoginAt).map((u) => u.id);
+      const nunca = inactivas.filter((u) => !u.lastLoginAt).map((u) => u.id);
+      if (entraron.length) await prisma.user.updateMany({ where: { id: { in: entraron } }, data: { status: "activo" } });
+      if (nunca.length) await prisma.user.updateMany({ where: { id: { in: nunca } }, data: { status: "pendiente_activacion" } });
+    }
   }
 
   await audit({

@@ -24,10 +24,13 @@ export default async function CertificadoPage(props: { params: Promise<{ code: s
   const staff = ["superadmin", "admin_kg"].includes(user.role.code);
   if (cert.userId !== user.id && !staff) notFound();
 
-  await prisma.certificate.update({
-    where: { id: cert.id },
-    data: { downloads: { increment: 1 } },
-  });
+  // Cuenta las veces que el titular lo abre (no las revisiones de KG).
+  if (cert.userId === user.id) {
+    await prisma.certificate.update({
+      where: { id: cert.id },
+      data: { downloads: { increment: 1 } },
+    });
+  }
 
   return (
     <div>

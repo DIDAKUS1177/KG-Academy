@@ -98,7 +98,16 @@ function leerLinea(linea: string): { ok: true; pregunta: Nueva } | { ok: false; 
 
 /* -------------------------------- Componente ------------------------------- */
 
-export function EditorEvaluacion({ evaluacion: e, preguntas }: { evaluacion: Evaluacion; preguntas: Pregunta[] }) {
+export function EditorEvaluacion({
+  evaluacion: e,
+  preguntas,
+  puedePublicar,
+}: {
+  evaluacion: Evaluacion;
+  preguntas: Pregunta[];
+  /** Publicar y fijar nota mínima e intentos es de la administración de KG, no del instructor. */
+  puedePublicar: boolean;
+}) {
   const router = useRouter();
   const [msg, setMsg] = useState<Mensaje>(null);
   const [guardando, setGuardando] = useState(false);
@@ -135,6 +144,7 @@ export function EditorEvaluacion({ evaluacion: e, preguntas }: { evaluacion: Eva
   }
 
   async function publicar(valor: boolean) {
+    if (!valor && !window.confirm("¿Retirar la evaluación? Mientras esté retirada, nadie podrá presentarla.")) return;
     setGuardando(true);
     const r = await llamar("/api/admin/evaluacion", "PATCH", { assessmentId: e.id, isPublished: valor });
     setGuardando(false);
@@ -238,14 +248,20 @@ export function EditorEvaluacion({ evaluacion: e, preguntas }: { evaluacion: Eva
               ? "Publicada: los estudiantes que terminen las lecciones pueden presentarla."
               : "Sin publicar. Cargue y revise las preguntas antes de publicarla."}
           </p>
-          <button
-            type="button"
-            disabled={guardando}
-            onClick={() => publicar(!e.isPublished)}
-            className={`mt-4 w-full ${e.isPublished ? "btn-outline" : "btn-lime"}`}
-          >
-            {e.isPublished ? "Retirar publicación" : "Publicar evaluación"}
-          </button>
+          {puedePublicar ? (
+            <button
+              type="button"
+              disabled={guardando}
+              onClick={() => publicar(!e.isPublished)}
+              className={`mt-4 w-full ${e.isPublished ? "btn-outline" : "btn-lime"}`}
+            >
+              {e.isPublished ? "Retirar publicación" : "Publicar evaluación"}
+            </button>
+          ) : (
+            <p className="mt-3 rounded-xl bg-navy-50 px-3 py-2 text-[11px] text-navy-500">
+              La administración de KG la publica cuando esté revisada.
+            </p>
+          )}
         </div>
 
         <form onSubmit={guardarConfig} className="card space-y-4 p-5">

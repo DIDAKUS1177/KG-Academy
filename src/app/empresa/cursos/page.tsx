@@ -7,7 +7,7 @@ import { filtroCatalogo } from "@/lib/acceso-cursos";
 import { ROLES } from "@/lib/constants";
 import { CourseCard } from "@/components/CourseCard";
 import { EmptyState, SectionTitle } from "@/components/ui";
-import { IconBook, IconClipboard } from "@/components/Icons";
+import { IconBook, IconClipboard, IconArrowRight } from "@/components/Icons";
 
 export const metadata: Metadata = { title: "Cursos de su plan" };
 export const dynamic = "force-dynamic";
@@ -25,6 +25,7 @@ export default async function CursosEmpresaPage(props: { searchParams: Promise<{
     orderBy: { code: "asc" },
   });
   const seleccion = company.catalogo === "seleccion";
+  const asigna = user.role.code !== ROLES.SUPERVISOR;
 
   return (
     <div>
@@ -37,7 +38,7 @@ export default async function CursosEmpresaPage(props: { searchParams: Promise<{
             : "Todo el catálogo publicado de KG Academy está disponible para su empresa."
         }
         action={
-          user.role.code !== ROLES.SUPERVISOR && cursos.length > 0 ? (
+          asigna && cursos.length > 0 ? (
             <Link href="/empresa/asignar" className="btn-lime btn-sm">
               <IconClipboard width={14} height={14} /> Asignar cursos
             </Link>
@@ -53,24 +54,30 @@ export default async function CursosEmpresaPage(props: { searchParams: Promise<{
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {cursos.map((c) => (
-            <CourseCard
-              key={c.id}
-              course={{
-                slug: c.slug,
-                code: c.code,
-                title: c.title,
-                subtitle: c.subtitle,
-                level: c.level,
-                durationHours: c.durationHours,
-                accessType: c.accessType,
-                price: c.price,
-                status: c.status,
-                modulesCount: c.modules.length,
-                lessonsCount: c.modules.reduce((s, m) => s + m.lessons.length, 0),
-                categoryName: c.category.name,
-                categoryColor: c.category.color,
-              }}
-            />
+            <div key={c.id} className="flex flex-col gap-2">
+              <CourseCard
+                course={{
+                  slug: c.slug,
+                  code: c.code,
+                  title: c.title,
+                  subtitle: c.subtitle,
+                  level: c.level,
+                  durationHours: c.durationHours,
+                  accessType: c.accessType,
+                  price: c.price,
+                  status: c.status,
+                  modulesCount: c.modules.length,
+                  lessonsCount: c.modules.reduce((s, m) => s + m.lessons.length, 0),
+                  categoryName: c.category.name,
+                  categoryColor: c.category.color,
+                }}
+              />
+              {asigna && (
+                <Link href={`/empresa/asignar?curso=${c.id}`} className="btn-outline btn-sm justify-center">
+                  <IconClipboard width={14} height={14} /> Asignar este curso <IconArrowRight width={12} height={12} />
+                </Link>
+              )}
+            </div>
           ))}
         </div>
       )}

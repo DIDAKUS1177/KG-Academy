@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { fueraDelEquipoKG } from "@/lib/acceso-cursos";
 import { requireRole } from "@/lib/auth";
 import { ROLES, ROLE_LABEL } from "@/lib/constants";
 import { formatDateTime, cantidad } from "@/lib/utils";
@@ -37,8 +38,8 @@ export default async function AdminDashboard() {
     prisma.user.count(),
     prisma.company.count(),
     prisma.course.count(),
-    prisma.certificate.count(),
-    prisma.enrollment.findMany({ select: { progress: true, status: true } }),
+    prisma.certificate.count({ where: { user: fueraDelEquipoKG } }),
+    prisma.enrollment.findMany({ where: { user: fueraDelEquipoKG }, select: { progress: true, status: true } }),
     prisma.course.count({ where: { status: "publicado" } }),
     prisma.user.groupBy({ by: ["roleId"], _count: true }),
     prisma.user.findMany({
@@ -48,7 +49,11 @@ export default async function AdminDashboard() {
     }),
     prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
     prisma.course.findMany({
-      include: { enrollments: true, category: true, certificates: true },
+      include: {
+        enrollments: { where: { user: fueraDelEquipoKG } },
+        category: true,
+        certificates: { where: { user: fueraDelEquipoKG } },
+      },
       orderBy: { createdAt: "asc" },
     }),
   ]);

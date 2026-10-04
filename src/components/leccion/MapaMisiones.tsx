@@ -100,10 +100,12 @@ export function MapaMisiones({
             <p className="mt-0.5 line-clamp-2 min-h-[2.5rem] font-display text-sm font-bold leading-snug text-white/90">
               {m.titulo.replace(/^M[oó]dulo\s*\d+\.\s*/i, "")}
             </p>
-            <div className="relative mt-4 flex items-start justify-around gap-2">
-              <div className="pointer-events-none absolute left-[18%] right-[18%] top-8 border-t-[3px] border-dashed border-white/20" />
+            <div className="mt-4 flex items-start">
               {m.niveles.map((n, ni) => (
-                <Nodo key={n.id} n={n} numero={primerNumero[mi] + ni} estrellas={estrellas[n.id] ?? 0} avatar={avatar} />
+                <div key={n.id} className="relative flex min-w-0 flex-1 basis-0 justify-center">
+                  {ni > 0 && <Tramo recorrido={n.estado !== "bloqueado"} />}
+                  <Nodo n={n} numero={primerNumero[mi] + ni} estrellas={estrellas[n.id] ?? 0} avatar={avatar} />
+                </div>
               ))}
             </div>
           </div>
@@ -113,31 +115,56 @@ export function MapaMisiones({
         <div className="rounded-2xl bg-gradient-to-br from-red-600/30 to-amber-500/20 p-4 ring-1 ring-red-400/30">
           <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-300">Final</p>
           <p className="mt-0.5 min-h-[2.5rem] font-display text-sm font-bold leading-snug">Desafío final y certificado</p>
-          <div className="relative mt-4 flex items-start justify-around gap-2">
-            <div className="pointer-events-none absolute left-[18%] right-[18%] top-8 border-t-[3px] border-dashed border-white/20" />
+          <div className="mt-4 flex items-start">
             {jefe && (
-              <NodoEspecial
-                href={jefe.estado === "bloqueado" ? null : jefe.href}
-                etiqueta="Desafío final"
-                detalle={jefe.detalle}
-                tono={jefe.estado === "superado" ? "lima" : jefe.estado === "disponible" ? "rojo" : "gris"}
-                pulso={jefe.estado === "disponible"}
-                avatar={avatarEnJefe ? avatar : undefined}
-                icono={jefe.estado === "bloqueado" ? <IconLock width={24} height={24} /> : jefe.estado === "superado" ? <IconCheck width={26} height={26} strokeWidth={3} /> : <IconFire width={28} height={28} fill="currentColor" />}
-              />
+              <div className="relative flex min-w-0 flex-1 basis-0 justify-center">
+                <NodoEspecial
+                  href={jefe.estado === "bloqueado" ? null : jefe.href}
+                  etiqueta="Desafío final"
+                  detalle={jefe.detalle}
+                  tono={jefe.estado === "superado" ? "lima" : jefe.estado === "disponible" ? "rojo" : "gris"}
+                  pulso={jefe.estado === "disponible"}
+                  avatar={avatarEnJefe ? avatar : undefined}
+                  icono={jefe.estado === "bloqueado" ? <IconLock width={24} height={24} /> : jefe.estado === "superado" ? <IconCheck width={26} height={26} strokeWidth={3} /> : <IconFire width={28} height={28} fill="currentColor" />}
+                />
+              </div>
             )}
-            <NodoEspecial
-              href={trofeo.href}
-              etiqueta="Certificado"
-              detalle={trofeo.href ? "¡Obtenido!" : "Al superar el desafío"}
-              tono={trofeo.href ? "oro" : "gris"}
-              pulso={false}
-              icono={<IconAward width={26} height={26} />}
-            />
+            <div className="relative flex min-w-0 flex-1 basis-0 justify-center">
+              {jefe && <Tramo recorrido={!!trofeo.href} />}
+              <NodoEspecial
+                href={trofeo.href}
+                etiqueta="Certificado"
+                detalle={trofeo.href ? "¡Obtenido!" : "Al superar el desafío"}
+                tono={trofeo.href ? "oro" : "gris"}
+                pulso={false}
+                icono={<IconAward width={26} height={26} />}
+              />
+            </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * Tramo del camino entre un nivel y el anterior. Va del borde de un círculo al
+ * del siguiente (con aire a cada lado), nunca por debajo de ellos. Lo ya
+ * recorrido es verde continuo; lo que falta, punteado.
+ *
+ * Cada nivel ocupa una columna del mismo ancho, así que el centro del nivel
+ * anterior está a una columna de distancia: -50% y 50% del ancho de esta.
+ */
+function Tramo({ recorrido }: { recorrido: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`pointer-events-none absolute top-[30px] border-t-[3px] ${
+        recorrido ? "border-solid border-lime-400/70" : "border-dashed border-white/25"
+      }`}
+      // Radio del círculo (2rem) más 0,5rem de aire a cada lado.
+      style={{ left: "calc(-50% + 2.5rem)", right: "calc(50% + 2.5rem)" }}
+    />
   );
 }
 
@@ -150,7 +177,7 @@ function Nodo({ n, numero, estrellas, avatar }: { n: NivelMapa; numero: number; 
         hecho
           ? "border-lime-300 bg-lime-500 text-navy-900"
           : bloqueado
-            ? "border-white/10 bg-white/5 text-white/30"
+            ? "border-white/15 bg-navy-800 text-white/35"
             : "kg-mapa-pulso border-white bg-navy-700 text-white"
       } ${n.activo ? "ring-4 ring-lime-400/60 ring-offset-2 ring-offset-navy-900" : ""} ${bloqueado ? "" : "group-hover:scale-110"}`}
     >
@@ -173,17 +200,17 @@ function Nodo({ n, numero, estrellas, avatar }: { n: NivelMapa; numero: number; 
             </span>
           ))}
       </span>
-      <span className={`mt-1 line-clamp-2 max-w-[7.5rem] text-center text-[11px] font-semibold leading-snug ${bloqueado ? "text-white/35" : "text-white/85"}`}>
+      <span className={`mt-1 line-clamp-2 w-full max-w-[7.5rem] px-1 text-center text-[11px] font-semibold leading-snug ${bloqueado ? "text-white/35" : "text-white/85"}`}>
         {n.titulo}
       </span>
     </>
   );
   return bloqueado ? (
-    <div className="relative z-[1] flex flex-col items-center" aria-label={`Nivel ${numero}: ${n.titulo}, bloqueado`}>
+    <div className="relative z-[1] flex w-full flex-col items-center" aria-label={`Nivel ${numero}: ${n.titulo}, bloqueado`}>
       {contenido}
     </div>
   ) : (
-    <Link href={n.href} className="group relative z-[1] flex flex-col items-center" aria-current={n.activo ? "step" : undefined} aria-label={`Nivel ${numero}: ${n.titulo}${hecho ? ", superado" : ""}`}>
+    <Link href={n.href} className="group relative z-[1] flex w-full flex-col items-center" aria-current={n.activo ? "step" : undefined} aria-label={`Nivel ${numero}: ${n.titulo}${hecho ? ", superado" : ""}`}>
       {contenido}
     </Link>
   );
@@ -213,7 +240,7 @@ function NodoEspecial({
         ? "border-red-300 bg-red-600 text-white"
         : tono === "oro"
           ? "border-amber-200 bg-amber-400 text-navy-900"
-          : "border-white/10 bg-white/5 text-white/30";
+          : "border-white/15 bg-navy-800 text-white/35";
   const contenido = (
     <>
       <span className={`relative flex h-16 w-16 items-center justify-center rounded-2xl border-4 transition group-hover:scale-110 ${c} ${pulso ? "kg-mapa-pulso" : ""}`}>

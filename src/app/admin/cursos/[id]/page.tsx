@@ -14,7 +14,7 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
   const params = await props.params;
   const actor = await requireRole(ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR);
 
-  const [course, categorias, instructores, empresas] = await Promise.all([
+  const [course, categorias, instructores, empresas, cursando] = await Promise.all([
     prisma.course.findUnique({
       where: { id: params.id },
       include: {
@@ -42,6 +42,14 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
       where: { status: { not: "inactiva" } },
       select: { id: true, legalName: true, tradeName: true, catalogo: true },
       orderBy: { legalName: "asc" },
+    }),
+    // Personas (fuera del equipo de KG) que lo tienen empezado y sin terminar.
+    prisma.enrollment.count({
+      where: {
+        courseId: params.id,
+        status: { not: "completado" },
+        user: { role: { code: { notIn: [ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR] } } },
+      },
     }),
   ]);
   if (!course) notFound();
@@ -88,6 +96,7 @@ export default async function ConstructorPage(props: { params: Promise<{ id: str
 
       <CursoConstructor
         puedePublicar={actor.role.code !== ROLES.INSTRUCTOR}
+        cursando={cursando}
         categorias={categorias.map((c) => ({ id: c.id, nombre: c.name }))}
         instructores={instructores.map((i) => ({ id: i.id, nombre: `${i.firstName} ${i.lastName}`.trim() }))}
         course={{

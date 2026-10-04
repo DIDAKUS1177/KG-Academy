@@ -59,10 +59,9 @@ export function Ventana({
   }, [onCerrar]);
 
   return (
-    <div
-      className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-navy-900/60 p-4 backdrop-blur-sm sm:items-center"
-      onMouseDown={(e) => e.target === e.currentTarget && onCerrar()}
-    >
+    // No se cierra con un clic afuera: se perdía lo escrito o una contraseña
+    // temporal que no se vuelve a mostrar. Se cierra con la X, "Cerrar" o Esc.
+    <div className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-navy-900/60 p-4 backdrop-blur-sm sm:items-center">
       <div
         role="dialog"
         aria-modal="true"

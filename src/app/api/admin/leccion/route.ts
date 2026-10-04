@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { urlDeVideo } from "@/lib/video";
 import { audit } from "@/lib/auth";
 import { CONTENT_TYPES } from "@/lib/constants";
 import { leerLeccionInteractiva } from "@/lib/leccion-interactiva";
@@ -66,12 +67,17 @@ export async function POST(req: Request) {
   if (d.contentType === "interactivo" && !leerLeccionInteractiva(d.contentBody ?? before.contentBody)) {
     return respuestaError("Arme el contenido de la lección interactiva con el botón «Editar contenido».");
   }
+  // Texto y SCORM no tienen cómo cargarse todavía: el trabajador vería una lección en blanco.
+  if ((d.contentType === "texto" && !(d.contentBody ?? before.contentBody)?.trim()) || (d.contentType === "scorm" && before.contentType !== "scorm")) {
+    return respuestaError("Ese tipo de contenido no se puede cargar todavía. Use video, Genially, PDF, enlace o una lección interactiva.");
+  }
 
   const after = await prisma.lesson.update({
     where: { id: d.lessonId },
     data: {
       contentType: d.contentType,
-      contentUrl: sinUrl ? null : url,
+      // El enlace de YouTube o Vimeo tal como se copia del navegador se guarda en su forma para incrustar.
+      contentUrl: sinUrl ? null : d.contentType === "video" && url ? urlDeVideo(url) : url,
       contentBody: d.contentBody ?? before.contentBody,
       isPublished: d.contentType !== "pendiente",
     },

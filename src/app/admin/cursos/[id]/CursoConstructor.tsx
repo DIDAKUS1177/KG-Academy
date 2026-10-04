@@ -48,15 +48,22 @@ type Course = {
 };
 type Opcion = { id: string; nombre: string };
 
+/**
+ * Tipos de contenido que se pueden cargar desde aquí. "Texto" y "SCORM" no
+ * tienen cómo cargarse todavía (la lección quedaba en blanco): solo se
+ * muestran en una lección que ya los tenga.
+ */
 const TIPOS = [
   { v: "pendiente", l: "Pendiente (sin contenido)" },
-  { v: "video", l: "Video (URL embebible)" },
-  { v: "genially", l: "Genially / interactivo" },
+  { v: "video", l: "Video (enlace de YouTube o Vimeo)" },
+  { v: "genially", l: "Presentación de Genially" },
   { v: "pdf", l: "PDF / documento" },
-  { v: "texto", l: "Texto enriquecido" },
-  { v: "enlace", l: "Enlace externo" },
-  { v: "scorm", l: "Paquete SCORM" },
+  { v: "enlace", l: "Enlace a otra página" },
   { v: "interactivo", l: "Lección interactiva (KG Academy)" },
+];
+const TIPOS_ANTERIORES = [
+  { v: "texto", l: "Texto (sin editor: cámbielo por otro tipo)" },
+  { v: "scorm", l: "Paquete SCORM (no disponible)" },
 ];
 
 /**
@@ -67,6 +74,14 @@ const TIPOS = [
  * avance de estudiantes no se pueden borrar: el servidor lo rechaza y aquí el
  * botón ni se muestra.
  */
+/** Qué significa cada estado, dicho en corto junto al botón. */
+const AYUDA_ESTADO: Record<string, string> = {
+  borrador: "Solo lo ve el equipo de KG",
+  revision: "Listo para que KG lo revise; solo lo ve KG",
+  publicado: "Lo ven los estudiantes y las empresas",
+  despublicado: "Fuera del catálogo; quien lo empezó lo termina",
+};
+
 export function CursoConstructor({
   course,
   modules,
@@ -74,6 +89,7 @@ export function CursoConstructor({
   categorias,
   instructores,
   puedePublicar,
+  cursando,
 }: {
   course: Course;
   modules: Module[];
@@ -81,6 +97,8 @@ export function CursoConstructor({
   categorias: Opcion[];
   instructores: Opcion[];
   puedePublicar: boolean;
+  /** Personas que lo tienen empezado y sin terminar. */
+  cursando: number;
 }) {
   const router = useRouter();
   const [msg, setMsg] = useState<Mensaje>(null);
@@ -124,8 +142,20 @@ export function CursoConstructor({
   const guardarContenido = (id: string) =>
     ejecutar(id, "/api/admin/leccion", "POST", { lessonId: id, ...draft[id] }, "Contenido de la lección actualizado");
 
-  const cambiarEstado = (status: string) =>
-    ejecutar("curso", "/api/admin/curso", "POST", { courseId: course.id, status }, `Curso marcado como "${STATUS_LABEL[status] ?? status}"`);
+  /** Publicar o sacar un curso del catálogo afecta a estudiantes y empresas: se confirma diciendo a cuántos. */
+  function cambiarEstado(status: string) {
+    const personas = cantidad(cursando, "persona lo está haciendo", "personas lo están haciendo");
+    let aviso: string | null = null;
+    if (status === "publicado") {
+      aviso = `¿Publicar «${course.title}»?\n\nQuedará disponible para los estudiantes y para asignarlo en las empresas.`;
+    } else if (course.status === "publicado" && status === "despublicado") {
+      aviso = `¿Retirar «${course.title}» del catálogo?\n\nNadie nuevo podrá empezarlo ni asignarlo.${cursando ? ` Hoy ${personas}: podrán terminarlo.` : ""}`;
+    } else if (course.status === "publicado" || (course.status === "despublicado" && cursando)) {
+      aviso = `¿Pasar «${course.title}» a ${STATUS_LABEL[status] ?? status}?\n\nSolo el equipo de KG lo verá.${cursando ? ` Hoy ${personas}: dejarán de verlo hasta que lo vuelva a publicar (su avance se guarda).` : ""}`;
+    }
+    if (aviso && !confirm(aviso)) return;
+    return ejecutar("curso", "/api/admin/curso", "POST", { courseId: course.id, status }, `Curso marcado como "${STATUS_LABEL[status] ?? status}"`);
+  }
 
   const mover = (tipo: "modulo" | "leccion", id: string, dir: "arriba" | "abajo") =>
     ejecutar(
@@ -237,7 +267,9 @@ export function CursoConstructor({
                         onChange={(e) => setDraft((s) => ({ ...s, [l.id]: { ...s[l.id], contentType: e.target.value } }))}
                         className="select py-2 text-sm"
                       >
-                        {TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
+                        {[...TIPOS, ...TIPOS_ANTERIORES.filter((t) => t.v === l.contentType)].map((t) => (
+                          <option key={t.v} value={t.v}>{t.l}</option>
+                        ))}
                       </select>
                       {/* La lección interactiva se arma en su editor visual, no con una URL. */}
                       {d.contentType === "interactivo" ? (
@@ -328,6 +360,7 @@ export function CursoConstructor({
               >
                 {STATUS_LABEL[s] ?? s}
                 {course.status === s && <span className="float-right text-lime-600">actual</span>}
+                <span className="block text-[11px] font-normal text-navy-400">{AYUDA_ESTADO[s]}</span>
               </button>
             ))}
           </div>
@@ -359,7 +392,11 @@ export function CursoConstructor({
               <IconLayers width={17} height={17} className="text-navy-400" />
               <p className="font-display text-sm font-bold text-navy-700">Reglas del curso</p>
             </div>
-            <button onClick={() => setVentana({ tipo: "reglas" })} className="btn-ghost btn-sm">Editar</button>
+            {puedePublicar ? (
+              <button onClick={() => setVentana({ tipo: "reglas" })} className="btn-ghost btn-sm">Editar</button>
+            ) : (
+              <span className="text-[11px] text-navy-400">Las define KG</span>
+            )}
           </div>
           <dl className="mt-3 space-y-2 text-xs">
             <Dato k="Regla de progreso" v={course.progressRule.replace("_", " ")} />

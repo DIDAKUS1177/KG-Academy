@@ -12,6 +12,12 @@ export const dynamic = "force-dynamic";
 export default async function LogrosPage() {
   const user = await requireUser();
 
+  // El ranking es solo entre compañeros de la misma empresa: nadie ve nombres
+  // de trabajadores de otras empresas. Quien estudia por su cuenta no tiene ranking.
+  const companeros = user.companyId
+    ? (await prisma.companyMember.findMany({ where: { companyId: user.companyId, status: { not: "retirado" } }, select: { userId: true } })).map((m) => m.userId)
+    : [];
+
   const [points, streak, badges, earned, ledger, ranking] = await Promise.all([
     totalPoints(user.id),
     prisma.streak.findUnique({ where: { userId: user.id } }),
@@ -22,12 +28,15 @@ export default async function LogrosPage() {
       orderBy: { createdAt: "desc" },
       take: 12,
     }),
-    prisma.pointsLedger.groupBy({
-      by: ["userId"],
-      _sum: { points: true },
-      orderBy: { _sum: { points: "desc" } },
-      take: 5,
-    }),
+    companeros.length
+      ? prisma.pointsLedger.groupBy({
+          by: ["userId"],
+          where: { userId: { in: companeros } },
+          _sum: { points: true },
+          orderBy: { _sum: { points: "desc" } },
+          take: 5,
+        })
+      : Promise.resolve([]),
   ]);
 
   const earnedIds = new Set(earned.map((e) => e.badgeId));
@@ -117,34 +126,36 @@ export default async function LogrosPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="card overflow-hidden">
-            <p className="border-b border-navy-50 px-5 py-4 font-display text-sm font-bold text-navy-700">
-              Ranking de la plataforma
-            </p>
-            <ol className="divide-y divide-navy-50">
-              {ranking.map((r, i) => (
-                <li key={r.userId} className="flex items-center gap-3 px-5 py-3">
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                      i === 0 ? "bg-lime-500 text-navy-900" : "bg-navy-50 text-navy-500"
-                    }`}
-                  >
-                    {i + 1}
-                  </span>
-                  <span
-                    className={`min-w-0 flex-1 truncate text-sm ${
-                      r.userId === user.id ? "font-bold text-navy-700" : "text-navy-500"
-                    }`}
-                  >
-                    {r.userId === user.id ? "Usted" : nameOf(r.userId)}
-                  </span>
-                  <span className="shrink-0 font-display text-sm font-extrabold text-lime-600">
-                    {r._sum.points}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
+          {ranking.length > 0 && (
+            <div className="card overflow-hidden">
+              <p className="border-b border-navy-50 px-5 py-4 font-display text-sm font-bold text-navy-700">
+                Ranking de su empresa
+              </p>
+              <ol className="divide-y divide-navy-50">
+                {ranking.map((r, i) => (
+                  <li key={r.userId} className="flex items-center gap-3 px-5 py-3">
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+                        i === 0 ? "bg-lime-500 text-navy-900" : "bg-navy-50 text-navy-500"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <span
+                      className={`min-w-0 flex-1 truncate text-sm ${
+                        r.userId === user.id ? "font-bold text-navy-700" : "text-navy-500"
+                      }`}
+                    >
+                      {r.userId === user.id ? "Usted" : nameOf(r.userId)}
+                    </span>
+                    <span className="shrink-0 font-display text-sm font-extrabold text-lime-600">
+                      {r._sum.points}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
 
           <div className="card overflow-hidden">
             <p className="border-b border-navy-50 px-5 py-4 font-display text-sm font-bold text-navy-700">

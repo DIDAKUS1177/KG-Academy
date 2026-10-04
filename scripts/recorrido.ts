@@ -104,6 +104,7 @@ async function main() {
   // El ciclo completo con un curso de juego y con uno de Genially.
   fallos += await acciones(cursoJuego.id);
   fallos += await acciones(curso.id);
+  fallos += await gestionEmpresa(cursoJuego.id);
   await limpiar();
 
   await prisma.$disconnect();
@@ -345,8 +346,8 @@ async function acciones(cursoId: string) {
       cursos: [curso.id],
       filas: [{ firstName: "Sin", lastName: "Correo", documentNumber: docSinCorreo }],
     });
-    const errorRetirado = (retirado.data.errores as { motivo: string }[] | undefined)?.[0]?.motivo ?? "";
-    paso("A una persona retirada no la reactiva la empresa por su cuenta", retirado.status === 200 && errorRetirado.includes("retirada"), errorRetirado || retirado.texto.slice(0, 100));
+    const vuelta = await prisma.companyMember.findFirst({ where: { companyId, userId: sinCorreo.id } });
+    paso("A una persona retirada la empresa la reincorpora con su historial", retirado.status === 200 && retirado.data.vinculados === 1 && vuelta?.status === "activo", retirado.texto.slice(0, 120));
   }
   const formula = await llamar("POST", "/api/empresa/trabajadores", empresa, {
     companyId,
@@ -605,6 +606,247 @@ async function ultimoCodigo(correo: string) {
   return c.asunto.match(/\b(\d{6})\b/)?.[1] ?? null;
 }
 
+/** Lo que la empresa maneja sin depender de KG, y los límites de cada rol. */
+async function gestionEmpresa(cursoId: string) {
+  const sufijo = `g${Date.now().toString(36)}`;
+  const pasos: { nombre: string; ok: boolean; detalle?: string }[] = [];
+  const paso = (nombre: string, ok: boolean, detalle?: string) => pasos.push({ nombre, ok, detalle });
+  const rrhh = await prisma.user.findUniqueOrThrow({ where: { email: "rrhh@constructoraandina.com" } });
+  const companyId = rrhh.companyId!;
+  const empresa = await entrar("rrhh@constructoraandina.com");
+  const admin = await entrar("admin@kggestionintegral.com");
+  const curso = await prisma.course.findUniqueOrThrow({ where: { id: cursoId } });
+  const crearUno = (trabajador: Record<string, string>, extra: Record<string, unknown> = {}) =>
+    llamar("POST", "/api/empresa/trabajadores", empresa, { companyId, modo: "individual", trabajador, ...extra });
+  const cupos = () =>
+    prisma.companyMember.count({ where: { companyId, status: { not: "retirado" }, user: { role: { code: { in: ["estudiante", "supervisor"] } } } } });
+  // React escapa estos caracteres en el HTML.
+  const enHtml = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+
+  // 1. Primer ingreso: define su contraseña sin volver a escribir la temporal.
+  const correo1 = `primer.${sufijo}@demo.test`;
+  const alta1 = await crearUno({ firstName: "Primer", lastName: "Ingreso", documentNumber: `PI${sufijo}`, email: correo1 }, { cursos: [curso.id] });
+  const temporal1 = (alta1.data.credenciales as { clave: string }[] | undefined)?.[0]?.clave ?? "";
+  const ingreso1 = await entrarCon(correo1, temporal1);
+  const igual = await llamar("POST", "/api/auth/clave", ingreso1.cookie, { nueva: temporal1 });
+  const nueva1 = `Primer-${sufijo}-Clave`;
+  const define = await llamar("POST", "/api/auth/clave", ingreso1.cookie, { nueva: nueva1 });
+  paso(
+    "En el primer ingreso define su contraseña sin repetir la temporal (y no puede dejar la misma)",
+    alta1.status === 200 && igual.status === 400 && define.status === 200 && define.data.activada === true,
+    `${alta1.status} ${igual.status} ${define.status} ${define.texto.slice(0, 80)}`
+  );
+  const sesion1 = (await entrarCon(correo1, nueva1)).cookie;
+
+  // 2. La empresa escribe la contraseña al crear la cuenta.
+  const correo2 = `elegida.${sufijo}@demo.test`;
+  const clave2 = `Elegida-${sufijo}-Clave`;
+  const alta2 = await crearUno({ firstName: "Clave", lastName: "Elegida", documentNumber: `CE${sufijo}`, email: correo2, clave: clave2, pedirCambio: "no" }, { cursos: [curso.id] });
+  const ingreso2 = await entrarCon(correo2, clave2);
+  paso(
+    "La empresa escribe la contraseña al crear la cuenta (sin pedir cambio, entra directo)",
+    alta2.status === 200 && alta2.data.claveElegida === true && (alta2.data.credenciales as unknown[]).length === 0 && ingreso2.redirect === "/aula",
+    `${alta2.status} ${ingreso2.redirect}`
+  );
+  const correo3 = `elegida2.${sufijo}@demo.test`;
+  const alta3 = await crearUno({ firstName: "Clave", lastName: "ConCambio", documentNumber: `CC${sufijo}`, email: correo3, clave: clave2, pedirCambio: "si" });
+  const ingreso3 = await entrarCon(correo3, clave2);
+  paso("Con «pedir que la cambie», el sistema le pide cambiarla al entrar", alta3.status === 200 && ingreso3.redirect === "/cambiar-clave", `${alta3.status} ${ingreso3.redirect}`);
+  const cupoDebil = await cupos();
+  const debil = await crearUno({ firstName: "Clave", lastName: "Debil", documentNumber: `CD${sufijo}`, email: `debil.${sufijo}@demo.test`, clave: "12345678" });
+  paso(
+    "Una contraseña débil escrita por la empresa se rechaza (y no gasta cupo)",
+    debil.status === 409 && !(await prisma.user.findUnique({ where: { email: `debil.${sufijo}@demo.test` } })) && (await cupos()) === cupoDebil,
+    `${debil.status} ${debil.texto.slice(0, 80)}`
+  );
+  const lote = await llamar("POST", "/api/empresa/trabajadores", empresa, {
+    companyId,
+    modo: "masivo",
+    filas: [{ firstName: "Lote", lastName: "ConClave", documentNumber: `LC${sufijo}`, email: `lote.${sufijo}@demo.test`, clave: clave2, pedirCambio: "no" }],
+  });
+  const credLote = (lote.data.credenciales as { clave: string }[] | undefined)?.[0]?.clave;
+  const conLaEscrita = await entrarCon(`lote.${sufijo}@demo.test`, clave2);
+  paso(
+    "En la carga masiva no se aceptan contraseñas escritas: cada persona recibe la suya",
+    lote.status === 200 && !!credLote && credLote !== clave2 && conLaEscrita.status === 401,
+    `${lote.status} ${conLaEscrita.status}`
+  );
+
+  // 3. Un curso retirado del catálogo lo termina quien ya lo había empezado.
+  const correoLibre = `libre.${sufijo}@demo.test`;
+  await crearUno({ firstName: "Sin", lastName: "Cursos", documentNumber: `SL${sufijo}`, email: correoLibre, clave: clave2, pedirCambio: "no" });
+  const sesionLibre = (await entrarCon(correoLibre, clave2)).cookie;
+  const sesion2 = ingreso2.cookie;
+  const estadoOriginal = curso.status;
+  await prisma.course.update({ where: { id: curso.id }, data: { status: "despublicado" } });
+  try {
+    const conMatricula = await llamar("GET", `/aula/curso/${curso.slug}`, sesion2);
+    const sinMatricula = await llamar("GET", `/aula/curso/${curso.slug}`, sesionLibre);
+    paso(
+      "Un curso retirado del catálogo lo termina quien ya lo había empezado; nadie nuevo lo abre",
+      conMatricula.status === 200 && !conMatricula.texto.includes("se está actualizando") && sinMatricula.status === 404,
+      `${conMatricula.status} ${sinMatricula.status}`
+    );
+    await prisma.course.update({ where: { id: curso.id }, data: { status: "borrador" } });
+    const enBorrador = await llamar("GET", `/aula/curso/${curso.slug}`, sesion2);
+    paso("Si KG lo devuelve a borrador, quien lo estaba haciendo ve un aviso, no un error", enBorrador.status === 200 && enBorrador.texto.includes("se está actualizando"), `${enBorrador.status}`);
+  } finally {
+    await prisma.course.update({ where: { id: curso.id }, data: { status: estadoOriginal } });
+  }
+
+  // 4. La empresa cambia la contraseña a una que ella escribe.
+  const u2 = await prisma.user.findUniqueOrThrow({ where: { email: correo2 } });
+  const clave4 = `Cambiada-${sufijo}-Clave`;
+  const cambio = await llamar("POST", "/api/empresa/trabajadores/clave", empresa, { userId: u2.id, clave: clave4, pedirCambio: false });
+  const ingreso4 = await entrarCon(correo2, clave4);
+  const cambioPide = await llamar("POST", "/api/empresa/trabajadores/clave", empresa, { userId: u2.id, clave: clave4, pedirCambio: true });
+  const ingreso5 = await entrarCon(correo2, clave4);
+  paso(
+    "La empresa asigna la contraseña que quiera, pidiendo o no que la cambien",
+    cambio.status === 200 && cambio.data.claveTemporal === null && ingreso4.redirect === "/aula" && cambioPide.status === 200 && ingreso5.redirect === "/cambiar-clave",
+    `${cambio.status} ${ingreso4.redirect} ${cambioPide.status} ${ingreso5.redirect}`
+  );
+
+  // 5. Retirar de la empresa libera el cupo y conserva el historial.
+  const u1 = await prisma.user.findUniqueOrThrow({ where: { email: correo1 } });
+  const cupoAntes = await cupos();
+  const retiro = await llamar("POST", "/api/empresa/trabajadores/retirar", empresa, { userId: u1.id, companyId });
+  const tras = await prisma.user.findUniqueOrThrow({ where: { id: u1.id }, include: { memberships: true } });
+  const cupoDespues = await cupos();
+  const entraRetirado = await entrarCon(correo1, nueva1);
+  const sesionVieja = await llamar("GET", "/aula", sesion1);
+  paso(
+    "Retirar a alguien libera su cupo, lo deja sin acceso y conserva su historial",
+    retiro.status === 200 && tras.status === "inactivo" && tras.memberships.find((m) => m.companyId === companyId)?.status === "retirado" &&
+      cupoDespues === cupoAntes - 1 && entraRetirado.status === 403 && sesionVieja.status >= 300 &&
+      (await prisma.enrollment.count({ where: { userId: u1.id } })) > 0,
+    `${retiro.status} ${tras.status} cupos ${cupoAntes}->${cupoDespues} ingreso ${entraRetirado.status}`
+  );
+  const lista = await llamar("GET", "/empresa/trabajadores", empresa);
+  const listaRetirados = await llamar("GET", "/empresa/trabajadores?estado=retirados", empresa);
+  const fichaRetirado = await llamar("GET", `/empresa/trabajadores/${u1.id}`, empresa);
+  const claveRetirado = await llamar("POST", "/api/empresa/trabajadores/clave", empresa, { userId: u1.id });
+  paso(
+    "El retirado pasa a «retirados», su ficha lo dice y ya no se le cambia la contraseña",
+    !lista.texto.includes(correo1) && listaRetirados.texto.includes(correo1) && fichaRetirado.texto.includes("Retirado de la empresa") && claveRetirado.status === 403,
+    `${lista.status} ${listaRetirados.status} ${claveRetirado.status}`
+  );
+
+  // 6. Si vuelve, la empresa lo reincorpora con su historial.
+  const vuelve = await crearUno({ firstName: "Primer", lastName: "Ingreso", documentNumber: `PI${sufijo}`, email: correo1 });
+  const reincorporado = await prisma.user.findUniqueOrThrow({ where: { id: u1.id }, include: { memberships: true } });
+  const conSuClave = await entrarCon(correo1, nueva1);
+  paso(
+    "Si vuelve, la empresa lo reincorpora con su historial y al entrar debe cambiar la contraseña",
+    vuelve.status === 200 && vuelve.data.reincorporado === true && reincorporado.companyId === companyId &&
+      reincorporado.memberships.find((m) => m.companyId === companyId)?.status === "activo" && (await cupos()) === cupoAntes &&
+      conSuClave.redirect === "/cambiar-clave",
+    `${vuelve.status} ${vuelve.texto.slice(0, 100)} ${reincorporado.status} ${conSuClave.redirect}`
+  );
+
+  // 7. Las cifras de la empresa son solo de lo que ella asignó.
+  const otroCurso = (await prisma.course.findMany({ where: { status: "publicado", id: { not: curso.id } } })).find(
+    (c) => !c.title.includes(curso.title) && !curso.title.includes(c.title)
+  );
+  if (otroCurso) {
+    await prisma.enrollment.create({ data: { userId: u1.id, courseId: otroCurso.id, progress: 100, status: "completado" } });
+    const nomina = await (await fetch(`${BASE}/api/empresa/reporte?tipo=trabajadores`, { headers: { cookie: empresa } })).text();
+    const lineas = nomina.replace(/^﻿/, "").split("\n");
+    const columnas = lineas[0].split(";");
+    const fila = (lineas.find((l) => l.includes(correo1)) ?? "").split(";");
+    const valor = (col: string) => fila[columnas.indexOf(col)];
+    const ficha = await llamar("GET", `/empresa/trabajadores/${u1.id}`, empresa);
+    paso(
+      "Lo que la persona estudió por su cuenta no entra en las cifras ni en la ficha de la empresa",
+      valor("Cursos_asignados") === "1" && valor("Cursos_completados") === "0" && !ficha.texto.includes(enHtml(otroCurso.title)) && ficha.texto.includes(enHtml(curso.title)),
+      `asignados=${valor("Cursos_asignados")} completados=${valor("Cursos_completados")}`
+    );
+  }
+
+  // 8. El supervisor consulta: no asigna ni retira, y llega a sus propios cursos.
+  const supervisor = await entrar("diana.suarez@constructoraandina.com");
+  const inicioSup = await llamar("GET", "/empresa", supervisor);
+  const retiroSup = await llamar("POST", "/api/empresa/trabajadores/retirar", supervisor, { userId: u2.id, companyId });
+  paso(
+    "El supervisor ve el panel sin «Asignar cursos», con acceso a sus cursos, y no puede retirar a nadie",
+    inicioSup.status === 200 && !inicioSup.texto.includes('href="/empresa/asignar"') && inicioSup.texto.includes('href="/aula"') && retiroSup.status === 403,
+    `${inicioSup.status} ${retiroSup.status}`
+  );
+
+  // 9. KG elige qué empresa ver y el panel lo recuerda al cambiar de página.
+  const otraEmpresa = await prisma.company.findFirst({ where: { id: { not: companyId } } });
+  if (otraEmpresa) {
+    const ver = await fetch(`${BASE}/empresa/ver?empresa=${otraEmpresa.id}`, { headers: { cookie: admin }, redirect: "manual" });
+    const elegida = (ver.headers.get("set-cookie") ?? "").split(";")[0];
+    const trab = await llamar("GET", "/empresa/trabajadores", `${admin}; ${elegida}`);
+    paso(
+      "«Abrir panel» recuerda la empresa elegida al cambiar de página",
+      ver.status >= 300 && elegida.startsWith("kg_empresa=") && trab.texto.includes(enHtml(otraEmpresa.tradeName ?? otraEmpresa.legalName)) && trab.texto.includes("como equipo KG"),
+      `${ver.status} ${elegida.slice(0, 24)} ${trab.status}`
+    );
+  }
+
+  // 10. El instructor no cambia reglas de certificación ni publica evaluaciones;
+  //     la evaluación final de un curso publicado no se retira.
+  const instructor = await entrar("instructor@kggestionintegral.com");
+  const reglas = await llamar("PUT", "/api/admin/curso", instructor, { courseId: curso.id, minPassingScore: curso.minPassingScore === 80 ? 70 : 80 });
+  const final = await prisma.assessment.findFirstOrThrow({ where: { courseId: curso.id, type: "final", isPublished: true } });
+  const publicarInst = await llamar("PATCH", "/api/admin/evaluacion", instructor, { assessmentId: final.id, isPublished: false });
+  const cursoDespues = await prisma.course.findUniqueOrThrow({ where: { id: curso.id } });
+  paso(
+    "El instructor no cambia las reglas de certificación ni publica o retira evaluaciones",
+    reglas.status === 403 && publicarInst.status === 403 && cursoDespues.minPassingScore === curso.minPassingScore,
+    `${reglas.status} ${publicarInst.status}`
+  );
+  if (curso.requiresFinalExam) {
+    const retirarFinal = await llamar("PATCH", "/api/admin/evaluacion", admin, { assessmentId: final.id, isPublished: false });
+    const sigue = await prisma.assessment.findUniqueOrThrow({ where: { id: final.id } });
+    paso("La evaluación final de un curso publicado no se puede retirar", retirarFinal.status === 409 && sigue.isPublished, `${retirarFinal.status}`);
+  }
+
+  // 11. KG baja todos los certificados en un solo archivo.
+  const todos = await fetch(`${BASE}/api/empresa/reporte?tipo=certificados`, { headers: { cookie: admin } });
+  const textoTodos = await todos.text();
+  paso("KG descarga todos los certificados desde Administración → Reportes", todos.status === 200 && textoTodos.includes("Empresa"), `${todos.status} ${textoTodos.slice(0, 60)}`);
+
+  // 12. Suspender una empresa y reactivarla devuelve a cada cuenta su estado.
+  const prueba = await prisma.company.create({ data: { nit: `RC-${sufijo}`, legalName: `Recorrido ${sufijo} SAS`, tradeName: `Recorrido ${sufijo}` } });
+  try {
+    const rol = await prisma.role.findUniqueOrThrow({ where: { code: "estudiante" } });
+    const cuenta = (correo: string, status: string) =>
+      prisma.user.create({ data: { email: correo, passwordHash: "x", firstName: "Cuenta", lastName: status, roleId: rol.id, companyId: prueba.id, status } });
+    const activa = await cuenta(`activa.${sufijo}@demo.test`, "activo");
+    const pendiente = await cuenta(`pendiente.${sufijo}@demo.test`, "pendiente_activacion");
+    const bloqueada = await cuenta(`bloqueada.${sufijo}@demo.test`, "bloqueado");
+    const suspender = await llamar("PATCH", "/api/admin/empresa", admin, { companyId: prueba.id, status: "suspendida" });
+    const suspendidas = await prisma.user.findMany({ where: { companyId: prueba.id }, select: { id: true, status: true } });
+    const reactivar = await llamar("PATCH", "/api/admin/empresa", admin, { companyId: prueba.id, status: "activa" });
+    const estado = async (id: string) => (await prisma.user.findUniqueOrThrow({ where: { id } })).status;
+    const [e1, e2, e3] = [await estado(activa.id), await estado(pendiente.id), await estado(bloqueada.id)];
+    paso(
+      "Suspender una empresa deja sin acceso a sus cuentas; reactivarla devuelve a cada una su estado",
+      suspender.status === 200 && suspendidas.every((u) => u.status === (u.id === bloqueada.id ? "bloqueado" : "inactivo")) &&
+        reactivar.status === 200 && e1 === "activo" && e2 === "pendiente_activacion" && e3 === "bloqueado",
+      `${suspender.status} ${reactivar.status} ${e1} ${e2} ${e3}`
+    );
+    const sinPlan = await llamar("PATCH", "/api/admin/empresa", admin, { companyId: prueba.id, seats: 25 });
+    const plan = await prisma.plan.findFirstOrThrow();
+    await prisma.companySubscription.create({ data: { companyId: prueba.id, planId: plan.id, seats: 10, status: "activa" } });
+    const conPlan = await llamar("PATCH", "/api/admin/empresa", admin, { companyId: prueba.id, seats: 25 });
+    const suscripcion = await prisma.companySubscription.findFirstOrThrow({ where: { companyId: prueba.id, status: "activa" } });
+    paso("Cambiar solo los cupos se guarda de verdad (y sin plan, se avisa)", sinPlan.status === 400 && conPlan.status === 200 && suscripcion.seats === 25, `${sinPlan.status} ${conPlan.status} ${suscripcion.seats}`);
+  } finally {
+    await prisma.user.deleteMany({ where: { companyId: prueba.id } });
+    await prisma.auditLog.deleteMany({ where: { entityId: prueba.id } });
+    await prisma.company.delete({ where: { id: prueba.id } });
+  }
+
+  const malos = pasos.filter((p) => !p.ok);
+  console.log(`${malos.length ? "✗" : "✓"} Gestión de la empresa y límites de cada rol: ${pasos.length - malos.length}/${pasos.length}`);
+  for (const p of pasos) console.log(`    ${p.ok ? "✓" : "✗"} ${p.nombre}${p.ok || !p.detalle ? "" : ` (${p.detalle})`}`);
+  return malos.length;
+}
+
 /** Borra lo que creó el recorrido, para que la demostración quede como estaba. */
 /** El editor visual de lecciones interactivas guarda solo contenido que el aula puede abrir. */
 async function editorDeLecciones(cursoJuegoId: string, cursoGeniallyId: string) {
@@ -751,7 +993,7 @@ async function limpiar() {
   const cursos = await prisma.course.findMany({ where: { code: { startsWith: "KG-RC-" } }, select: { id: true } });
   const idsCursos = cursos.map((c) => c.id);
   await prisma.$transaction([
-    prisma.auditLog.deleteMany({ where: { OR: [{ userId: { in: ids } }, { entityId: { in: [...ids, ...idsCursos] } }, { actorEmail: { endsWith: "@demo.test" } }] } }),
+    prisma.auditLog.deleteMany({ where: { OR: [{ userId: { in: ids } }, { entityId: { in: [...ids, ...idsCursos] } }, { actorEmail: { endsWith: "@demo.test" } }, { summary: { contains: "@demo.test" } }] } }),
     prisma.attemptAnswer.deleteMany({ where: { attempt: { userId: { in: ids } } } }),
     prisma.certificate.deleteMany({ where: { userId: { in: ids } } }),
     prisma.pointsLedger.deleteMany({ where: { userId: { in: ids } } }),

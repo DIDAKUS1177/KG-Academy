@@ -27,6 +27,12 @@ export function formatDate(d?: Date | string | null) {
   });
 }
 
+/** Fecha dd/mm/aaaa (hora de Colombia), la que Excel reconoce como fecha en los CSV. */
+export function fechaCorta(d?: Date | string | null) {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("es-CO", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: ZONA });
+}
+
 export function formatDateTime(d?: Date | string | null) {
   if (!d) return "—";
   return new Date(d).toLocaleString("es-CO", {

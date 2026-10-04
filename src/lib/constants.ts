@@ -93,12 +93,12 @@ export const ASSESSMENT_TYPE_LABEL: Record<string, string> = {
 };
 
 export const STATUS_LABEL: Record<string, string> = {
-  no_iniciado: "No iniciado",
+  no_iniciado: "Sin iniciar",
   en_progreso: "En progreso",
   completado: "Completado",
   vencido: "Vencido",
   anulado: "Anulado",
-  asignado: "Asignado",
+  asignado: "Sin iniciar",
   cancelado: "Cancelado",
   borrador: "Borrador",
   revision: "En revisión",

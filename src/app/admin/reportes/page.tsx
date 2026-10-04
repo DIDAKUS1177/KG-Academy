@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { fueraDelEquipoKG } from "@/lib/acceso-cursos";
 import { requireRole } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { ProgressBar, SectionTitle, StatCard } from "@/components/ui";
@@ -13,10 +14,13 @@ export default async function AdminReportes() {
 
   const [companies, courses, enrollments, certificates, attempts] = await Promise.all([
     prisma.company.findMany({ include: { assignments: { include: { enrollment: true } }, members: true } }),
-    prisma.course.findMany({ include: { enrollments: true, certificates: true } }),
-    prisma.enrollment.findMany(),
-    prisma.certificate.count(),
-    prisma.assessmentAttempt.findMany({ where: { status: "finalizado" } }),
+    // Sin el equipo de KG: sus matrículas de revisión no son capacitación.
+    prisma.course.findMany({
+      include: { enrollments: { where: { user: fueraDelEquipoKG } }, certificates: { where: { user: fueraDelEquipoKG } } },
+    }),
+    prisma.enrollment.findMany({ where: { user: fueraDelEquipoKG } }),
+    prisma.certificate.count({ where: { user: fueraDelEquipoKG } }),
+    prisma.assessmentAttempt.findMany({ where: { status: "finalizado", user: fueraDelEquipoKG } }),
   ]);
 
   const completados = enrollments.filter((e) => e.status === "completado").length;

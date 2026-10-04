@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
 import { CambiarClave } from "@/app/aula/perfil/CambiarClave";
+import { minimoClave } from "@/lib/claves";
 
 export const metadata: Metadata = { title: "Defina su contraseña" };
 export const dynamic = "force-dynamic";
@@ -23,12 +24,12 @@ export default async function CambiarClavePage() {
         Defina su contraseña
       </h1>
       <p className="mt-2 text-sm text-navy-400">
-        Hola, {user.firstName}. Ingresó con una contraseña temporal: por seguridad debe cambiarla antes de
-        continuar. Solo usted conocerá la nueva.
+        Hola, {user.firstName}. Elija una contraseña que solo usted conozca: es la que usará de ahora en adelante para
+        entrar.
       </p>
 
       <div className="mt-8">
-        <CambiarClave temporal obligatorio />
+        <CambiarClave temporal obligatorio minimo={await minimoClave()} />
       </div>
 
       <form action="/api/auth/logout" method="post" className="mt-6 text-center">

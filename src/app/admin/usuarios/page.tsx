@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { buscarPersona } from "@/lib/busqueda";
 import { requireRole } from "@/lib/auth";
 import { ROLES, ROLE_LABEL } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
@@ -23,16 +24,7 @@ export default async function AdminUsuarios(props: {
       where: {
         ...(searchParams.rol ? { role: { code: searchParams.rol } } : {}),
         ...(searchParams.estado ? { status: searchParams.estado } : {}),
-        ...(q
-          ? {
-              OR: [
-                { firstName: { contains: q } },
-                { lastName: { contains: q } },
-                { email: { contains: q } },
-                { documentNumber: { contains: q } },
-              ],
-            }
-          : {}),
+        ...(q ? buscarPersona(q) : {}),
       },
       include: {
         role: true,
@@ -43,9 +35,9 @@ export default async function AdminUsuarios(props: {
       take: 200,
     }),
     prisma.role.findMany({ orderBy: { code: "asc" } }),
+    // También las inactivas: si no salen en la lista, guardar a uno de sus usuarios lo desvinculaba.
     prisma.company.findMany({
-      where: { status: { not: "inactiva" } },
-      select: { id: true, tradeName: true, legalName: true },
+      select: { id: true, tradeName: true, legalName: true, status: true },
       orderBy: { legalName: "asc" },
     }),
   ]);
@@ -101,7 +93,10 @@ export default async function AdminUsuarios(props: {
         actorRole={actor.role.code}
         actorId={actor.id}
         roles={roles.map((r) => ({ id: r.code, nombre: ROLE_LABEL[r.code] ?? r.name }))}
-        empresas={empresas.map((c) => ({ id: c.id, nombre: c.tradeName ?? c.legalName }))}
+        empresas={empresas.map((c) => ({
+          id: c.id,
+          nombre: `${c.tradeName ?? c.legalName}${c.status === "inactiva" ? " (inactiva)" : c.status === "suspendida" ? " (suspendida)" : ""}`,
+        }))}
         filas={users.map((u) => ({
           id: u.id,
           firstName: u.firstName,
@@ -121,6 +116,11 @@ export default async function AdminUsuarios(props: {
           ultimoAcceso: u.lastLoginAt ? formatDate(u.lastLoginAt) : "Nunca",
         }))}
       />
+      {users.length === 200 && (
+        <p className="mt-3 text-center text-xs text-navy-400">
+          Se muestran las 200 cuentas más recientes. Use la búsqueda o los filtros para encontrar a alguien en particular.
+        </p>
+      )}
     </div>
   );
 }

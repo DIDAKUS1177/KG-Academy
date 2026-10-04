@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui";
 import { IconCheck, IconAlert, IconClipboard, IconSearch } from "@/components/Icons";
 import { pedirApi } from "@/lib/api-cliente";
+import { cantidad } from "@/lib/utils";
 
 type Course = { id: string; title: string; code: string; durationHours: number; status: string };
 type Member = {
@@ -23,15 +24,20 @@ export function AsignarForm({
   members,
   areas,
   existentes,
+  cursoInicial,
 }: {
   companyId: string;
   courses: Course[];
   members: Member[];
   areas: { id: string; name: string }[];
   existentes: string[];
+  /** Curso ya elegido al llegar desde "Cursos de su plan". */
+  cursoInicial?: string;
 }) {
   const router = useRouter();
-  const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
+  const [courseId, setCourseId] = useState(
+    cursoInicial && courses.some((c) => c.id === cursoInicial) ? cursoInicial : (courses[0]?.id ?? "")
+  );
   const [dueDate, setDueDate] = useState("");
   const [mandatory, setMandatory] = useState(true);
   const [batchName, setBatchName] = useState("");
@@ -248,7 +254,7 @@ export function AsignarForm({
 
           <div className="mt-6 rounded-xl bg-kg-gradient p-4 text-center text-white">
             <p className="font-display text-3xl font-extrabold text-lime-400">{selected.size}</p>
-            <p className="text-[11px] text-white/60">trabajador(es) seleccionado(s)</p>
+            <p className="text-[11px] text-white/60">{selected.size === 1 ? "trabajador seleccionado" : "trabajadores seleccionados"}</p>
           </div>
 
           {msg && (
@@ -263,7 +269,7 @@ export function AsignarForm({
           )}
 
           <button onClick={asignar} disabled={loading || selected.size === 0} className="btn-lime mt-5 w-full py-3">
-            {loading ? "Asignando..." : `Asignar a ${selected.size} trabajador(es)`}
+            {loading ? "Asignando..." : `Asignar a ${cantidad(selected.size, "trabajador", "trabajadores")}`}
           </button>
           <p className="mt-3 text-[11px] leading-relaxed text-navy-400">
             Cada trabajador recibe una notificación interna y se crea su matrícula con estado &quot;no

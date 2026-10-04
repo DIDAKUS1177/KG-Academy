@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { resolveCompany, companyKpis, alcanceEmpresa, asignacionesVigentes } from "@/lib/empresa";
-import { cuposEmpresa } from "@/lib/cupos";
+import { cuposEmpresa, ROLES_CON_CUPO } from "@/lib/cupos";
 import { indicadoresEmpresa, mostrarMeta, mostrarValor } from "@/lib/indicadores";
 import { EtiquetaSemaforo } from "@/components/TableroIndicadores";
 import { ROLES } from "@/lib/constants";
@@ -33,7 +33,7 @@ export default async function InformePage(props: { searchParams: Promise<{ empre
       include: { course: true, enrollment: true, user: true },
     }),
     prisma.companyMember.findMany({
-      where: { companyId: company.id, status: { not: "retirado" } },
+      where: { companyId: company.id, status: { not: "retirado" }, user: { role: { code: { in: ROLES_CON_CUPO } } } },
       include: { area: true },
     }),
     // Solo certificados de cursos que la empresa asignó a esa persona.

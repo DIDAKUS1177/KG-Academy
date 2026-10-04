@@ -36,11 +36,18 @@ export async function PUT(req: Request) {
     return respuestaError("Alguna de las empresas no existe");
   }
 
+  // Las empresas inactivas no salen en el constructor: lo que tengan habilitado
+  // se conserva (antes, guardar se lo quitaba sin que nadie lo viera).
+  const conservadas = (
+    await prisma.companyCourse.findMany({ where: { courseId, company: { status: "inactiva" } }, select: { companyId: true } })
+  ).map((c) => c.companyId);
+  const nuevas = ids.filter((id) => !conservadas.includes(id));
+
   try {
     await prisma.$transaction([
       prisma.course.update({ where: { id: courseId }, data: { visibilidad } }),
-      prisma.companyCourse.deleteMany({ where: { courseId } }),
-      ...(ids.length ? [prisma.companyCourse.createMany({ data: ids.map((companyId) => ({ companyId, courseId })) })] : []),
+      prisma.companyCourse.deleteMany({ where: { courseId, companyId: { notIn: conservadas } } }),
+      ...(nuevas.length ? [prisma.companyCourse.createMany({ data: nuevas.map((companyId) => ({ companyId, courseId })) })] : []),
     ]);
   } catch (e) {
     if ((e as { code?: string }).code === "P2002") return respuestaError("Alguien más acaba de cambiar este curso. Recargue e intente de nuevo.", 409);

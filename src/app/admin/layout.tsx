@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       items: [
         ...(esInstructor
           ? []
-          : [{ href: "/admin", label: "Dashboard", icon: <IconHome width={18} height={18} />, exact: true }]),
+          : [{ href: "/admin", label: "Inicio", icon: <IconHome width={18} height={18} />, exact: true }]),
         { href: "/admin/cursos", label: "Cursos", icon: <IconBook width={18} height={18} /> },
         { href: "/admin/evaluaciones", label: "Evaluaciones", icon: <IconClipboard width={18} height={18} /> },
         // El equipo de KG también estudia y revisa los cursos como estudiante.

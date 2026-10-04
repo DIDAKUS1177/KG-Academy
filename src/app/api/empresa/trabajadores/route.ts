@@ -9,6 +9,7 @@ import { cuposEmpresa, mensajeSinCupo } from "@/lib/cupos";
 import { asignarCurso } from "@/lib/asignaciones";
 import { correoInterno, esCorreoValido, normalizarDocumento, usuarioDeIngreso } from "@/lib/identidad";
 import { finDelDia } from "@/lib/utils";
+import { problemaClaveNueva } from "@/lib/claves";
 
 /**
  * Alta de trabajadores de una empresa: de a uno o en lote (filas leídas de un
@@ -21,7 +22,9 @@ import { finDelDia } from "@/lib/utils";
  *   - Opcionalmente, en el mismo paso se les asignan cursos publicados.
  *
  * Cada persona nueva recibe su propia contraseña temporal, que se muestra una
- * sola vez y debe cambiar al primer ingreso.
+ * sola vez y debe cambiar al primer ingreso. De a uno, la empresa puede
+ * escribir la contraseña ella misma. Alguien que la empresa retiró y vuelve se
+ * reincorpora con su historial.
  */
 
 // Cada contraseña se cifra por separado; un lote grande tarda. 60 s es el
@@ -55,14 +58,18 @@ const filaSchema = z.object({
   cargo: z.string().trim().max(80).optional(),
   sede: z.string().trim().max(80).optional(),
   rol: z.string().trim().optional(),
+  /** Solo de a uno: contraseña que escribe la empresa (en lote siempre se genera una por persona). */
+  clave: z.string().max(200).optional(),
+  /** "no" para no pedir el cambio al entrar (el formulario manda texto). */
+  pedirCambio: z.string().optional(),
 });
 type Fila = z.infer<typeof filaSchema>;
 
 const PERMITIDOS: string[] = [ROLES.ADMIN_EMPRESA, ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 
 type Resultado =
-  | { tipo: "creado"; userId: string; nombre: string; usuario: string; clave: string }
-  | { tipo: "vinculado" | "ya_estaba"; userId: string }
+  | { tipo: "creado"; userId: string; nombre: string; usuario: string; clave: string | null }
+  | { tipo: "vinculado" | "reincorporado" | "ya_estaba"; userId: string }
   | { tipo: "sin_cupo" }
   | { tipo: "error"; motivo: string };
 
@@ -170,8 +177,27 @@ export async function POST(req: Request) {
         where: { companyId_userId: { companyId, userId: yaExiste.id } },
       });
       if (miembro?.status === "activo") return { tipo: "ya_estaba", userId: yaExiste.id };
-      // Retirado o suspendido: reactivarlo es decisión de KG (puede estar en otra empresa).
-      if (miembro) return { tipo: "error", motivo: "Esa persona figura como retirada de la empresa. Pídale a KG que la reactive." };
+      // Vuelve alguien que la empresa retiró: se reincorpora con su historial,
+      // salvo que KG haya bloqueado la cuenta o que hoy esté en otra empresa.
+      if (miembro) {
+        const reincorporable =
+          miembro.status === "retirado" &&
+          [ROLES.ESTUDIANTE, ROLES.SUPERVISOR].includes(yaExiste.role.code as never) &&
+          yaExiste.status !== "bloqueado" &&
+          (!yaExiste.companyId || yaExiste.companyId === companyId);
+        if (!reincorporable) {
+          return { tipo: "error", motivo: "Esa persona no se puede reincorporar desde aquí (su cuenta está bloqueada o en otra empresa). Pídale a KG que la revise." };
+        }
+        if (disponibles <= 0) return { tipo: "sin_cupo" };
+        disponibles--;
+        await prisma.companyMember.update({
+          where: { id: miembro.id },
+          data: { status: "activo", ...(areaId ? { areaId } : {}), ...(positionId ? { positionId } : {}), ...(locationId ? { locationId } : {}), ...(f.employeeCode ? { employeeCode: f.employeeCode } : {}) },
+        });
+        // Entra con su contraseña de siempre y debe cambiarla al volver.
+        await prisma.user.update({ where: { id: yaExiste.id }, data: { companyId, status: "pendiente_activacion" } });
+        return { tipo: "reincorporado", userId: yaExiste.id };
+      }
       // Solo se vincula a un estudiante independiente. Una cuenta de otra
       // empresa o del equipo de KG no se puede "traer": se la quitaría a quien
       // corresponde.
@@ -185,20 +211,26 @@ export async function POST(req: Request) {
       return { tipo: "vinculado", userId: yaExiste.id };
     }
 
+    const elegida = f.clave?.trim() ? f.clave : null;
+    if (elegida) {
+      const problema = await problemaClaveNueva(elegida);
+      if (problema) return { tipo: "error", motivo: problema };
+    }
     if (disponibles <= 0) return { tipo: "sin_cupo" };
     disponibles--;
-    const temporal = claveTemporal();
+    const temporal = elegida ? null : claveTemporal();
     const nuevo = await prisma.user.create({
       data: {
         email,
-        passwordHash: await hashPassword(temporal),
+        passwordHash: await hashPassword(elegida ?? temporal!),
         firstName: f.firstName,
         lastName: f.lastName,
         documentType: documento ? "CC" : null,
         documentNumber: documento || null,
         roleId: esSupervisor ? rolSupervisor!.id : rolEstudiante!.id,
         companyId,
-        status: "pendiente_activacion",
+        // Con la contraseña escrita por la empresa puede entrar sin cambiarla, si así lo eligió.
+        status: elegida && f.pedirCambio === "no" ? "activo" : "pendiente_activacion",
       },
     });
     await prisma.companyMember.create({ data: { companyId, userId: nuevo.id, isSupervisor: esSupervisor, ...vinculo } });
@@ -254,8 +286,12 @@ export async function POST(req: Request) {
       ok: true,
       creados: r.tipo === "creado" ? 1 : 0,
       vinculado: r.tipo === "vinculado",
+      reincorporado: r.tipo === "reincorporado",
       asignadas,
-      credenciales: r.tipo === "creado" ? [{ nombre: r.nombre, usuario: r.usuario, email: r.usuario, clave: r.clave }] : [],
+      // Si la contraseña la escribió la empresa, no se devuelve: ya la conoce.
+      claveElegida: r.tipo === "creado" && !r.clave,
+      usuario: r.tipo === "creado" ? r.usuario : undefined,
+      credenciales: r.tipo === "creado" && r.clave ? [{ nombre: r.nombre, usuario: r.usuario, email: r.usuario, clave: r.clave }] : [],
     });
   }
 
@@ -284,7 +320,8 @@ export async function POST(req: Request) {
   const enLaEmpresa: string[] = [];
 
   for (const [i, cruda] of crudas.entries()) {
-    const fila = filaSchema.safeParse(cruda);
+    // En lote no se aceptan contraseñas escritas: cada persona recibe la suya generada.
+    const fila = filaSchema.safeParse({ ...cruda, clave: undefined, pedirCambio: undefined });
     if (!fila.success) {
       omitidos++;
       errores.push({ fila: i + 1, motivo: fila.error.issues[0].message });
@@ -300,9 +337,9 @@ export async function POST(req: Request) {
     }
     if (r.tipo === "creado") {
       creados++;
-      credenciales.push({ nombre: r.nombre, usuario: r.usuario, email: r.usuario, clave: r.clave });
+      if (r.clave) credenciales.push({ nombre: r.nombre, usuario: r.usuario, email: r.usuario, clave: r.clave });
       enLaEmpresa.push(r.userId);
-    } else if (r.tipo === "vinculado") {
+    } else if (r.tipo === "vinculado" || r.tipo === "reincorporado") {
       vinculados++;
       enLaEmpresa.push(r.userId);
     } else if (r.tipo === "ya_estaba") {
@@ -337,7 +374,7 @@ export async function POST(req: Request) {
     sinCupo,
     asignadas,
     errores,
-    ...(sinCupo ? { aviso: `${sinCupo} trabajador(es) no se crearon por falta de cupo. ${mensajeSinCupo(cupos)}` } : {}),
+    ...(sinCupo ? { aviso: `${sinCupo === 1 ? "1 trabajador no se creó" : `${sinCupo} trabajadores no se crearon`} por falta de cupo. ${mensajeSinCupo(cupos)}` } : {}),
     credenciales,
   });
 }

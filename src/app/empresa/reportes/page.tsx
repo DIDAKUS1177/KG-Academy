@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
-import { resolveCompany, companyKpis, alcanceEmpresa } from "@/lib/empresa";
+import { resolveCompany, companyKpis, alcanceEmpresa, avanceEnLaEmpresa } from "@/lib/empresa";
 import { ROLES } from "@/lib/constants";
+import { ROLES_CON_CUPO } from "@/lib/cupos";
+import { cantidad } from "@/lib/utils";
 import { EmptyState, ProgressBar, SectionTitle, StatCard } from "@/components/ui";
 import { IconDownload, IconFile, IconUsers, IconAward, IconChart, IconCheck, IconClipboard, IconBook, IconClock, IconArrowRight } from "@/components/Icons";
 
@@ -18,12 +20,13 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
 
   const kpis = await companyKpis(company.id);
 
-  const [porSede, porCargo, certs] = await Promise.all([
+  const [miembros, avance, certs] = await Promise.all([
+    // Las personas que toman cursos y siguen en la empresa.
     prisma.companyMember.findMany({
-      where: { companyId: company.id },
-      include: { location: true, position: true, user: { include: { enrollments: true } } },
+      where: { companyId: company.id, status: { not: "retirado" }, user: { role: { code: { in: ROLES_CON_CUPO } } } },
+      include: { location: true, position: true },
     }),
-    prisma.position.findMany({ where: { companyId: company.id } }),
+    avanceEnLaEmpresa(company.id),
     // Solo certificados de cursos que la empresa asignó a esa persona.
     alcanceEmpresa(company.id).then(async (alcance) =>
       (
@@ -35,15 +38,17 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
     ),
   ]);
 
+  /** Promedio de avance en los cursos que la empresa asignó, por sede o por cargo. */
   function agrupar(key: "location" | "position") {
-    const map = new Map<string, { total: number; avance: number; completos: number }>();
-    for (const m of porSede) {
+    const map = new Map<string, { personas: number; asignados: number; suma: number; completos: number }>();
+    for (const m of miembros) {
       const name = key === "location" ? m.location?.name ?? "Sin sede" : m.position?.name ?? "Sin cargo";
-      const cur = map.get(name) ?? { total: 0, avance: 0, completos: 0 };
-      const enr = m.user.enrollments;
-      cur.total++;
-      cur.avance += enr.length ? enr.reduce((s, e) => s + e.progress, 0) / enr.length : 0;
-      cur.completos += enr.filter((e) => e.status === "completado").length;
+      const cur = map.get(name) ?? { personas: 0, asignados: 0, suma: 0, completos: 0 };
+      const a = avance(m.userId);
+      cur.personas++;
+      cur.asignados += a.asignados;
+      cur.suma += (a.avance ?? 0) * a.asignados;
+      cur.completos += a.completados;
       map.set(name, cur);
     }
     return [...map.entries()];
@@ -58,7 +63,7 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
     },
     {
       titulo: "Reporte de trabajadores",
-      desc: "Nomina completa con cursos asignados, completados, avance promedio y certificados.",
+      desc: "Nómina completa con usuario de ingreso, cursos asignados, completados, avance promedio y certificados.",
       tipo: "trabajadores",
       icon: <IconUsers width={20} height={20} />,
     },
@@ -163,12 +168,13 @@ export default async function ReportesPage(props: { searchParams: Promise<{ empr
                   <div className="mb-1.5 flex items-baseline justify-between gap-3">
                     <p className="truncate text-sm font-semibold text-navy-700">{name}</p>
                     <span className="shrink-0 text-xs font-bold text-navy-500">
-                      {Math.round(d.avance / d.total)}%
+                      {d.asignados ? `${Math.round(d.suma / d.asignados)}%` : "—"}
                     </span>
                   </div>
-                  <ProgressBar value={d.avance / d.total} />
+                  <ProgressBar value={d.asignados ? d.suma / d.asignados : 0} />
                   <p className="mt-1 text-[11px] text-navy-400">
-                    {d.total} trabajadores &middot; {d.completos} cursos completados
+                    {cantidad(d.personas, "persona", "personas")} &middot; {d.completos} de{" "}
+                    {cantidad(d.asignados, "curso asignado terminado", "cursos asignados terminados")}
                   </p>
                 </div>
               ))}

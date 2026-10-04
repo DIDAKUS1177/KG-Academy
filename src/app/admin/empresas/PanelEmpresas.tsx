@@ -9,7 +9,9 @@ import { GestionEmpresas, GestionPlanes, type EmpresaFila, type PlanFila } from 
 import { CursosVisibles, type CursoCatalogo } from "./CursosVisibles";
 
 type Tarjeta = EmpresaFila & {
+  /** Personas que ocupan cupo (trabajadores y supervisores no retirados). */
   trabajadores: number;
+  tienePlan: boolean;
   asignaciones: number;
   completadas: number;
   avance: number;
@@ -77,8 +79,13 @@ export function PanelEmpresas({ empresas, planes, cursos }: { empresas: Tarjeta[
                   <button onClick={() => setEditar(c)} className="btn-outline btn-sm shrink-0">Editar</button>
                 </div>
 
+                {(!c.tienePlan || c.seats === 0) && c.status === "activa" && (
+                  <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                    {c.tienePlan ? "Sin cupos" : "Sin plan"}: su administrador no puede crear trabajadores. Use «Editar» para fijar el plan y los cupos.
+                  </p>
+                )}
                 <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
-                  {[["Trabajadores", c.trabajadores], ["Asignaciones", c.asignaciones], ["Completadas", c.completadas]].map(([k, v]) => (
+                  {[["Cupos usados", c.tienePlan ? `${c.trabajadores}/${c.seats}` : c.trabajadores], ["Asignaciones", c.asignaciones], ["Completadas", c.completadas]].map(([k, v]) => (
                     <div key={String(k)} className="rounded-xl bg-navy-50/70 p-2.5">
                       <dt className="text-[10px] font-bold uppercase tracking-wide text-navy-400">{k}</dt>
                       <dd className="font-display text-lg font-extrabold text-navy-700">{v}</dd>
@@ -112,7 +119,7 @@ export function PanelEmpresas({ empresas, planes, cursos }: { empresas: Tarjeta[
                     {c.planValor ? ` · ${formatCOP(c.planValor)}/mes` : ""}
                     {c.seats ? ` · ${c.seats} cupos` : ""}
                   </span>
-                  <Link href={`/empresa?empresa=${c.id}`} className="inline-flex items-center gap-1.5 font-bold text-lime-600 hover:underline">
+                  <Link href={`/empresa/ver?empresa=${c.id}`} className="inline-flex items-center gap-1.5 font-bold text-lime-600 hover:underline">
                     Abrir panel <IconArrowRight width={12} height={12} />
                   </Link>
                 </div>
@@ -124,7 +131,7 @@ export function PanelEmpresas({ empresas, planes, cursos }: { empresas: Tarjeta[
 
       <SectionTitle
         title="Planes comerciales"
-        description="Catálogo de planes B2B. Un plan con suscripciones no se borra: se desactiva."
+        description="Planes que se venden a las empresas. Un plan con suscripciones no se borra: se desactiva."
         action={<GestionPlanes editar={editarPlan} onCerrarEdicion={() => setEditarPlan(null)} />}
       />
       <div className="card overflow-x-auto">

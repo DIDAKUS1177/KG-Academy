@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { ensureEnrollment } from "@/lib/progress";
-import { puedeEmpezarCurso, puedeVerCurso } from "@/lib/acceso-cursos";
+import { puedeCursar, puedeEmpezarCurso } from "@/lib/acceso-cursos";
 import { htmlSeguro } from "@/lib/html-seguro";
-import { Breadcrumb, ProgressRing, StatusBadge } from "@/components/ui";
+import { Breadcrumb, EmptyState, ProgressRing, StatusBadge } from "@/components/ui";
 import { LessonPlayer } from "./LessonPlayer";
 import { MapaMisiones } from "@/components/leccion/MapaMisiones";
 import { leerLeccionInteractiva } from "@/lib/leccion-interactiva";
@@ -18,6 +18,7 @@ import {
   IconClock,
   IconLock,
   IconFire,
+  IconArrowRight,
 } from "@/components/Icons";
 import { cantidad } from "@/lib/utils";
 
@@ -45,14 +46,30 @@ export default async function AulaCursoPage(props: {
       assessments: { where: { isPublished: true }, orderBy: { order: "asc" } },
     },
   });
-  // Un borrador solo lo abren los revisores de KG.
-  if (!course || !puedeVerCurso(user.role.code, course.status)) notFound();
+  if (!course) notFound();
 
   // Abrir el curso matricula; si todavía no lo tiene, su empresa debe tenerlo
   // habilitado (KG decide qué cursos ve cada empresa).
   const yaMatriculado = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: course.id } },
   });
+  // Un borrador solo lo abren los revisores de KG; uno despublicado, quien ya lo había empezado.
+  if (!puedeCursar(user.role.code, course.status, !!yaMatriculado)) {
+    if (!yaMatriculado) notFound();
+    // KG lo devolvió a borrador para corregirlo: quien lo estaba haciendo no ve un error.
+    return (
+      <EmptyState
+        icon={<IconClock width={30} height={30} />}
+        title={`«${course.title}» se está actualizando`}
+        description="KG está mejorando su contenido. Su avance quedó guardado: podrá seguir donde iba en cuanto vuelva a estar disponible."
+        action={
+          <Link href="/aula" className="btn-lime btn-sm">
+            Volver a mi aula
+          </Link>
+        }
+      />
+    );
+  }
   if (!yaMatriculado && !(await puedeEmpezarCurso(user, course))) notFound();
   let enrollment = yaMatriculado ?? (await ensureEnrollment(user.id, course.id, "gratuito"));
 
@@ -96,6 +113,7 @@ export default async function AulaCursoPage(props: {
 
   const completedCount = allLessons.filter((l) => doneMap.get(l.id)?.status === "completado").length;
   const lessonsDone = completedCount === allLessons.length;
+  const numeroPendiente = allLessons.findIndex((l) => l.id === primeraPendiente.id) + 1;
 
   // Abrir una lección cuenta como iniciar el curso: es lo que ve la empresa en
   // el seguimiento. Se actualiza en el momento y se sigue renderizando; antes
@@ -126,8 +144,8 @@ export default async function AulaCursoPage(props: {
         ]}
       />
 
-      {/* Cabecera del curso */}
-      <div className="relative mb-7 overflow-hidden rounded-3xl bg-kg-gradient p-7 text-white lg:p-9">
+      {/* Cabecera del curso: compacta en el celular, con un solo botón para seguir */}
+      <div className="relative mb-7 overflow-hidden rounded-3xl bg-kg-gradient p-5 text-white sm:p-7 lg:p-9">
         <div className="pointer-events-none absolute inset-0 bg-kg-mesh" />
         <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:36px_36px] opacity-40" />
         <div className="relative flex flex-wrap items-center justify-between gap-7">
@@ -150,8 +168,30 @@ export default async function AulaCursoPage(props: {
                 <IconClock width={14} height={14} className="text-lime-400" /> {course.durationHours} horas
               </span>
             </div>
+            {/* En el celular, una barra en lugar del círculo */}
+            <div className="mt-4 sm:hidden">
+              <div className="h-2 overflow-hidden rounded-full bg-white/15">
+                <div className="h-full rounded-full bg-lime-400" style={{ width: `${Math.round(enrollment.progress)}%` }} />
+              </div>
+              <p className="mt-1 text-[11px] font-semibold text-white/60">{Math.round(enrollment.progress)}% completado</p>
+            </div>
+            <div className="mt-5">
+              {finalPassed && certificate ? (
+                <Link href={`/aula/certificado/${certificate.code}`} className="btn-lime w-full justify-center sm:w-auto">
+                  <IconAward width={16} height={16} /> Ver mi certificado
+                </Link>
+              ) : lessonsDone && finalAssessment && !finalPassed ? (
+                <Link href={`/aula/evaluacion/${finalAssessment.id}`} className="btn-lime w-full justify-center sm:w-auto">
+                  Presentar la evaluación final <IconArrowRight width={16} height={16} />
+                </Link>
+              ) : (
+                <Link href={`/aula/curso/${course.slug}?leccion=${primeraPendiente.id}#leccion`} className="btn-lime w-full justify-center sm:w-auto">
+                  <IconPlay width={16} height={16} /> {completedCount === 0 ? "Empezar" : "Continuar"}: {modoJuego ? "nivel" : "lección"} {numeroPendiente}
+                </Link>
+              )}
+            </div>
           </div>
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+          <div className="hidden rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur sm:block">
             <ProgressRing value={enrollment.progress} size={116} sub="completado" />
           </div>
         </div>
@@ -167,7 +207,7 @@ export default async function AulaCursoPage(props: {
               return {
                 id: l.id,
                 titulo: l.title,
-                href: `/aula/curso/${course.slug}?leccion=${l.id}`,
+                href: `/aula/curso/${course.slug}?leccion=${l.id}#leccion`,
                 estado: hecha(l.id) ? "completado" : desbloqueada(i) ? "disponible" : "bloqueado",
                 activo: l.id === activeId && !(lessonsDone && pedida < 0),
               };
@@ -216,8 +256,9 @@ export default async function AulaCursoPage(props: {
 
       <div className={modoJuego ? "mx-auto max-w-5xl" : "grid gap-6 lg:grid-cols-[340px_1fr]"}>
         {/* Indice del curso */}
+        {/* En el celular, la lección va primero y el índice debajo. */}
         {!modoJuego && (
-        <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto">
+        <aside className="order-2 lg:order-none lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto">
           <div className="card overflow-hidden">
             <div className="border-b border-navy-50 bg-navy-50/50 px-5 py-4">
               <p className="font-display text-sm font-bold text-navy-700">Contenido del curso</p>
@@ -251,7 +292,7 @@ export default async function AulaCursoPage(props: {
                         return (
                           <li key={l.id}>
                             <Link
-                              href={`/aula/curso/${course.slug}?leccion=${l.id}`}
+                              href={`/aula/curso/${course.slug}?leccion=${l.id}#leccion`}
                               className={`flex items-start gap-3 py-2.5 pl-5 pr-4 text-xs transition ${
                                 isActive
                                   ? "border-l-[3px] border-lime-500 bg-lime-50/70 font-semibold text-navy-800"
@@ -345,7 +386,7 @@ export default async function AulaCursoPage(props: {
         )}
 
         {/* Reproductor / contenido */}
-        <section>
+        <section id="leccion" className="order-1 scroll-mt-20 lg:order-none">
           <LessonPlayer
             // Una instancia por lección: al pasar a la siguiente se reinician el
             // cronómetro, el registro de inicio y el estado de la práctica.
@@ -368,8 +409,8 @@ export default async function AulaCursoPage(props: {
             }}
             completed={doneMap.get(active.id)?.status === "completado"}
             modoJuego={modoJuego}
-            prevHref={prev ? `/aula/curso/${course.slug}?leccion=${prev.id}` : null}
-            nextHref={next ? `/aula/curso/${course.slug}?leccion=${next.id}` : null}
+            prevHref={prev ? `/aula/curso/${course.slug}?leccion=${prev.id}#leccion` : null}
+            nextHref={next ? `/aula/curso/${course.slug}?leccion=${next.id}#leccion` : null}
           />
 
           {/* Cierre del curso */}

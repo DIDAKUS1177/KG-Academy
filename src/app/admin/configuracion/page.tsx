@@ -163,7 +163,7 @@ export default async function ConfiguracionPage() {
 
       <div className="mt-6 rounded-2xl border border-dashed border-navy-200 bg-white/60 p-6 text-center">
         <p className="text-sm font-semibold text-navy-600">
-          Plataforma KG Academy v1.0 &middot; Next.js 14 + TypeScript + Prisma
+          Plataforma KG Academy
         </p>
         <p className="mt-1 text-xs text-navy-400">
           Diseñada y desarrollada por <CreditoDesarrollo /> para KG Gestión Integral S.A.S.
