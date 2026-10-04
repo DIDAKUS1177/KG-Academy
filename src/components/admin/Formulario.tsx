@@ -11,6 +11,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { IconAlert, IconCheck, IconX } from "@/components/Icons";
+import { pedirApi } from "@/lib/api-cliente";
 
 export type Mensaje = { ok: boolean; text: string } | null;
 
@@ -150,17 +151,9 @@ export async function llamar<T = Record<string, unknown>>(
   method: "POST" | "PUT" | "PATCH" | "DELETE",
   body: unknown
 ): Promise<{ ok: boolean; data: T & { error?: string } }> {
-  try {
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = (await res.json().catch(() => ({}))) as T & { error?: string };
-    return { ok: res.ok, data };
-  } catch {
-    return { ok: false, data: { error: "Sin conexión con el servidor" } as T & { error?: string } };
-  }
+  // pedirApi distingue la sesión vencida (redirección a /ingresar) de un éxito.
+  const { ok, data } = await pedirApi<T>(url, method, body);
+  return { ok, data };
 }
 
 /** Lee un formulario y devuelve un objeto plano; las casillas van como booleanos. */

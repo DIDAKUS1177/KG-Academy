@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconCheck, IconArrowRight, IconFile, IconPlay, IconClock, IconAlert } from "@/components/Icons";
 import { LeccionInteractiva } from "@/components/leccion/LeccionInteractiva";
-import { leerLeccionInteractiva } from "@/lib/leccion-interactiva";
+import { huellaContenido, leerLeccionInteractiva } from "@/lib/leccion-interactiva";
+import { pedirApi } from "@/lib/api-cliente";
 
 type Lesson = {
   id: string;
@@ -40,6 +41,7 @@ export function LessonPlayer({
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [errorMarcar, setErrorMarcar] = useState<string | null>(null);
   const [seconds, setSeconds] = useState(0);
   const startedRef = useRef(false);
 
@@ -72,17 +74,16 @@ export function LessonPlayer({
 
   async function marcar() {
     setSaving(true);
-    await fetch("/api/aula/leccion", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        enrollmentId,
-        lessonId: lesson.id,
-        completed: true,
-        addSeconds: seconds,
-      }),
+    setErrorMarcar(null);
+    const { ok, data } = await pedirApi("/api/aula/leccion", "POST", {
+      enrollmentId,
+      lessonId: lesson.id,
+      completed: true,
+      addSeconds: seconds,
     });
     setSaving(false);
+    // Si no quedó registrada, se dice aquí: avanzar haría creer que se completó.
+    if (!ok) return setErrorMarcar(data.error ?? "No se pudo registrar la lección. Vuelva a intentarlo.");
     if (nextHref) router.push(nextHref);
     else router.push(`/aula/curso/${courseSlug}?leccion=${lesson.id}`);
     router.refresh();
@@ -130,6 +131,8 @@ export function LessonPlayer({
               <LeccionInteractiva
                 leccionId={lesson.id}
                 contenido={interactiva}
+                key={huellaContenido(lesson.contentBody)}
+                version={huellaContenido(lesson.contentBody)}
                 completada={completed}
                 guardando={saving}
                 onTerminar={alTerminar}
@@ -146,6 +149,12 @@ export function LessonPlayer({
             <ContentSlot lesson={lesson} />
           )}
         </div>
+
+        {errorMarcar && (
+          <div role="alert" className="mt-6 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <IconAlert width={18} height={18} className="mt-0.5 shrink-0" /> {errorMarcar}
+          </div>
+        )}
 
         {/* Barra de acciones */}
         <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-navy-50 pt-6">

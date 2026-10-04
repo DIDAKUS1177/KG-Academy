@@ -10,12 +10,20 @@ export function fullName(u: { firstName: string; lastName: string }) {
   return `${u.firstName} ${u.lastName}`.trim();
 }
 
+/**
+ * Las fechas se muestran en hora de Colombia. El servidor (Vercel) corre en
+ * UTC: sin la zona horaria, un certificado emitido a las 8 p. m. salía con la
+ * fecha del día siguiente.
+ */
+const ZONA = "America/Bogota";
+
 export function formatDate(d?: Date | string | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("es-CO", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: ZONA,
   });
 }
 
@@ -27,6 +35,7 @@ export function formatDateTime(d?: Date | string | null) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: ZONA,
   });
 }
 

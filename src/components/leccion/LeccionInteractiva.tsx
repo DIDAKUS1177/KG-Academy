@@ -24,7 +24,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { Bloque, LeccionInteractiva as Leccion } from "@/lib/leccion-interactiva";
 import { BLOQUES_CALIFICABLES } from "@/lib/leccion-interactiva";
 import { barajar, semilla } from "@/lib/barajar";
-import { fijarSonido, sfx, sonidoActivo } from "@/lib/sonidos";
+import { fijarSonido, sfx, silenciar, sonidoActivo } from "@/lib/sonidos";
 import { Ilustracion } from "./Ilustraciones";
 import { Escena, TITULO_ESCENA } from "./Escenas";
 import { Avatar } from "./Avatares";
@@ -58,6 +58,9 @@ export function LeccionInteractiva({
   nivel,
   onTerminar,
   onCompletar,
+  version,
+  vistaPrevia = false,
+  inicio = 0,
 }: {
   leccionId: string;
   contenido: Leccion;
@@ -69,10 +72,16 @@ export function LeccionInteractiva({
   onTerminar: () => void;
   /** Botón final de la lección. */
   onCompletar: () => void;
+  /** Huella del contenido: si KG lo edita, el avance guardado empieza de cero. */
+  version?: string;
+  /** En el editor de KG: no lee ni guarda avance ni estrellas. */
+  vistaPrevia?: boolean;
+  /** Pantalla con la que arranca (la vista previa abre la que se está editando). */
+  inicio?: number;
 }) {
   const { bloques, guia } = contenido;
-  const clave = `kg-li-${leccionId}`;
-  const [indice, setIndice] = useState(0);
+  const clave = `kg-li-${leccionId}${version ? `-${version}` : ""}`;
+  const [indice, setIndice] = useState(Math.min(Math.max(0, inicio), bloques.length - 1));
   const [estado, setEstado] = useState<Record<number, Estado>>({});
   const [vidas, setVidas] = useState(VIDAS);
   const [racha, setRacha] = useState(0);
@@ -81,6 +90,10 @@ export function LeccionInteractiva({
   const [aviso, setAviso] = useState<{ id: number; texto: string } | null>(null);
   const raiz = useRef<HTMLDivElement>(null);
   const avisado = useRef(false);
+
+  // La vista previa del editor no suena: se dibuja de nuevo con cada cambio.
+  // (Efecto de diseño: corre antes que los efectos de las pantallas que suenan.)
+  useLayoutEffect(() => (vistaPrevia ? silenciar() : undefined), [vistaPrevia]);
 
   // Espejo del estado para decidir sonidos y rachas fuera de los setState.
   const ref = useRef({ estado, vidas, racha, indice });
@@ -93,7 +106,7 @@ export function LeccionInteractiva({
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
-      const g = JSON.parse(localStorage.getItem(clave) ?? "null") as Guardado | null;
+      const g = vistaPrevia ? null : (JSON.parse(localStorage.getItem(clave) ?? "null") as Guardado | null);
       if (g && typeof g.indice === "number") {
         setEstado(g.estado ?? {});
         setIndice(Math.min(g.indice, bloques.length - 1));
@@ -105,17 +118,17 @@ export function LeccionInteractiva({
     }
     setSonido(sonidoActivo());
     setCargado(true);
-  }, [clave, bloques.length]);
+  }, [clave, bloques.length, vistaPrevia]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
-    if (!cargado) return;
+    if (!cargado || vistaPrevia) return;
     try {
       localStorage.setItem(clave, JSON.stringify({ indice, estado, vidas, racha } satisfies Guardado));
     } catch {
       /* Ignorado. */
     }
-  }, [cargado, clave, indice, estado, vidas, racha]);
+  }, [cargado, clave, indice, estado, vidas, racha, vistaPrevia]);
 
   const calificables = useMemo(
     () => bloques.map((b, i) => (BLOQUES_CALIFICABLES.has(b.tipo) ? i : -1)).filter((i) => i >= 0),
@@ -137,16 +150,17 @@ export function LeccionInteractiva({
   const esUltimo = indice === bloques.length - 1;
   const sinVidas = !completada && vidas <= 0;
 
+  // La práctica termina al llegar al final con todo lo calificable resuelto.
   useEffect(() => {
-    if (esUltimo && !avisado.current) {
+    if (esUltimo && todoResuelto && !avisado.current) {
       avisado.current = true;
       onTerminar();
     }
-  }, [esUltimo, onTerminar]);
+  }, [esUltimo, todoResuelto, onTerminar]);
 
   // Guarda las estrellas del nivel para el mapa del curso.
   useEffect(() => {
-    if (!cargado || !esUltimo || completada || !todoResuelto) return;
+    if (!cargado || vistaPrevia || !esUltimo || completada || !todoResuelto) return;
     try {
       const k = claveEstrellas(leccionId);
       const antes = Number(localStorage.getItem(k) ?? 0);
@@ -154,12 +168,16 @@ export function LeccionInteractiva({
     } catch {
       /* Ignorado. */
     }
-  }, [cargado, esUltimo, completada, todoResuelto, leccionId, precision]);
+  }, [cargado, vistaPrevia, esUltimo, completada, todoResuelto, leccionId, precision]);
 
-  const ir = useCallback((n: number) => {
-    setIndice(n);
-    raiz.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  const ir = useCallback(
+    (n: number) => {
+      setIndice(n);
+      // En la vista previa del editor no se mueve la página del editor.
+      if (!vistaPrevia) raiz.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [vistaPrevia]
+  );
 
   const avisar = useCallback((texto: string) => {
     const id = Date.now();

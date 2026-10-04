@@ -26,10 +26,23 @@ export function fijarSonido(activo: boolean) {
   }
 }
 
+/**
+ * Silencio temporal que no toca la preferencia guardada: lo usa la vista previa
+ * del editor de KG, que se vuelve a dibujar con cada cambio. Devuelve la función
+ * que lo levanta.
+ */
+let silencios = 0;
+export function silenciar() {
+  silencios++;
+  return () => {
+    silencios = Math.max(0, silencios - 1);
+  };
+}
+
 type Nota = [frecuencia: number, inicio: number, duracion: number];
 
 function tocar(notas: Nota[], forma: OscillatorType = "triangle", volumen = 0.07) {
-  if (typeof window === "undefined" || !sonidoActivo()) return;
+  if (typeof window === "undefined" || silencios > 0 || !sonidoActivo()) return;
   try {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return;

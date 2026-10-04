@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/auth";
 import { CONTENT_TYPES } from "@/lib/constants";
+import { leerLeccionInteractiva } from "@/lib/leccion-interactiva";
 import { ROLES_CURSOS, exigirRol, leerCuerpo, limpiar, respuestaError, respuestaOk } from "@/lib/admin-api";
 
 /**
@@ -60,6 +61,10 @@ export async function POST(req: Request) {
   }
   if (url && !/^https?:\/\//i.test(url)) {
     return respuestaError("La URL debe empezar por http:// o https://");
+  }
+  // Una lección interactiva solo se publica con un contenido que el aula pueda abrir.
+  if (d.contentType === "interactivo" && !leerLeccionInteractiva(d.contentBody ?? before.contentBody)) {
+    return respuestaError("Arme el contenido de la lección interactiva con el botón «Editar contenido».");
   }
 
   const after = await prisma.lesson.update({

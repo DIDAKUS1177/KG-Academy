@@ -14,7 +14,7 @@
 import { PrismaClient } from "@prisma/client";
 import { readdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import { leccionInteractivaSchema } from "../src/lib/leccion-interactiva";
+import { huellaContenido as leccionHuella, leccionInteractivaSchema } from "../src/lib/leccion-interactiva";
 
 const BASE = process.env.RECORRIDO_URL ?? "http://localhost:3000";
 const CLAVE_DEMO = "KgAcademy2026*";
@@ -99,6 +99,7 @@ async function main() {
   }
 
   fallos += await catalogo();
+  fallos += await editorDeLecciones(cursoJuego.id, curso.id);
 
   // El ciclo completo con un curso de juego y con uno de Genially.
   fallos += await acciones(cursoJuego.id);
@@ -605,6 +606,102 @@ async function ultimoCodigo(correo: string) {
 }
 
 /** Borra lo que creó el recorrido, para que la demostración quede como estaba. */
+/** El editor visual de lecciones interactivas guarda solo contenido que el aula puede abrir. */
+async function editorDeLecciones(cursoJuegoId: string, cursoGeniallyId: string) {
+  const pasos: { nombre: string; ok: boolean; detalle?: string }[] = [];
+  const admin = await entrar("admin@kggestionintegral.com");
+  const empresa = await entrar("rrhh@constructoraandina.com");
+  const leccion = await prisma.lesson.findFirstOrThrow({
+    where: { contentType: "interactivo", module: { courseId: cursoJuegoId } },
+    orderBy: [{ module: { order: "asc" } }, { order: "asc" }],
+  });
+  const original = leccion.contentBody ?? "";
+  const tituloOriginal = leccion.title;
+  type Contenido = { bloques: { tipo: string; titulo?: string; opciones?: { correcta?: boolean }[] }[] };
+  const contenido = JSON.parse(original) as Contenido;
+  const guardar = (body: Record<string, unknown>, cookie = admin) =>
+    llamar("PUT", "/api/admin/leccion/interactiva", cookie, { lessonId: leccion.id, ...body });
+  try {
+    const pagina = await llamar("GET", `/admin/cursos/${cursoJuegoId}/leccion/${leccion.id}`, admin);
+    pasos.push({ nombre: "KG abre el editor de una lección interactiva", ok: pagina.status === 200 && pagina.texto.includes("Vista previa"), detalle: `${pagina.status}` });
+
+    const sinSesion = await fetch(`${BASE}/api/admin/leccion/interactiva`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: "{}", redirect: "manual" });
+    pasos.push({
+      nombre: "Sin sesión, la API responde 401 en JSON (no una página que parezca un guardado)",
+      ok: sinSesion.status === 401 && (sinSesion.headers.get("content-type") ?? "").includes("json"),
+      detalle: `${sinSesion.status} ${sinSesion.headers.get("content-type")}`,
+    });
+
+    // Renombrar la lección no es un conflicto: solo cambiar su contenido lo es.
+    const base = leccionHuella(original);
+    await llamar("PATCH", "/api/admin/leccion", admin, { lessonId: leccion.id, title: `${tituloOriginal} (renombrada)` });
+    const editado = structuredClone(contenido);
+    const portada = editado.bloques.find((b) => b.tipo === "portada");
+    if (portada) portada.titulo = `${portada.titulo} (revisado)`;
+    const primero = await guardar({ contenido: editado, huellaBase: base });
+    const despues = await prisma.lesson.findUniqueOrThrow({ where: { id: leccion.id } });
+    const sigueValida = leccionInteractivaSchema.safeParse(JSON.parse(despues.contentBody ?? "null")).success;
+    pasos.push({
+      nombre: "Guarda el cambio aunque otro haya renombrado la lección, y sigue abriéndose en el aula",
+      ok: primero.status === 200 && typeof primero.data.huella === "string" && !!despues.contentBody?.includes("(revisado)") && sigueValida,
+      detalle: `${primero.status} ${primero.texto.slice(0, 120)}`,
+    });
+    const versiones = await prisma.auditLog.count({ where: { entity: "lessons", entityId: leccion.id, summary: { startsWith: "Contenido interactivo" } } });
+    const conOriginal = await llamar("GET", `/admin/cursos/${cursoJuegoId}/leccion/${leccion.id}`, admin);
+    pasos.push({
+      nombre: "Cada guardado queda en el historial, junto con la versión original",
+      ok: versiones >= 1 && conOriginal.texto.includes("versión original"),
+      detalle: `${versiones}`,
+    });
+
+    // Otra persona guardó otro contenido: se avisa, y se puede reemplazar a propósito.
+    const vieja = await guardar({ contenido: editado, huellaBase: base });
+    const forzada = await guardar({ contenido: editado, huellaBase: base, forzar: true });
+    pasos.push({
+      nombre: "Avisa si otra persona guardó otro contenido, y permite reemplazarlo a propósito",
+      ok: vieja.status === 409 && vieja.data.codigo === "conflicto" && forzada.status === 200,
+      detalle: `${vieja.status} ${forzada.status}`,
+    });
+
+    const actual = String(forzada.data.huella ?? "");
+    const sinCorrecta = structuredClone(contenido);
+    const decision = sinCorrecta.bloques.find((b) => b.opciones);
+    decision?.opciones?.forEach((o) => delete o.correcta);
+    const invalido = await guardar({ contenido: sinCorrecta, huellaBase: actual });
+    const conEjemplo = structuredClone(contenido);
+    if (conEjemplo.bloques[0]) conEjemplo.bloques[0].titulo = "✎ Título de ejemplo";
+    const ejemplo = await guardar({ contenido: conEjemplo, huellaBase: actual });
+    const desordenado = structuredClone(contenido);
+    desordenado.bloques.splice(1, 0, desordenado.bloques.pop()!); // el Resumen queda en la pantalla 2
+    const orden = await guardar({ contenido: desordenado, huellaBase: actual });
+    pasos.push({
+      nombre: "Rechaza pantallas sin respuesta correcta, textos de ejemplo y un Resumen fuera del final",
+      ok: (!decision || invalido.status === 400) && ejemplo.status === 400 && orden.status === 400,
+      detalle: `${invalido.status} ${ejemplo.status} ${orden.status}`,
+    });
+
+    const intruso = await guardar({ contenido: editado, huellaBase: actual }, empresa);
+    pasos.push({ nombre: "Una empresa no puede editar lecciones", ok: intruso.status === 403, detalle: `${intruso.status}` });
+
+    const genially = await prisma.lesson.findFirstOrThrow({ where: { contentType: "genially", module: { courseId: cursoGeniallyId } } });
+    const vacia = await llamar("POST", "/api/admin/leccion", admin, { lessonId: genially.id, contentType: "interactivo" });
+    const geniallyDespues = await prisma.lesson.findUniqueOrThrow({ where: { id: genially.id } });
+    pasos.push({
+      nombre: "No se publica una lección interactiva sin contenido válido",
+      ok: vacia.status === 400 && geniallyDespues.contentType === "genially",
+      detalle: `${vacia.status} ${geniallyDespues.contentType}`,
+    });
+  } finally {
+    // La lección vuelve a como estaba (contenido y título).
+    await prisma.lesson.update({ where: { id: leccion.id }, data: { contentBody: original, title: tituloOriginal } });
+  }
+
+  const malos = pasos.filter((p) => !p.ok);
+  console.log(`${malos.length ? "✗" : "✓"} Editor de lecciones: ${pasos.length - malos.length}/${pasos.length}`);
+  for (const p of pasos) console.log(`    ${p.ok ? "✓" : "✗"} ${p.nombre}${p.ok || !p.detalle ? "" : ` (${p.detalle})`}`);
+  return malos.length;
+}
+
 /** Cada curso tiene su examen final y todas sus lecciones interactivas se pueden abrir. */
 async function catalogo() {
   const cursos = await prisma.course.findMany({

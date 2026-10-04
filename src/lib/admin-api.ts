@@ -12,7 +12,7 @@
 import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { ZodSchema } from "zod";
-import { requireUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 
 /** Roles que administran la plataforma (no la empresa cliente). */
@@ -21,7 +21,7 @@ export const ROLES_KG: string[] = [ROLES.SUPERADMIN, ROLES.ADMIN_KG];
 /** Roles que pueden editar la estructura y el contenido de los cursos. */
 export const ROLES_CURSOS: string[] = [ROLES.SUPERADMIN, ROLES.ADMIN_KG, ROLES.INSTRUCTOR];
 
-type Usuario = Awaited<ReturnType<typeof requireUser>>;
+type Usuario = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
 
 /**
  * Exige sesión con alguno de los roles indicados. Devuelve el usuario o la
@@ -30,7 +30,15 @@ type Usuario = Awaited<ReturnType<typeof requireUser>>;
 export async function exigirRol(
   roles: string[]
 ): Promise<{ user: Usuario; error: null } | { user: null; error: NextResponse }> {
-  const user = await requireUser();
+  // Las API responden en JSON (401/403) en vez de redirigir: un formulario no
+  // puede confundir la página de ingreso con un guardado exitoso.
+  const user = await getCurrentUser();
+  if (!user || user.status === "bloqueado" || user.status === "inactivo") {
+    return { user: null, error: NextResponse.json({ error: "Su sesión venció. Ingrese de nuevo (puede hacerlo en otra pestaña) y vuelva a intentarlo: esta acción no se guardó." }, { status: 401 }) };
+  }
+  if (user.status === "pendiente_activacion") {
+    return { user: null, error: NextResponse.json({ error: "Debe cambiar su contraseña antes de continuar." }, { status: 403 }) };
+  }
   if (!roles.includes(user.role.code)) {
     return {
       user: null,

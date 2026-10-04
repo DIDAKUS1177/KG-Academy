@@ -56,6 +56,7 @@ const TIPOS = [
   { v: "texto", l: "Texto enriquecido" },
   { v: "enlace", l: "Enlace externo" },
   { v: "scorm", l: "Paquete SCORM" },
+  { v: "interactivo", l: "Lección interactiva (KG Academy)" },
 ];
 
 /**
@@ -236,23 +237,27 @@ export function CursoConstructor({
                         onChange={(e) => setDraft((s) => ({ ...s, [l.id]: { ...s[l.id], contentType: e.target.value } }))}
                         className="select py-2 text-sm"
                       >
-                        {/* Una lección interactiva se arma con su guion (JSON), no desde este
-                            selector: la opción aparece solo si la lección ya lo es. */}
-                        {(l.contentType === "interactivo"
-                          ? [{ v: "interactivo", l: "Lección interactiva (KG Academy)" }, ...TIPOS]
-                          : TIPOS
-                        ).map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
+                        {TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
                       </select>
-                      <input
-                        value={d.contentUrl}
-                        onChange={(e) => setDraft((s) => ({ ...s, [l.id]: { ...s[l.id], contentUrl: e.target.value } }))}
-                        placeholder="https://... (URL del video, Genially, PDF o recurso)"
-                        className="input py-2 text-sm"
-                        disabled={d.contentType === "pendiente" || d.contentType === "interactivo"}
-                      />
-                      <button onClick={() => guardarContenido(l.id)} disabled={!cambio || saving === l.id} className="btn-lime btn-sm">
-                        {saving === l.id ? "..." : "Guardar"}
-                      </button>
+                      {/* La lección interactiva se arma en su editor visual, no con una URL. */}
+                      {d.contentType === "interactivo" ? (
+                        <Link href={`/admin/cursos/${course.id}/leccion/${l.id}`} className="btn-lime btn-sm justify-center sm:col-span-2">
+                          {l.contentType === "interactivo" ? "Editar contenido" : "Crear la lección interactiva"}
+                        </Link>
+                      ) : (
+                        <>
+                          <input
+                            value={d.contentUrl}
+                            onChange={(e) => setDraft((s) => ({ ...s, [l.id]: { ...s[l.id], contentUrl: e.target.value } }))}
+                            placeholder="https://... (URL del video, Genially, PDF o recurso)"
+                            className="input py-2 text-sm"
+                            disabled={d.contentType === "pendiente"}
+                          />
+                          <button onClick={() => guardarContenido(l.id)} disabled={!cambio || saving === l.id} className="btn-lime btn-sm">
+                            {saving === l.id ? "..." : "Guardar"}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );

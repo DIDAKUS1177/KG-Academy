@@ -186,7 +186,7 @@ export const leccionInteractivaSchema = z
         const ids = new Set(b.categorias.map((c) => c.id));
         b.elementos.forEach((e, j) => {
           if (!ids.has(e.categoria)) {
-            ctx.addIssue({ code: "custom", path: ["bloques", i, "elementos", j], message: `Categoría inexistente: ${e.categoria}` });
+            ctx.addIssue({ code: "custom", path: ["bloques", i, "elementos", j], message: "Un elemento quedó sin grupo: elija su grupo correcto" });
           }
         });
       }
@@ -198,6 +198,64 @@ export type Bloque = LeccionInteractiva["bloques"][number];
 
 /** Bloques que se califican (dan puntos de práctica). */
 export const BLOQUES_CALIFICABLES = new Set(["decision", "contrarreloj", "ordenar", "clasificar", "buscar", "mision"]);
+
+/** Nombre en español de cada campo, para los mensajes de error del editor. */
+const CAMPO: Record<string, string> = {
+  titulo: "el título", subtitulo: "el subtítulo", objetivos: "los objetivos", minutos: "los minutos",
+  parrafos: "los párrafos", puntos: "las ideas", clave: "el dato destacado", tarjetas: "las tarjetas",
+  frente: "el frente", reverso: "el reverso", situacion: "la situación", pregunta: "la pregunta",
+  opciones: "las opciones", texto: "el texto", retro: "la consecuencia", segundos: "los segundos",
+  alAgotar: "el mensaje de tiempo agotado", instruccion: "la instrucción", pasos: "los pasos",
+  explicacion: "la explicación", categorias: "los grupos", elementos: "los elementos", nombre: "el nombre",
+  categoria: "el grupo", escena: "la escena", x: "la posición", y: "la posición", r: "el tamaño del área",
+  intro: "la presentación", etiqueta: "el nombre del medidor", velocidad: "la velocidad",
+  penalizacion: "el castigo por error", exito: "el mensaje de éxito", fracaso: "el mensaje de fracaso",
+  insignia: "la insignia", ilustracion: "la ilustración", bloques: "las pantallas", rol: "el rol", avatar: "el personaje",
+};
+
+/** El mensaje de zod (en inglés) traducido a algo que entienda quien edita. */
+export function mensajeEnEspanol(i: z.ZodIssue) {
+  const clave = [...i.path].reverse().find((p) => typeof p === "string");
+  const campo = CAMPO[String(clave ?? "")] ?? "este campo";
+  switch (i.code) {
+    case "invalid_type":
+      if (i.received === "undefined" || i.received === "null") return `Falta ${campo}.`;
+      return i.expected === "number" ? `Escriba un número en ${campo}.` : `Revise ${campo}.`;
+    case "too_small":
+      if (i.type === "array") return `Debe haber al menos ${String(i.minimum)} en ${campo}.`;
+      return i.type === "number" ? `El valor de ${campo} debe ser al menos ${String(i.minimum)}.` : `Complete ${campo}.`;
+    case "too_big":
+      if (i.type === "array") return `Puede haber como máximo ${String(i.maximum)} en ${campo}.`;
+      return i.type === "number" ? `El valor de ${campo} debe ser como máximo ${String(i.maximum)}.` : `Acorte ${campo}.`;
+    case "invalid_enum_value":
+      return `Elija una opción válida en ${campo}.`;
+    case "custom":
+      return i.message;
+    default:
+      return `Revise ${campo}.`;
+  }
+}
+
+/** Resumen legible de lo que está mal, con la pantalla en la que ocurre. */
+export function problemasDeContenido(issues: z.ZodIssue[]) {
+  return issues.slice(0, 8).map((i) => {
+    const [raiz, n] = i.path;
+    const donde = raiz === "bloques" && typeof n === "number" ? `Pantalla ${n + 1}: ` : "";
+    return `${donde}${mensajeEnEspanol(i)}`;
+  });
+}
+
+/**
+ * Huella corta del contenido (djb2). Cambia cuando KG edita la lección: el
+ * avance guardado en el navegador se indexa por pantalla, así que una versión
+ * nueva empieza de cero en vez de marcar como resueltas pantallas que se
+ * movieron o cambiaron.
+ */
+export function huellaContenido(texto: string | null | undefined) {
+  let h = 5381;
+  for (const c of texto ?? "") h = ((h << 5) + h + c.charCodeAt(0)) | 0;
+  return (h >>> 0).toString(36);
+}
 
 /** Lee y valida el contenido. Devuelve null si no es válido. */
 export function leerLeccionInteractiva(json: string | null | undefined): LeccionInteractiva | null {

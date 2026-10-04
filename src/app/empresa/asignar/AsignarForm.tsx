@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui";
 import { IconCheck, IconAlert, IconClipboard, IconSearch } from "@/components/Icons";
+import { pedirApi } from "@/lib/api-cliente";
 
 type Course = { id: string; title: string; code: string; durationHours: number; status: string };
 type Member = {
@@ -77,21 +78,16 @@ export function AsignarForm({
   async function asignar() {
     setLoading(true);
     setMsg(null);
-    const res = await fetch("/api/empresa/asignar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        companyId,
-        courseId,
-        userIds: [...selected],
-        dueDate: dueDate || null,
-        isMandatory: mandatory,
-        batchName: batchName || null,
-      }),
+    const { ok, data } = await pedirApi<{ creadas: number; omitidas: number }>("/api/empresa/asignar", "POST", {
+      companyId,
+      courseId,
+      userIds: [...selected],
+      dueDate: dueDate || null,
+      isMandatory: mandatory,
+      batchName: batchName || null,
     });
-    const data = await res.json().catch(() => ({}));
     setLoading(false);
-    if (!res.ok) return setMsg({ ok: false, text: data.error ?? "No fue posible asignar" });
+    if (!ok) return setMsg({ ok: false, text: data.error ?? "No fue posible asignar" });
     setMsg({
       ok: true,
       text: `${data.creadas} asignación(es) creada(s). ${data.omitidas} ya existian.`,

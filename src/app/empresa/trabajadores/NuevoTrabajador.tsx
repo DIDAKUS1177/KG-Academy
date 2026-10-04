@@ -4,11 +4,24 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconUsers, IconAlert, IconCheck, IconUpload, IconDownload } from "@/components/Icons";
 import { esCorreoValido, normalizarDocumento } from "@/lib/identidad";
+import { pedirApi } from "@/lib/api-cliente";
 
 type Opt = { id: string; name: string };
 type Curso = { id: string; code: string; title: string };
 type Credencial = { nombre?: string; usuario?: string; email: string; clave: string };
 type Mensaje = { ok: boolean; text: string } | null;
+/** Respuesta de /api/empresa/trabajadores (de a uno o por lote). */
+type RespuestaAlta = {
+  creados?: number;
+  vinculados?: number;
+  omitidos?: number;
+  sinCupo?: number;
+  asignadas?: number;
+  vinculado?: boolean;
+  aviso?: string;
+  errores?: { fila: number; motivo: string }[];
+  credenciales?: Credencial[];
+};
 
 /* ----------------------------- Lectura del lote ----------------------------- */
 
@@ -300,12 +313,7 @@ export function NuevoTrabajador({
   const textoAsignadas = (n?: number) => (n ? ` Se asignaron ${n} curso(s).` : "");
 
   async function enviar(cuerpo: Record<string, unknown>) {
-    const res = await fetch("/api/empresa/trabajadores", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ companyId, ...asignacion, ...cuerpo }),
-    });
-    return { ok: res.ok, data: await res.json().catch(() => ({})) };
+    return pedirApi<RespuestaAlta>("/api/empresa/trabajadores", "POST", { companyId, ...asignacion, ...cuerpo });
   }
 
   async function crearIndividual(e: React.FormEvent<HTMLFormElement>) {

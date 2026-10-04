@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconAlert, IconArrowRight, IconCheck, IconClock, IconFire } from "@/components/Icons";
 import { barajar } from "@/lib/barajar";
+import { pedirApi } from "@/lib/api-cliente";
 
 type Q = {
   id: string;
@@ -58,14 +59,9 @@ export function QuizForm({
     if (abriendo) return;
     setAbriendo(true);
     setError(null);
-    const res = await fetch("/api/aula/evaluacion/iniciar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assessmentId }),
-    });
-    const data = (await res.json().catch(() => ({}))) as { error?: string; segundosRestantes?: number | null };
+    const { ok, data } = await pedirApi<{ segundosRestantes?: number | null }>("/api/aula/evaluacion/iniciar", "POST", { assessmentId });
     setAbriendo(false);
-    if (!res.ok) return setError(data.error ?? "No fue posible empezar la evaluación");
+    if (!ok) return setError(data.error ?? "No fue posible empezar la evaluación");
     setLeft(typeof data.segundosRestantes === "number" ? Math.max(0, data.segundosRestantes) : null);
     setIniciado(true);
   }
@@ -115,16 +111,11 @@ export function QuizForm({
     if (sending) return;
     setSending(true);
     setError(null);
-    const res = await fetch("/api/aula/evaluacion", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        assessmentId,
-        answers: list.map((p) => ({ questionId: p.id, optionId: answers[p.id] ?? null })),
-      }),
+    const { ok, data } = await pedirApi<{ attemptId?: string }>("/api/aula/evaluacion", "POST", {
+      assessmentId,
+      answers: list.map((p) => ({ questionId: p.id, optionId: answers[p.id] ?? null })),
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
+    if (!ok) {
       setError(data.error ?? "No fue posible enviar la evaluación");
       setSending(false);
       return;
