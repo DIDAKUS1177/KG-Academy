@@ -108,7 +108,7 @@ export default async function CertificadoPage(props: { params: Promise<{ code: s
               </p>
 
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-navy-500">
-                Con una intensidad academica de{" "}
+                Con una intensidad académica de{" "}
                 <strong className="text-navy-700">{cert.hours} horas</strong>
                 {cert.finalScore ? (
                   <>
@@ -117,7 +117,7 @@ export default async function CertificadoPage(props: { params: Promise<{ code: s
                     <strong className="text-navy-700">{Math.round(cert.finalScore)}/100</strong>
                   </>
                 ) : null}
-                , cumpliendo la totalidad de los requisitos academicos establecidos.
+                , cumpliendo la totalidad de los requisitos académicos establecidos.
               </p>
             </div>
 

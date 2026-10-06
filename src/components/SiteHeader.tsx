@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/catalogo", label: "Cursos" },
   { href: "/#empresas", label: "Para empresas" },
+  // Los precios viven en la página de KG Gestión Integral, no en la plataforma.
+  { href: "https://kg-gestion-integral.pages.dev/planes", label: "Planes y precios" },
   { href: "/#como-funciona", label: "Cómo funciona" },
   { href: "/verificar", label: "Verificar certificado" },
 ];

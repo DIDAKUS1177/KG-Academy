@@ -93,14 +93,16 @@ export function MapaMisiones({
         </div>
       </div>
 
-      <div className="relative mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* Cuatro tarjetas por fila solo en pantallas muy anchas: en un portátil quedaban
+          tan angostas que el tramo entre niveles se reducía a un guion. */}
+      <div className="relative mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
         {mundos.map((m, mi) => (
           <div key={mi} className="rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/10">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-lime-300/80">Mundo {mi + 1}</p>
             <p className="mt-0.5 line-clamp-2 min-h-[2.5rem] font-display text-sm font-bold leading-snug text-white/90">
               {m.titulo.replace(/^M[oó]dulo\s*\d+\.\s*/i, "")}
             </p>
-            <div className="mt-4 flex items-start">
+            <div className="mt-4 flex items-start pt-8">
               {m.niveles.map((n, ni) => (
                 <div key={n.id} className="relative flex min-w-0 flex-1 basis-0 justify-center">
                   {ni > 0 && <Tramo recorrido={n.estado !== "bloqueado"} />}
@@ -115,7 +117,7 @@ export function MapaMisiones({
         <div className="rounded-2xl bg-gradient-to-br from-red-600/30 to-amber-500/20 p-4 ring-1 ring-red-400/30">
           <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-300">Final</p>
           <p className="mt-0.5 min-h-[2.5rem] font-display text-sm font-bold leading-snug">Desafío final y certificado</p>
-          <div className="mt-4 flex items-start">
+          <div className="mt-4 flex items-start pt-8">
             {jefe && (
               <div className="relative flex min-w-0 flex-1 basis-0 justify-center">
                 <NodoEspecial

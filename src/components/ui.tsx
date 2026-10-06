@@ -57,12 +57,15 @@ export function ProgressRing({
   stroke = 10,
   label,
   sub,
+  oscuro = false,
 }: {
   value: number;
   size?: number;
   stroke?: number;
   label?: string;
   sub?: string;
+  /** Sobre un fondo oscuro: cifra en blanco (en azul no se leía). */
+  oscuro?: boolean;
 }) {
   const v = Math.max(0, Math.min(100, value));
   const r = (size - stroke) / 2;
@@ -70,7 +73,7 @@ export function ProgressRing({
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="#D6E4F0" strokeWidth={stroke} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke={oscuro ? "rgba(255,255,255,0.18)" : "#D6E4F0"} strokeWidth={stroke} fill="none" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -91,8 +94,8 @@ export function ProgressRing({
         </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-2xl font-extrabold text-navy-700">{label ?? pct(v)}</span>
-        {sub && <span className="text-[10px] font-semibold uppercase tracking-wide text-navy-400">{sub}</span>}
+        <span className={`font-display text-2xl font-extrabold ${oscuro ? "text-white" : "text-navy-700"}`}>{label ?? pct(v)}</span>
+        {sub && <span className={`text-[10px] font-semibold uppercase tracking-wide ${oscuro ? "text-white/60" : "text-navy-400"}`}>{sub}</span>}
       </div>
     </div>
   );

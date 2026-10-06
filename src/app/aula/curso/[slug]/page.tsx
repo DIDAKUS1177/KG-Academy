@@ -192,7 +192,7 @@ export default async function AulaCursoPage(props: {
             </div>
           </div>
           <div className="hidden rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur sm:block">
-            <ProgressRing value={enrollment.progress} size={116} sub="completado" />
+            <ProgressRing value={enrollment.progress} size={116} sub="completado" oscuro />
           </div>
         </div>
       </div>

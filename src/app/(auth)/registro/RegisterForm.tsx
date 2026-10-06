@@ -77,7 +77,7 @@ export function RegisterForm() {
       </div>
 
       <div className="mt-4">
-        <label className="label">Correo electronico</label>
+        <label className="label">Correo electrónico</label>
         <input name="email" type="email" required className="input" placeholder="nombre@empresa.com" />
       </div>
 

@@ -240,9 +240,14 @@ export default async function LandingPage() {
               ))}
             </ul>
 
-            <Link href="/registro?tipo=empresa" className="btn-primary mt-9">
-              Solicitar acceso empresarial <IconArrowRight width={16} height={16} />
-            </Link>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link href="/registro?tipo=empresa" className="btn-primary">
+                Solicitar acceso empresarial <IconArrowRight width={16} height={16} />
+              </Link>
+              <a href="https://kg-gestion-integral.pages.dev/planes" className="btn-outline">
+                Ver planes y precios
+              </a>
+            </div>
           </div>
 
           {/* Mock del panel empresarial */}

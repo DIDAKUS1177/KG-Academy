@@ -184,7 +184,7 @@ export default async function EmpresaDashboard(props: { searchParams: Promise<{ 
             </div>
           </div>
           <div className="rounded-2xl border border-white/15 bg-white/10 p-5 text-center backdrop-blur">
-            <ProgressRing value={kpis.cumplimiento} size={132} sub="cumplimiento" />
+            <ProgressRing value={kpis.cumplimiento} size={132} sub="cumplimiento" oscuro />
             <p className="mt-2 text-[11px] text-white/50">
               {kpis.completados} de {cantidad(kpis.total, "curso asignado", "cursos asignados")} terminados
             </p>
