@@ -114,7 +114,12 @@ export function MapaMisiones({
         ))}
 
         {/* Desafío final y trofeo */}
-        <div className="rounded-2xl bg-gradient-to-br from-red-600/30 to-amber-500/20 p-4 ring-1 ring-red-400/30">
+        <div
+          className={`rounded-2xl bg-gradient-to-br from-red-600/30 to-amber-500/20 p-4 ring-1 ring-red-400/30 ${
+            // Con un número par de mundos el final quedaría solo en su fila de dos: ocupa la fila entera.
+            mundos.length % 2 === 0 ? "md:col-span-2 2xl:col-span-1" : ""
+          }`}
+        >
           <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-300">Final</p>
           <p className="mt-0.5 min-h-[2.5rem] font-display text-sm font-bold leading-snug">Desafío final y certificado</p>
           <div className="mt-4 flex items-start pt-8">

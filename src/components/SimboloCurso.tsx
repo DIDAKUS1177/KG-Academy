@@ -3,7 +3,8 @@ import type { ReactElement, SVGProps } from "react";
 /**
  * Símbolo de cada curso: lo identifica de un vistazo en el panel, el catálogo
  * y el aula. Se elige por código; un curso nuevo sin símbolo propio toma el
- * de su familia (PA = primeros auxilios, EM = emergencias) o el genérico.
+ * de su familia (PA = primeros auxilios, EM = emergencias, CA = calidad) o el
+ * genérico.
  */
 type P = SVGProps<SVGSVGElement>;
 
@@ -62,6 +63,25 @@ const Llama = (p: P) => (
   </svg>
 );
 
+/** Edificio de salud con la cruz: habilitación de servicios de salud. */
+const Habilitacion = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 21V8l8-5 8 5v13" />
+    <path d="M12 8.5v5M9.5 11h5" />
+    <path d="M9.5 21v-3.5h5V21" />
+    <path d="M2.5 21h19" />
+  </svg>
+);
+
+/** Sello con el visto bueno: sistema de gestión de la calidad. */
+const Calidad = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="9" r="6" />
+    <path d="m9.3 9 1.8 1.8L14.8 7" />
+    <path d="M8.5 14 7 21l5-2.5 5 2.5-1.5-7" />
+  </svg>
+);
+
 /** Birrete: cualquier otro curso. */
 const Birrete = (p: P) => (
   <svg {...base(p)}>
@@ -76,11 +96,14 @@ const POR_CODIGO: Record<string, (p: P) => ReactElement> = {
   "KG-PA-003": Mente,
   "KG-PA-004": Gota,
   "KG-EM-001": Llama,
+  "KG-CA-001": Habilitacion,
+  "KG-CA-002": Calidad,
 };
 
 const POR_FAMILIA: Record<string, (p: P) => ReactElement> = {
   PA: Botiquin,
   EM: Llama,
+  CA: Calidad,
 };
 
 export function SimboloCurso({ code, ...p }: { code: string } & P) {

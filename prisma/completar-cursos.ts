@@ -1,11 +1,14 @@
 /**
- * Completa los cursos de primeros auxilios del catálogo:
+ * Completa los cursos del catálogo:
  *
  *   - KG-PA-001: agrega los módulos 4 a 7 (lecciones interactivas) a los tres
  *     de Genially y suma sus preguntas a la evaluación final existente.
  *   - KG-PA-002 y KG-PA-003: retira la estructura de espera (un módulo con la
  *     lección "pendiente" y, en la demo, el banco de ejemplo) y carga el curso
  *     completo con su evaluación final.
+ *   - KG-CA-001 (Resolución 3100 de 2019) y KG-CA-002 (ISO 9001): se crean
+ *     completos, con su evaluación final, en la categoría "Calidad y
+ *     habilitación" (se crea si no existe).
  *
  * Es idempotente: un módulo o una pregunta que ya existen no se repiten, y un
  * curso que ya tiene contenido interactivo o avance de estudiantes no se toca.
@@ -21,6 +24,18 @@ import { crearContenidoInteractivo, crearCursoInteractivo } from "./crear-curso-
 import { MODULOS_PA001, PREGUNTAS_PA001 } from "./contenido/pa001-modulos";
 import { PEDIATRICOS } from "./contenido/pa002-pediatricos";
 import { PSICOLOGICOS } from "./contenido/pa003-psicologicos";
+import { RESOLUCION_3100 } from "./contenido/ca001-resolucion-3100";
+import { ISO_9001 } from "./contenido/ca002-iso-9001";
+
+/** Categoría de los cursos de calidad: en producción no venía en la carga inicial. */
+const CATEGORIA_CALIDAD = {
+  slug: "calidad",
+  name: "Calidad y habilitación",
+  description: "Gestión de la calidad con ISO 9001 y habilitación de servicios de salud.",
+  icon: "shield",
+  color: "#123C61",
+  order: 6,
+};
 
 type Db = PrismaClient | Prisma.TransactionClient;
 type Resultado = { curso: string; estado: string };
@@ -223,8 +238,9 @@ async function completarInteractivo(db: Db, c: CursoInteractivo, publicar: boole
 }
 
 /**
- * Completa los tres cursos. Con `publicar`, KG-PA-002 y KG-PA-003 quedan
- * publicados; sin él conservan su estado (borrador) para que KG los revise.
+ * Completa los cursos. Con `publicar`, los cursos interactivos que se crean o
+ * completan quedan publicados; sin él quedan en borrador para que KG los revise.
+ * Un curso que ya estaba completo no cambia de estado.
  * Cada curso va en su propia transacción: si uno falla, no deja nada a medias.
  */
 export async function completarCursos(prisma: PrismaClient, opciones: { publicar: boolean }) {
@@ -232,7 +248,8 @@ export async function completarCursos(prisma: PrismaClient, opciones: { publicar
   const tx = { timeout: 180_000, maxWait: 20_000 };
   const resultado: Resultado[] = [];
   resultado.push(await prisma.$transaction((db) => completarBasico(db), tx));
-  for (const c of [PEDIATRICOS, PSICOLOGICOS]) {
+  await prisma.category.upsert({ where: { slug: CATEGORIA_CALIDAD.slug }, update: {}, create: CATEGORIA_CALIDAD });
+  for (const c of [PEDIATRICOS, PSICOLOGICOS, RESOLUCION_3100, ISO_9001]) {
     resultado.push(await prisma.$transaction((db) => completarInteractivo(db, c, opciones.publicar), tx));
   }
   return resultado;

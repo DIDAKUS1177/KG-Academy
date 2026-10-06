@@ -1,13 +1,14 @@
 ﻿# ==========================================================================
-# KG ACADEMY - Completar los cursos de primeros auxilios en producción (Neon)
+# KG ACADEMY - Completar los cursos del catálogo en producción (Neon)
 # --------------------------------------------------------------------------
 # Agrega los módulos 4 a 7 y sus preguntas al Curso Básico (KG-PA-001) y
 # carga completos Pediátricos (KG-PA-002) y Psicológicos (KG-PA-003) con su
-# evaluación final. No duplica nada y se puede repetir.
+# evaluación final. Crea Resolución 3100 (KG-CA-001) e ISO 9001 (KG-CA-002)
+# con su categoría. No duplica nada y se puede repetir.
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\completar-cursos-produccion.ps1
 #
-# Con -Publicar, KG-PA-002 y KG-PA-003 quedan publicados; sin él, en borrador.
+# Con -Publicar, los cursos que se crean quedan publicados; sin él, en borrador.
 # ==========================================================================
 param(
   [switch]$Publicar,

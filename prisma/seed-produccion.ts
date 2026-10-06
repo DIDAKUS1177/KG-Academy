@@ -86,6 +86,7 @@ const CATEGORIAS = [
   { slug: "riesgo-psicosocial", name: "Riesgo Psicosocial", description: "Bienestar mental y clima laboral.", icon: "spark", color: "#1B4A73", order: 3 },
   { slug: "analitica", name: "Business Analytics", description: "Indicadores y analítica aplicada a la gestión.", icon: "chart", color: "#759F11", order: 4 },
   { slug: "emergencias", name: "Emergencias", description: "Prevención y control de incendios, evacuación y brigadas.", icon: "flame", color: "#E4572E", order: 5 },
+  { slug: "calidad", name: "Calidad y habilitación", description: "Gestión de la calidad con ISO 9001 y habilitación de servicios de salud.", icon: "shield", color: "#123C61", order: 6 },
 ];
 
 const PLANES = [

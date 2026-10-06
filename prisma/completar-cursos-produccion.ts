@@ -1,9 +1,9 @@
 /**
- * KG ACADEMY - Completar los cursos de primeros auxilios
+ * KG ACADEMY - Completar los cursos del catálogo
  *
  * Corre prisma/completar-cursos.ts contra la base indicada en DATABASE_URL (la
  * local por defecto; la de producción con scripts/completar-cursos-produccion.ps1).
- * Con COMPLETAR_PUBLICAR=1, KG-PA-002 y KG-PA-003 quedan publicados.
+ * Con COMPLETAR_PUBLICAR=1, los cursos que se crean o completan quedan publicados.
  *
  *   powershell -ExecutionPolicy Bypass -File scripts\completar-cursos-produccion.ps1 [-Publicar]
  */
@@ -19,7 +19,7 @@ async function main() {
     data: {
       action: "editar",
       entity: "courses",
-      summary: `Cursos de primeros auxilios completados${publicar ? " y publicados" : ""}: ${resultado.map((r) => r.curso.split(" ")[0]).join(", ")}`,
+      summary: `Cursos del catálogo completados${publicar ? " y publicados" : ""}: ${resultado.map((r) => r.curso.split(" ")[0]).join(", ")}`,
     },
   });
 
