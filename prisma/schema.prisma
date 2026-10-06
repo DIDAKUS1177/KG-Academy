@@ -178,6 +178,7 @@ model Company {
   batches       AssignmentBatch[]
   orders        Order[]
   cursosHabilitados CompanyCourse[]
+  encuentros    CompanyMeeting[]
 
   @@map("companies")
 }
@@ -202,8 +203,9 @@ model Area {
   name      String // area / departamento
   code      String?
 
-  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  members CompanyMember[]
+  company    Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members    CompanyMember[]
+  encuentros CompanyMeeting[]
 
   @@map("areas")
 }
@@ -265,6 +267,34 @@ model Plan {
 }
 
 /// Cursos habilitados para una empresa: los de su selección y los exclusivos que KG le activa.
+/// Clase en vivo, reunión o material que una empresa comparte con su gente:
+/// un enlace de Meet, Zoom o Teams con fecha y hora, o una grabación sin fecha.
+/// Los destinatarios se calculan con `audience` (todos | area | curso) y
+/// reciben una notificación al crearlo y al cancelarlo.
+model CompanyMeeting {
+  id          String    @id @default(cuid())
+  companyId   String
+  title       String
+  description String?
+  url         String
+  startsAt    DateTime? // null = material sin fecha
+  durationMin Int?
+  audience    String    @default("todos") // todos | area | curso
+  areaId      String?
+  courseId    String?
+  recipients  Int       @default(0)
+  createdById String?
+  canceledAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  area    Area?   @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  course  Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, startsAt])
+  @@map("company_meetings")
+}
+
 model CompanyCourse {
   companyId String
   courseId  String
@@ -365,6 +395,7 @@ model Course {
   orderItems   OrderItem[]
   questionBanks QuestionBank[]
   empresasHabilitadas CompanyCourse[]
+  encuentros          CompanyMeeting[]
 
   @@index([status])
   @@index([categoryId])

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { puedeCursar } from "@/lib/acceso-cursos";
+import { encuentrosDe } from "@/lib/encuentros";
+import { TarjetaEncuentro } from "@/components/Encuentros";
 import { totalPoints } from "@/lib/progress";
 import { formatDate, daysBetween, cantidad } from "@/lib/utils";
 import { CursosDisponibles } from "./CursosDisponibles";
@@ -31,7 +33,7 @@ function plazo(dueDate: Date | null) {
 export default async function AulaHome() {
   const user = await requireUser();
 
-  const [enrollments, certificados, streak, points, asignaciones, hechas] = await Promise.all([
+  const [enrollments, certificados, streak, points, asignaciones, hechas, encuentros] = await Promise.all([
     prisma.enrollment.findMany({
       where: { userId: user.id },
       include: { course: { include: { modules: { include: { lessons: { where: { isPublished: true }, select: { id: true } } } } } } },
@@ -45,6 +47,7 @@ export default async function AulaHome() {
       select: { courseId: true, dueDate: true },
     }),
     prisma.lessonProgress.groupBy({ by: ["enrollmentId"], where: { userId: user.id, status: "completado" }, _count: true }),
+    encuentrosDe(user.id, { vigentes: true }),
   ]);
 
   const plazoDe = new Map(asignaciones.map((a) => [a.courseId, a.dueDate]));
@@ -116,6 +119,23 @@ export default async function AulaHome() {
           )}
         </div>
       </div>
+
+      {/* Clases en vivo y materiales que compartió la empresa */}
+      {encuentros.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="font-display text-base font-bold text-navy-700">Clases en vivo</p>
+            {encuentros.length > 2 && (
+              <Link href="/aula/encuentros" className="text-xs font-bold text-lime-700 hover:underline">
+                Ver las {encuentros.length}
+              </Link>
+            )}
+          </div>
+          {encuentros.slice(0, 2).map((e) => (
+            <TarjetaEncuentro key={e.id} e={e} />
+          ))}
+        </div>
+      )}
 
       {/* Guía de tres pasos, mientras no haya avance */}
       {continuar && sinAvance && (

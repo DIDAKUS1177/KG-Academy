@@ -67,8 +67,8 @@ async function main() {
   }
 
   const publicas = ["/", "/catalogo", `/curso/${curso.slug}`, `/curso/${cursoJuego.slug}`, "/verificar", `/verificar/${certificado.code}`, "/ingresar", "/registro", "/recuperar"];
-  const aula = ["/aula", "/aula/cursos", `/aula/curso/${curso.slug}`, `/aula/curso/${cursoJuego.slug}`, "/aula/certificados", "/aula/logros", "/aula/notificaciones", "/aula/perfil"];
-  const empresa = ["/empresa", "/empresa/trabajadores", `/empresa/trabajadores/${miembro.userId}`, "/empresa/asignar", "/empresa/seguimiento", "/empresa/reportes", "/empresa/reportes/informe", "/empresa/cursos"];
+  const aula = ["/aula", "/aula/cursos", `/aula/curso/${curso.slug}`, `/aula/curso/${cursoJuego.slug}`, "/aula/certificados", "/aula/logros", "/aula/notificaciones", "/aula/perfil", "/aula/encuentros"];
+  const empresa = ["/empresa", "/empresa/trabajadores", `/empresa/trabajadores/${miembro.userId}`, "/empresa/asignar", "/empresa/seguimiento", "/empresa/reportes", "/empresa/reportes/informe", "/empresa/cursos", "/empresa/encuentros"];
   const admin = ["/admin", "/admin/usuarios", "/admin/empresas", "/admin/cursos", `/admin/cursos/${curso.id}`, `/admin/cursos/${cursoJuego.id}`, "/admin/evaluaciones", `/admin/evaluaciones/${evaluacion.id}`, "/admin/certificados", "/admin/reportes", "/admin/auditoria", "/admin/permisos", "/admin/configuracion"];
 
   const ok = (rs: string[]): Caso[] => rs.map((ruta) => ({ ruta, espera: "ok" }));
@@ -105,6 +105,7 @@ async function main() {
   fallos += await acciones(cursoJuego.id);
   fallos += await acciones(curso.id);
   fallos += await gestionEmpresa(cursoJuego.id);
+  fallos += await clasesEnVivo();
   await limpiar();
 
   await prisma.$disconnect();
@@ -843,6 +844,77 @@ async function gestionEmpresa(cursoId: string) {
 
   const malos = pasos.filter((p) => !p.ok);
   console.log(`${malos.length ? "✗" : "✓"} Gestión de la empresa y límites de cada rol: ${pasos.length - malos.length}/${pasos.length}`);
+  for (const p of pasos) console.log(`    ${p.ok ? "✓" : "✗"} ${p.nombre}${p.ok || !p.detalle ? "" : ` (${p.detalle})`}`);
+  return malos.length;
+}
+
+/** La empresa comparte una clase en vivo y su gente la ve en notificaciones y en el aula. */
+async function clasesEnVivo() {
+  const sufijo = `cv${Date.now().toString(36)}`;
+  const pasos: { nombre: string; ok: boolean; detalle?: string }[] = [];
+  const paso = (nombre: string, ok: boolean, detalle?: string) => pasos.push({ nombre, ok, detalle });
+  const rrhh = await prisma.user.findUniqueOrThrow({ where: { email: "rrhh@constructoraandina.com" } });
+  const companyId = rrhh.companyId!;
+  const empresa = await entrar("rrhh@constructoraandina.com");
+  const laura = await prisma.user.findUniqueOrThrow({ where: { email: "laura.cardenas@constructoraandina.com" } });
+  const manana = new Date(Date.now() + 86_400_000).toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+  const base = { companyId, url: "https://meet.google.com/abc-defg-hij", fecha: manana, hora: "10:00", duracion: 60, audiencia: "todos" };
+  const creados: string[] = [];
+  try {
+    const titulo = `Clase de brigada ${sufijo}`;
+    const clase = await llamar("POST", "/api/empresa/encuentros", empresa, { ...base, titulo, descripcion: "Conéctese 5 minutos antes." });
+    if (typeof clase.data.meetingId === "string") creados.push(clase.data.meetingId);
+    const avisos = await prisma.notification.count({ where: { title: { contains: sufijo } } });
+    const deLaura = await prisma.notification.count({ where: { userId: laura.id, title: { contains: sufijo } } });
+    paso(
+      "La empresa comparte una clase en vivo y a cada persona le llega la notificación",
+      clase.status === 200 && Number(clase.data.destinatarios) > 0 && avisos === Number(clase.data.destinatarios) && deLaura === 1,
+      `${clase.status} ${clase.texto.slice(0, 100)} avisos=${avisos}`
+    );
+
+    const sesionLaura = await entrar("laura.cardenas@constructoraandina.com");
+    const inicio = await llamar("GET", "/aula", sesionLaura);
+    const pagina = await llamar("GET", "/aula/encuentros", sesionLaura);
+    paso(
+      "El trabajador la ve en su inicio y en «Clases en vivo», con el enlace para unirse",
+      inicio.texto.includes(titulo) && pagina.texto.includes(titulo) && pagina.texto.includes("https://meet.google.com/abc-defg-hij"),
+      `${inicio.status} ${pagina.status}`
+    );
+
+    const sinHttps = await llamar("POST", "/api/empresa/encuentros", empresa, { ...base, titulo: `Mala ${sufijo}`, url: "http://meet.google.com/x" });
+    const pasada = await llamar("POST", "/api/empresa/encuentros", empresa, { ...base, titulo: `Pasada ${sufijo}`, fecha: "2020-01-01" });
+    paso("Rechaza enlaces sin https y fechas que ya pasaron", sinHttps.status === 400 && pasada.status === 400, `${sinHttps.status} ${pasada.status}`);
+
+    const area = await prisma.companyMember.findFirst({ where: { companyId, areaId: { not: null }, user: { role: { code: "estudiante" } } }, select: { areaId: true } });
+    if (area?.areaId) {
+      const enArea = await prisma.companyMember.count({
+        where: { companyId, areaId: area.areaId, status: { not: "retirado" }, user: { role: { code: { in: ["estudiante", "supervisor"] } }, status: { notIn: ["inactivo", "bloqueado"] } } },
+      });
+      const porArea = await llamar("POST", "/api/empresa/encuentros", empresa, { ...base, titulo: `Solo área ${sufijo}`, audiencia: "area", areaId: area.areaId });
+      if (typeof porArea.data.meetingId === "string") creados.push(porArea.data.meetingId);
+      paso("Por área, le llega solo a la gente de esa área", porArea.status === 200 && porArea.data.destinatarios === enArea, `${porArea.status} ${porArea.data.destinatarios} vs ${enArea}`);
+    }
+
+    const supervisor = await entrar("diana.suarez@constructoraandina.com");
+    const delSupervisor = await llamar("POST", "/api/empresa/encuentros", supervisor, { ...base, titulo: `Supervisor ${sufijo}` });
+    paso("El supervisor no comparte clases (solo las consulta)", delSupervisor.status === 403, `${delSupervisor.status}`);
+
+    const cancelar = await llamar("PATCH", "/api/empresa/encuentros", empresa, { meetingId: creados[0], accion: "cancelar" });
+    const trasCancelar = await llamar("GET", "/aula/encuentros", sesionLaura);
+    const avisoCancelada = await prisma.notification.count({ where: { userId: laura.id, title: `Cancelada: ${titulo}` } });
+    paso(
+      "Al cancelarla desaparece del aula y se avisa",
+      cancelar.status === 200 && trasCancelar.status === 200 && !trasCancelar.texto.includes(titulo) && avisoCancelada === 1,
+      `${cancelar.status} aviso=${avisoCancelada}`
+    );
+  } finally {
+    await prisma.notification.deleteMany({ where: { title: { contains: sufijo } } });
+    await prisma.companyMeeting.deleteMany({ where: { title: { contains: sufijo } } });
+    await prisma.auditLog.deleteMany({ where: { entity: "company_meetings", summary: { contains: sufijo } } });
+  }
+
+  const malos = pasos.filter((p) => !p.ok);
+  console.log(`${malos.length ? "✗" : "✓"} Clases en vivo de la empresa: ${pasos.length - malos.length}/${pasos.length}`);
   for (const p of pasos) console.log(`    ${p.ok ? "✓" : "✗"} ${p.nombre}${p.ok || !p.detalle ? "" : ` (${p.detalle})`}`);
   return malos.length;
 }

@@ -10,6 +10,7 @@ import {
   IconBell,
   IconSpark,
   IconSettings,
+  IconPlay,
 } from "@/components/Icons";
 
 export default async function AulaLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +36,7 @@ export default async function AulaLayout({ children }: { children: React.ReactNo
       items: [
         { href: "/aula", label: "Inicio", icon: <IconHome width={18} height={18} />, exact: true },
         { href: "/aula/cursos", label: "Mis cursos", icon: <IconBook width={18} height={18} /> },
+        { href: "/aula/encuentros", label: "Clases en vivo", icon: <IconPlay width={18} height={18} /> },
         { href: "/aula/certificados", label: "Mis certificados", icon: <IconAward width={18} height={18} /> },
         { href: "/aula/logros", label: "Logros y puntos", icon: <IconSpark width={18} height={18} /> },
       ],

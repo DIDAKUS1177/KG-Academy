@@ -13,6 +13,7 @@ import {
   IconBook,
   IconGraduation,
   IconSettings,
+  IconPlay,
 } from "@/components/Icons";
 
 export default async function EmpresaLayout({ children }: { children: React.ReactNode }) {
@@ -37,6 +38,7 @@ export default async function EmpresaLayout({ children }: { children: React.Reac
         ...(esSupervisor
           ? []
           : [{ href: "/empresa/asignar", label: "Asignar cursos", icon: <IconClipboard width={18} height={18} /> }]),
+        { href: "/empresa/encuentros", label: "Clases y reuniones", icon: <IconPlay width={18} height={18} /> },
       ],
     },
     {
